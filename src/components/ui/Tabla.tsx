@@ -9,7 +9,7 @@ import {
   useReactTable,
   type SortingState,
 } from "@tanstack/react-table";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { Paginacion } from "./Paginacion";
 
@@ -30,6 +30,7 @@ export function Tabla<T>({
 }: TablaProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const tabla = useReactTable({
     data: datos,
     columns: columnas,

@@ -9,7 +9,7 @@ import { Boton } from "@/components/ui/Boton";
 import { Campo } from "@/components/ui/Campo";
 import { Selector } from "@/components/ui/Selector";
 import { Tarjeta } from "@/components/ui/Tarjeta";
-import { CargandoChico } from "@/components/ui/Cargando";
+
 import { useEscuelaActual } from "../../../../src/hooks/useEscuelaActual";
 
 interface TipoActa {
@@ -37,7 +37,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function NuevaActa() {
   const router = useRouter();
-  const { escuelaId, puedeElegirEscuela, escuelas, setEscuelaId } =
+  const { escuelaId, puedeElegirEscuela, escuelas } =
     useEscuelaActual();
 
   const { data: tiposActa } = useSWR<TipoActa[]>(
@@ -75,6 +75,7 @@ export default function NuevaActa() {
     name: "estudiantes",
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const tipoActaId = watch("tipoActaId");
 
   const onSubmit = async (datos: FormularioActa) => {
@@ -297,21 +298,21 @@ export default function NuevaActa() {
                 <div className="grid flex-1 grid-cols-4 gap-3">
                   <Campo
                     placeholder="Cédula"
-                    error={errors.estudiantes?.[index]?.identificacion?.message}
+                    error={(errors.estudiantes as Record<string, { identificacion?: { message?: string } }>)?.[String(index)]?.identificacion?.message}
                     {...register(`estudiantes.${index}.identificacion`, {
                       required: "Requerido",
                     })}
                   />
                   <Campo
                     placeholder="Nombres"
-                    error={errors.estudiantes?.[index]?.nombres?.message}
+                    error={(errors.estudiantes as Record<string, { nombres?: { message?: string } }>)?.[String(index)]?.nombres?.message}
                     {...register(`estudiantes.${index}.nombres`, {
                       required: "Requerido",
                     })}
                   />
                   <Campo
                     placeholder="Apellidos"
-                    error={errors.estudiantes?.[index]?.apellidos?.message}
+                    error={(errors.estudiantes as Record<string, { apellidos?: { message?: string } }>)?.[String(index)]?.apellidos?.message}
                     {...register(`estudiantes.${index}.apellidos`, {
                       required: "Requerido",
                     })}
@@ -319,7 +320,7 @@ export default function NuevaActa() {
                   <Campo
                     placeholder="N° certificado"
                     type="number"
-                    error={errors.estudiantes?.[index]?.numeroCertificado?.message}
+                    error={(errors.estudiantes as Record<string, { numeroCertificado?: { message?: string } }>)?.[String(index)]?.numeroCertificado?.message}
                     {...register(`estudiantes.${index}.numeroCertificado`, {
                       required: "Requerido",
                     })}

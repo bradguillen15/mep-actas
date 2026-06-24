@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ImageIcon,
 } from "lucide-react";
+import Image from "next/image";
 import { Boton } from "@/components/ui/Boton";
 import { Campo } from "@/components/ui/Campo";
 import { Selector } from "@/components/ui/Selector";
@@ -55,7 +56,7 @@ export default function Tomos() {
     (a, b) => a.numeroFolio - b.numeroFolio
   );
 
-  const escaneoVisible = escaneosOrdenados[folioActual] ?? null;
+  const escaneoVisible = escaneosOrdenados[folioActual as number] ?? null;
 
   const manejarSubida = async () => {
     if (!archivo || !nuevoTomo || !nuevoFolio) return;
@@ -182,10 +183,12 @@ export default function Tomos() {
 
           {escaneoVisible && (
             <Tarjeta className="flex items-center justify-center p-4">
-              <img
+              <Image
                 src={escaneoVisible.url}
                 alt={`Folio ${escaneoVisible.numeroFolio}`}
-                className="max-h-[60vh] rounded-lg object-contain"
+                width={800}
+                height={600}
+                className="max-h-[60vh] w-auto rounded-lg object-contain"
               />
             </Tarjeta>
           )}

@@ -63,7 +63,7 @@ export default function Auditoria() {
       cell: ({ getValue }) => {
         const acc = getValue() as string;
         return (
-          <Badge variante={badgeAccion[acc] ?? "info"}>
+          <Badge variante={badgeAccion[acc as keyof typeof badgeAccion] ?? "info"}>
             {acc}
           </Badge>
         );
@@ -152,7 +152,7 @@ export default function Auditoria() {
                   Acción
                 </label>
                 <Badge
-                  variante={badgeAccion[seleccionado.accion] ?? "info"}
+                  variante={badgeAccion[seleccionado.accion as keyof typeof badgeAccion] ?? "info"}
                 >
                   {seleccionado.accion}
                 </Badge>

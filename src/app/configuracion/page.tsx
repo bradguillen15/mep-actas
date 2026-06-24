@@ -3,11 +3,10 @@
 import { useState } from "react";
 import useSWR, { mutate } from "swr";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus, UserCog } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Tabla } from "@/components/ui/Tabla";
 import { Boton } from "@/components/ui/Boton";
 import { Campo } from "@/components/ui/Campo";
-import { Selector } from "@/components/ui/Selector";
 import { Modal } from "@/components/ui/Modal";
 import { Cargando } from "@/components/ui/Cargando";
 import { Badge } from "@/components/ui/Badge";

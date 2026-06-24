@@ -18,7 +18,7 @@ import {
 const DB_PATH = path.resolve(__dirname, "../../temp-e2e.db");
 let db: LibSQLDatabase<typeof esquema>;
 let sesionAdminPais: ReturnType<typeof datosSesionAdminPais>;
-let sesionAdminRegional: ReturnType<typeof datosSesionAdminRegional>;
+
 const idsUsuarioCrear: number[] = [];
 const idsPersonaCrear: number[] = [];
 const idsFuncionarioCrear: number[] = [];
@@ -42,7 +42,7 @@ beforeAll(async () => {
     "admin-regional@e2e.test"
   );
   const rolAdminRegional = await obtenerRolPorNivel(db, 2);
-  sesionAdminRegional = datosSesionAdminRegional(
+  const _sesionAdminRegional = datosSesionAdminRegional(
     usuarioAdminRegional.id,
     rolAdminRegional.id,
     1

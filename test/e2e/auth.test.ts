@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import { clienteDb } from "@/db/cliente";
 import { obtenerUsuarioPorEmail } from "@/server/repositorios/usuarios.repositorio";
 import { compare } from "bcryptjs";

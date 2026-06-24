@@ -59,3 +59,6 @@ next-env.d.ts
 
 # allow example env file
 !.env.example
+
+# local database
+mep-actas-local.db

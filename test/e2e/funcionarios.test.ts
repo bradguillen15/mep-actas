@@ -7,7 +7,6 @@ import { crearServicioRegiones } from "@/server/servicios/regiones.servicio";
 import * as repositorioPersonas from "@/server/repositorios/personas.repositorio";
 import * as repositorioFuncionarios from "@/server/repositorios/funcionarios.repositorio";
 import * as repositorioRegiones from "@/server/repositorios/regiones.repositorio";
-import * as repositorioEscuelas from "@/server/repositorios/escuelas.repositorio";
 import { datosSesionAdminPais, obtenerRolPorNivel, obtenerUsuarioPorEmail } from "./helpers";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";

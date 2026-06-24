@@ -57,7 +57,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 export default function Actas() {
   const { escuelaId, escuelas, puedeElegirEscuela } = useEscuelaActual();
   const [escuelaFiltro, setEscuelaFiltro] = useState("");
-  const [tomoFiltro, setTomoFiltro] = useState("");
+  const [tomoFiltro, _setTomoFiltro] = useState("");
   const [detalleId, setDetalleId] = useState<number | null>(null);
 
   const params = new URLSearchParams();

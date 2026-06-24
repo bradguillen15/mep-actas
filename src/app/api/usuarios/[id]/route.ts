@@ -1,5 +1,4 @@
 import { NextResponse, NextRequest } from "next/server";
-import { hashSync } from "bcryptjs";
 import { crearAuditor } from "@/server/servicios/auditoria.servicio";
 import { crearServicioUsuarios } from "@/server/servicios/usuarios.servicio";
 import * as repositorio from "@/server/repositorios/usuarios.repositorio";

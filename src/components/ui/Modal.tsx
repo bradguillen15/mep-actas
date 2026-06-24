@@ -55,7 +55,7 @@ export function Modal({
         onClick={onCerrar}
       />
       <div
-        className={`relative z-10 w-full ${tamanos[tamano]} mx-4 rounded-xl bg-white shadow-xl`}
+        className={`relative z-10 w-full ${tamanos[tamano as keyof typeof tamanos]} mx-4 rounded-xl bg-white shadow-xl`}
       >
         <div className="flex items-center justify-between border-b border-borde px-6 py-4">
           <h2 className="text-lg font-semibold text-texto">{titulo}</h2>

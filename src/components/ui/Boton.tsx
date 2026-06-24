@@ -38,7 +38,7 @@ export function Boton({
 }: BotonProps) {
   return (
     <button
-      className={`${clasesBase} ${variantes[variante]} ${tamanos[tamano]} ${className}`}
+      className={`${clasesBase} ${variantes[variante as keyof typeof variantes]} ${tamanos[tamano as keyof typeof tamanos]} ${className}`}
       disabled={disabled || cargando}
       {...props}
     >

@@ -16,7 +16,7 @@ describe("obtenerUsuarioPorEmail", () => {
         nivel: 1,
       },
     ];
-    const mockAll = vi.fn().mockResolvedValue(mockResult);
+    const _mockAll = vi.fn().mockResolvedValue(mockResult);
 
     const mockDb = {
       select: mockSelect.mockReturnValue({

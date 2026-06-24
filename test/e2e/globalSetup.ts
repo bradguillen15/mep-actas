@@ -78,6 +78,7 @@ export async function setup() {
 
 export async function teardown() {
   for (const archivo of [DB_PATH, DB_PATH + "-wal", DB_PATH + "-shm"]) {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     try { fs.unlinkSync(archivo); } catch { /* ignore */ }
   }
 }

@@ -10,6 +10,7 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "@next/next/no-html-link-for-pages": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", { varsIgnorePattern: "^_" }],
     },
   },
   globalIgnores([
