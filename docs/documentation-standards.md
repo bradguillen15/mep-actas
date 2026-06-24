@@ -1,49 +1,48 @@
 ---
-description: Standards and best practices for technical documentation in this project, including documentation structure, update processes, and language rules.
+description: Estándares y buenas prácticas para la documentación técnica de este proyecto, incluyendo estructura, proceso de actualización y reglas de idioma.
 globs:
 alwaysApply: true
 ---
-# Rules and Patterns for documentation and AI specs
+# Reglas y patrones para documentación y specs de IA
 
-## Introduction
-Technical documentation applies to all the documentation relative to the project, such as the data model, README, API specs, and other MD docs that describe how the project is structured, runs, and operates.
-AI specs refers to the documents that explain AI agents how to behave, document, plan, code, etc, which includes team agreements, standards and conventions.
+## Introducción
+La documentación técnica abarca toda la documentación del proyecto: el modelo de datos, el README, las specs de API y demás documentos MD que describen cómo está estructurado, cómo corre y cómo opera el proyecto.
+Las specs de IA son los documentos que explican a los agentes cómo comportarse, documentar, planificar, programar, etc.; incluyen acuerdos del equipo, estándares y convenciones.
 
-## General rules
-- ALWAYS WRITE IN ENGLISH, including comments and any explanation in the files. This applies both to creating new documentation and updating existing one, and it also applies to documentation within the code (comments, explanations of functions or fields, etc.).
+## Reglas generales
+- **ESCRIBE SIEMPRE EN ESPAÑOL (Costa Rica)**, incluyendo comentarios y cualquier explicación en los archivos. Aplica tanto al crear documentación nueva como al actualizar la existente, e incluye la documentación dentro del código (comentarios, explicaciones de funciones o campos). Es un producto del Gobierno de Costa Rica.
+- Excepción: las palabras reservadas de lenguajes/frameworks y los nombres de paquetes de terceros se mantienen en su forma original.
 
+## Documentación técnica
+Antes de cualquier commit o git push, o si te piden documentar un commit, SIEMPRE debes revisar qué documentación técnica debería actualizarse.
 
+Al actualizar la documentación:
+1. Revisa todos los cambios recientes en el código.
+2. Identifica qué archivos de documentación necesitan actualización según los cambios. Ejemplos claros:
+   - Cambios en el modelo de datos: actualiza `docs/data-model.md` y el esquema de Drizzle.
+   - Cambios de API: actualiza `docs/api-spec.yml`.
+   - Cambios en librerías, migraciones de base de datos o cualquier cosa que altere la instalación: actualiza los `*-standards.md`.
+3. Actualiza cada archivo afectado en español, manteniendo la consistencia con la documentación existente.
+4. Asegura que la documentación esté bien formateada y siga la estructura establecida.
+5. Verifica que todos los cambios se reflejen con precisión en la documentación.
+6. Reporta qué archivos se actualizaron y qué cambios se hicieron.
 
-## Technical Documentation
-Before making any commit or git push, or if you're asked to document a commit, you must ALWAYS review which technical documentation should be updated.
+## Specs de IA
 
-When updating documentation, I will:
-1. Review all recent changes in the codebase
-2. Identify which documentation files need updates based on the changes. Some clear examples:
-   - For data model changes: Update data model definition section in data-model.md
-   - For API changes: Update api-spec.yml
-   - For changes in libraries, database migrations, or anything that changes the installation process, update *-standards.md
-3. Update each affected documentation file in English, maintaining consistency with existing documentation
-4. Ensure all documentation is properly formatted and follows the established structure
-5. Verify that all changes are accurately reflected in the documentation
-6. Report which files were updated and what changes were made
+Esta regla establece un proceso obligatorio para que la IA:
+*   Aprenda de la retroalimentación, guía y sugerencias del usuario durante las interacciones.
+*   Identifique proactivamente oportunidades para mejorar las reglas de desarrollo existentes a partir de esos aprendizajes.
+*   Mantenga su asistencia alineada con las necesidades cambiantes del proyecto y las expectativas del usuario.
+*   Incorpore la retroalimentación del usuario en su marco operativo para maximizar su valor.
 
-## AI specs
+Aplica después de cualquier interacción donde el usuario brinde retroalimentación explícita o implícita, sugerencias, correcciones, información nueva o preferencias. **La IA DEBE analizar activamente todas las interacciones en busca de estas oportunidades de aprendizaje, no solo esperar pasivamente la retroalimentación directa.**
 
-This rule establishes a mandatory process for the AI to:
-*   Learn from user feedback, guidance, and suggestions during interactions.
-*   Identify opportunities to improve existing Development Rules based on these learnings proactively.
-*   Keep the AI's assistance aligned with evolving project needs and user expectations.
-*   Incorporate user feedback into the AI's operational framework to maximize its value.
+### Errores comunes y antipatrones que la IA debe evitar
 
-This rule is applicable after any interaction where the user provides explicit or implicit feedback, suggestions, corrections, new information, or expresses preferences. **The AI MUST actively analyze all user interactions for such learning opportunities, not only passively waiting for direct feedback, to proactively refine its understanding and the project's best practices.**
-
-### Common Pitfalls and Anti-Patterns to be avoided by the AI
-
-*   **Skipping Approval Process:** Applying rule modifications without obtaining explicit user review and approval first.
-*   **Unlinked Proposals:** Proposing rule changes without clearly connecting them to the specific user feedback or insights gained from the interaction.
-*   **Imprecise Modifications:** Suggesting modifications without precisely identifying which rule or specific sections within a rule should be changed, hindering effective user review.
-*   **Unaddressed Feedback:** Not initiating the learning and review process when the user provides relevant feedback that could improve the rules.
-*   **Scope Creep:** Updating multiple unrelated rules simultaneously or making changes that exceed the scope of the feedback received.
-*   **Unprompted Rule Changes:** Modifying rules proactively when there is no direct connection to user feedback or a learning opportunity. Rule updates should be reactive and feedback-driven.
-*   **Missing Update Confirmation:** Failing to notify the user after a rule modification has been successfully implemented following their approval.
+*   **Saltarse la aprobación:** Aplicar modificaciones de reglas sin obtener primero la revisión y aprobación explícita del usuario.
+*   **Propuestas sin vínculo:** Proponer cambios de reglas sin conectarlos claramente con la retroalimentación específica o los aprendizajes de la interacción.
+*   **Modificaciones imprecisas:** Sugerir cambios sin identificar con precisión qué regla o sección debe cambiar, dificultando la revisión.
+*   **Retroalimentación desatendida:** No iniciar el proceso de aprendizaje y revisión cuando el usuario da retroalimentación relevante.
+*   **Alcance excesivo:** Actualizar múltiples reglas no relacionadas a la vez o exceder el alcance de la retroalimentación recibida.
+*   **Cambios no solicitados:** Modificar reglas proactivamente sin una conexión directa con la retroalimentación. Las actualizaciones deben ser reactivas y guiadas por la retroalimentación.
+*   **Falta de confirmación:** No notificar al usuario tras implementar con éxito una modificación de regla aprobada.

@@ -1,170 +1,113 @@
-# Initialize the Harness in a New Project
+# Inicialización del proyecto
 
-Use this guide after copying `harness-lidr-sdd` into your project.
-
-## 1. Copy the harness
-
-### New project (harness is the base)
-
-```bash
-cp -R /path/to/harness-lidr-sdd/ /path/to/my-project/
-cd /path/to/my-project
-git init   # if starting fresh
-```
-
-### Existing project (merge harness in)
-
-```bash
-TARGET=/path/to/my-existing-project
-HARNESS=/path/to/harness-lidr-sdd
-
-cp -R "$HARNESS/ai-specs"     "$TARGET/"
-cp -R "$HARNESS/openspec"     "$TARGET/"
-cp -R "$HARNESS/.cursor"      "$TARGET/"
-cp -R "$HARNESS/.claude"      "$TARGET/"
-cp -R "$HARNESS/.codegraph"   "$TARGET/"
-cp    "$HARNESS/AGENTS.md"    "$TARGET/"
-cp    "$HARNESS/CLAUDE.md"    "$TARGET/"
-
-mkdir -p "$TARGET/docs"
-cp "$HARNESS/docs/base-standards.md" \
-   "$HARNESS/docs/documentation-standards.md" \
-   "$HARNESS/docs/openspec-tasks-mandatory-steps.md" \
-   "$HARNESS/docs/backend-standards.md" \
-   "$HARNESS/docs/frontend-standards.md" \
-   "$TARGET/docs/"
-```
-
-Merge `.gitignore` entries for harness runtime paths:
-
-```
-tmp/
-.worktrees/
-.mcp.json
-```
+El harness de desarrollo con IA (OpenSpec + agentes + estándares) ya está copiado y **adaptado a este proyecto**: Next.js + Turso/Drizzle + NextAuth + Cloudflare R2, pruebas con Vitest/Playwright, y todo en español. Esta guía resume qué ya está listo y qué falta para tener la aplicación corriendo.
 
 ---
 
-## 2. Understand what is harness vs project-specific
+## 1. Qué ya está adaptado (harness)
 
-### Harness (copy as-is, same in every project)
-
-These files define **how AI agents work**. You rarely change them per feature.
+Estos archivos definen **cómo trabajan los agentes de IA** y ya reflejan el stack y el idioma del proyecto:
 
 ```
-ai-specs/          # agents, skills, scripts
-.cursor/           # Cursor rules, commands, skills
-.claude/           # Claude commands, skills, worktree scripts
-openspec/config.yaml
-openspec/schemas/
-AGENTS.md
-CLAUDE.md
-docs/base-standards.md
-docs/documentation-standards.md
-docs/openspec-tasks-mandatory-steps.md
+CLAUDE.md, AGENTS.md            # reglas globales (español, modelo de planificación)
+docs/base-standards.md          # principios, TDD, estándar de idioma (español)
+docs/backend-standards.md       # Next.js route handlers, Drizzle/Turso, seguridad, pruebas
+docs/frontend-standards.md      # Next.js/React, SWR/Context/useReducer, identidad MEP
+docs/documentation-standards.md # documentación en español
+docs/openspec-tasks-mandatory-steps.md  # pasos obligatorios (Vitest/Playwright, sin curl)
+openspec/config.yaml            # contexto y reglas del proyecto
+ai-specs/agents/*.md            # backend-developer y frontend-developer adaptados
+docs/brd.md                     # requerimientos de negocio (fuente de verdad)
 ```
 
-### Project-specific (you create or customize per project)
-
-These files define **what your application is**. Agents read them when implementing features.
-
-| File | Purpose | When to create |
-|------|---------|----------------|
-| `docs/api-spec.yml` | REST/API contracts | Before first backend feature |
-| `docs/data-model.md` | Domain entities and relationships | Before first data model work |
-| `docs/development_guide.md` | How to run, test, deploy the app | When the app is runnable |
-| `docs/backend-standards.md` | Backend conventions | Customize from harness copy |
-| `docs/frontend-standards.md` | Frontend conventions | Customize from harness copy |
-| `openspec/specs/<capability>/spec.md` | Capability requirements | Created by OpenSpec as features land |
-| `openspec/changes/<change>/` | Active feature work | Created per change via `opsx:new` |
+No necesitas tocarlos para empezar una feature; los agentes los leen automáticamente.
 
 ---
 
-## 3. Customize for your project
+## 2. Qué falta crear (aplicación)
 
-### 3.1 `openspec/config.yaml`
+| Elemento | Propósito | Cuándo |
+|---|---|---|
+| Scaffold de Next.js (`app/`, `package.json`, `tsconfig.json`, …) | Estructura de la app | Primer paso de implementación |
+| Esquema Drizzle (`src/db/esquema.ts`) + `drizzle.config.ts` | Modelo de datos (ver BRD §10) | Antes del primer trabajo de datos |
+| Cliente Turso/Drizzle (`src/db/cliente.ts`) | Acceso a datos (solo servidor) | Con el esquema |
+| Configuración de NextAuth | Sesión + roles | Antes de cualquier endpoint protegido |
+| Integración con Cloudflare R2 | Subida/lectura de escaneos (URLs firmadas) | Antes de la gestión de escaneos |
+| `docs/data-model.md` | Modelo de dominio y datos | Derivar del BRD §10 |
+| `docs/api-spec.yml` | Contratos de la API | Antes de la primera feature de backend |
+| `docs/development_guide.md` | Cómo instalar, correr y probar | Cuando la app sea ejecutable |
 
-Replace the LTI example context with your project:
-
-```yaml
-context: |
-  Tech stack: <!-- your stack -->
-  Architecture: <!-- your architecture -->
-  Domain: <!-- your product -->
-  All code, comments, documentation, and technical artifacts must be in English
-
-  Project specs: read and apply docs/base-standards.md, docs/backend-standards.md,
-  docs/frontend-standards.md, docs/api-spec.yml, docs/data-model.md
-```
-
-Update `rules` if your testing or branch naming conventions differ.
-
-### 3.2 `docs/backend-standards.md` and `docs/frontend-standards.md`
-
-The harness ships with LTI examples (Express, Prisma, React). Edit these to match your stack, folder structure, and testing tools.
-
-### 3.3 `ai-specs/agents/*.md`
-
-Adjust agent personas if your stack differs from the defaults (Node/Express/Prisma backend, React frontend).
-
-### 3.4 Project documentation (create these)
-
-**`docs/api-spec.yml`** — OpenAPI spec for your endpoints. Agents use it to keep API changes consistent.
-
-**`docs/data-model.md`** — entities, fields, relationships. Agents use it when changing the database or domain layer.
-
-**`docs/development_guide.md`** — prerequisites, env setup, how to run backend/frontend, how to run tests. For humans and agents doing manual verification.
-
-You can start with empty stubs and fill them as the project grows:
+Stubs mínimos para desbloquear a los agentes:
 
 ```bash
-# Minimal stubs to unblock agents
 touch docs/api-spec.yml docs/data-model.md docs/development_guide.md
 ```
 
 ---
 
-## 4. Verify the harness works
+## 3. Variables de entorno
+
+Crea `.env.example` (se versiona) y `.env` (NO se versiona — ya está en `.gitignore`). Los secretos viven solo en el servidor:
+
+```
+# Turso (libSQL)
+TURSO_DATABASE_URL=
+TURSO_AUTH_TOKEN=
+
+# NextAuth
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
+
+# Cloudflare R2 (compatible con S3)
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET=
+```
+
+Nunca uses el prefijo `NEXT_PUBLIC_` para secretos: eso los expondría al navegador.
+
+---
+
+## 4. Verificar el harness de OpenSpec
 
 ```bash
-# Install OpenSpec CLI
 npm install -g @fission-ai/openspec
 openspec --version
-
-# Confirm schema is available
 openspec schemas
 ```
 
-In Cursor or Claude Code:
-
-1. Open the project
-2. Run `/opsx:onboard` for a guided first change cycle
-3. Or run `/opsx:new my-first-feature` to start manually
-
----
-
-## 5. Day-to-day usage
-
-| Step | Command / skill | What happens |
-|------|-----------------|--------------|
-| Enrich a user story | `enrich-us` | Jira ticket → implementation-ready spec |
-| Start a change | `/opsx:new` | Creates `openspec/changes/<name>/` |
-| Generate artifacts | `/opsx:ff` | proposal → specs → design → tasks |
-| Implement | `/opsx:apply` | Agent works through `tasks.md` |
-| Verify | `/opsx:verify` | Checks implementation vs specs |
-| Archive | `/opsx:archive` | Moves change to archive, syncs `openspec/specs/` |
-
-Project-specific docs (`api-spec.yml`, `data-model.md`) are updated by agents during implementation when endpoints or models change — see `docs/documentation-standards.md`.
+En Cursor o Claude Code:
+1. Abre el proyecto.
+2. Ejecuta `/opsx:onboard` para un primer ciclo guiado.
+3. O `/opsx:new <mi-primera-feature>` para empezar manualmente.
 
 ---
 
-## 6. Checklist
+## 5. Uso día a día
 
-- [ ] Harness folders copied into project
-- [ ] `openspec/config.yaml` updated with your project context
-- [ ] `docs/backend-standards.md` and `docs/frontend-standards.md` adapted to your stack
-- [ ] `docs/api-spec.yml` created
-- [ ] `docs/data-model.md` created
-- [ ] `docs/development_guide.md` created
-- [ ] OpenSpec CLI installed
-- [ ] `/opsx:onboard` completed or first change started
+| Paso | Comando / skill | Qué hace |
+|---|---|---|
+| Enriquecer una historia | `enrich-us` | Ticket → spec lista para implementar |
+| Iniciar un cambio | `/opsx:new` | Crea `openspec/changes/<nombre>/` |
+| Generar artefactos | `/opsx:ff` | proposal → specs → design → tasks |
+| Implementar | `/opsx:apply` | El agente trabaja el `tasks.md` |
+| Verificar | `/opsx:verify` | Compara implementación vs specs |
+| Archivar | `/opsx:archive` | Mueve el cambio al archivo y sincroniza `openspec/specs/` |
+
+Los docs específicos del proyecto (`api-spec.yml`, `data-model.md`) los actualizan los agentes durante la implementación cuando cambian endpoints o modelos — ver `docs/documentation-standards.md`.
+
+---
+
+## 6. Checklist de arranque
+
+- [ ] Scaffold de Next.js creado
+- [ ] Esquema Drizzle + cliente Turso configurados (BRD §10)
+- [ ] NextAuth configurado (sesión + roles jerárquicos)
+- [ ] Integración con Cloudflare R2 (URLs firmadas)
+- [ ] `.env.example` y `.env` creados (secretos solo en servidor)
+- [ ] `docs/data-model.md` creado
+- [ ] `docs/api-spec.yml` creado
+- [ ] `docs/development_guide.md` creado
+- [ ] OpenSpec CLI instalado
+- [ ] `/opsx:onboard` completado o primer cambio iniciado

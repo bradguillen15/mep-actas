@@ -1,37 +1,37 @@
 ---
-description: Directs all AI agents to use the consolidated rules in base-standards.md
-globs: 
+description: Indica a todos los agentes de IA que usen las reglas consolidadas en base-standards.md
+globs:
 alwaysApply: true
 ---
 
-# Use Base Development Rules
+# Usa las reglas base de desarrollo
 
-All AI agents working on this project must follow the comprehensive development rules and guidelines defined in:
+Todos los agentes de IA que trabajen en este proyecto deben seguir las reglas y lineamientos de desarrollo definidos en:
 
 **📋 [docs/base-standards.md](docs/base-standards.md)**
 
-## Key Directive
+## Directiva clave
 
-- **Single Source of Truth**: All development rules, coding standards, testing practices, and workflow requirements are maintained in `base-standards.md`
-- **No Rule Duplication**: Do not reference or follow other rule files - `base-standards.md` contains the complete and authoritative rule set
-- **Always Current**: `base-standards.md` is the actively maintained configuration - other rule files may be outdated
+- **Fuente única de verdad**: Todas las reglas de desarrollo, estándares de código, prácticas de pruebas y requisitos de flujo de trabajo se mantienen en `base-standards.md`.
+- **Sin duplicación de reglas**: No referencies ni sigas otros archivos de reglas — `base-standards.md` contiene el conjunto completo y autoritativo.
+- **Siempre vigente**: `base-standards.md` es la configuración que se mantiene activamente; otros archivos de reglas pueden estar desactualizados.
 
-## What's Included in base-standards.md
+## Qué incluye base-standards.md
 
-- **Core Principles**: Small tasks one at a time, Test-Driven Development (TDD), type safety, clear naming, incremental changes
-- **Language Standards**: English-only requirement for all technical artifacts
-- **Specific Standards**: Links to detailed standards for:
-  - Backend development (API, database patterns, testing, security)
-  - Frontend development (React components, UI/UX guidelines)
-  - Documentation (structure, formatting, maintenance)
+- **Principios fundamentales**: tareas pequeñas de una en una, Desarrollo Guiado por Pruebas (TDD), tipado seguro, nombres claros, comentarios mínimos, cambios incrementales.
+- **Estándar de idioma**: todo el proyecto en español (Costa Rica) — código, comentarios, documentación, esquema de base de datos e interfaz. Es un producto del Gobierno de Costa Rica.
+- **Estándares específicos**: enlaces a estándares detallados de:
+  - Backend (route handlers de Next.js, Drizzle/Turso, pruebas, seguridad)
+  - Frontend (componentes React/Next.js, lineamientos de UI/UX, identidad MEP)
+  - Documentación (estructura, formato, mantenimiento)
 
-## Compliance
+## Cumplimiento
 
-Before starting any development work, agents must:
-1. Read and understand all rules in `base-standards.md`
-2. Follow the TDD process and core principles defined there
-3. Use the specified tools, testing frameworks, and standards
-4. Maintain the required code quality and type safety standards
-5. Refer to specific standards documents (backend, frontend, documentation) for detailed guidelines
+Antes de iniciar cualquier trabajo, los agentes deben:
+1. Leer y entender todas las reglas en `base-standards.md`.
+2. Seguir el proceso TDD y los principios fundamentales.
+3. Usar las herramientas, frameworks de pruebas y estándares especificados.
+4. Mantener la calidad de código y el tipado estricto requeridos.
+5. Consultar los documentos de estándares específicos (backend, frontend, documentación) para el detalle.
 
-**Remember**: `base-standards.md` is the complete development rulebook for this project.
+**Recuerda**: `base-standards.md` es el manual completo de desarrollo de este proyecto.

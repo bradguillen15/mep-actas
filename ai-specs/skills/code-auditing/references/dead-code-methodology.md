@@ -190,7 +190,7 @@ For each flagged item, the agent MUST:
 3. **Check framework patterns**:
    - React: Is it a component used in JSX?
    - Angular: Is it decorated with @Component, @Injectable, etc.?
-   - Express: Is it middleware or route handler?
+   - Next.js: Is it a route handler, server action, or middleware?
 4. **Check for re-exports**:
    - Is this in an index.ts/index.js barrel file?
    - Is this part of the public API?

@@ -1,364 +1,313 @@
 ---
 name: owasp-security-audit
-description: Use when performing a cybersecurity audit, security review, OWASP Top 10 compliance check, vulnerability assessment, or preparing for a penetration test on a Node.js/Express/React application.
+description: Úsalo al realizar una auditoría de ciberseguridad, revisión de seguridad, verificación de cumplimiento OWASP Top 10, evaluación de vulnerabilidades o preparación de una prueba de penetración en una aplicación Next.js (App Router) con Drizzle/Turso, NextAuth y Cloudflare R2.
 ---
 
-# OWASP Top 10 Security Audit
+# Auditoría de Seguridad OWASP Top 10
 
-## Overview
+## Resumen
 
-Systematic methodology for auditing web applications against the OWASP Top 10:2021. Combines automated tooling with manual code review, produces a prioritized remediation plan with verification steps and CI/CD integration guidance.
+Metodología sistemática para auditar aplicaciones web contra el OWASP Top 10:2021. Combina herramientas automatizadas con revisión manual de código y produce un plan de remediación priorizado con pasos de verificación e integración en CI/CD.
 
-**Core principle:** Every finding must be verified with tooling or code evidence, prioritized by exploitability, and paired with a concrete fix the agent can implement.
+**Principio central:** cada hallazgo debe verificarse con herramientas o evidencia en el código, priorizarse por explotabilidad y acompañarse de una corrección concreta que el agente pueda implementar.
 
-## When to Use
+Stack objetivo: **Next.js (App Router)**, route handlers en `app/api`, **Drizzle ORM** sobre **Turso (libSQL)**, **NextAuth (JWT)**, **Cloudflare R2**, despliegue en **Vercel**. Producto del Gobierno de Costa Rica (Ley 8968 de protección de datos).
 
-- Cybersecurity audit or security review request
-- OWASP Top 10 compliance assessment
-- Pre-release security gate or penetration test preparation
-- Post-incident security hardening
-- Dependency vulnerability triage
+## Cuándo usarla
 
-**When NOT to use:**
-- Quick fix for a single known vulnerability (just fix it)
-- General code quality review (use `code-auditing` skill instead)
-- Infrastructure/cloud security review (out of scope - this covers application layer)
+- Solicitud de auditoría o revisión de seguridad.
+- Evaluación de cumplimiento OWASP Top 10.
+- Compuerta de seguridad previa a un release o preparación de pentest.
+- Endurecimiento posterior a un incidente.
+- Triaje de vulnerabilidades en dependencias.
 
-## Audit Methodology
+**Cuándo NO usarla:**
+- Arreglo puntual de una vulnerabilidad conocida (solo arréglala).
+- Revisión general de calidad de código (usa la skill `code-auditing`).
+- Revisión de seguridad de infraestructura/nube (fuera de alcance; esto cubre la capa de aplicación).
 
-### Phase 0: Environment Setup and Automated Scans
+## Metodología
 
-Run automated tools FIRST - they catch low-hanging fruit before manual review.
+### Fase 0: Preparación y escaneos automatizados
 
-**Required scans (execute all):**
+Corre las herramientas automáticas PRIMERO — atrapan lo evidente antes de la revisión manual.
 
-| Tool | Command | Covers |
+| Herramienta | Comando | Cubre |
 |------|---------|--------|
-| npm audit | `npm audit --json` | A06: Known CVEs in dependencies |
-| ESLint security | `npx eslint --plugin security .` | A03, A05: Code-level vulnerabilities |
-| Outdated check | `npm outdated` | A06: Outdated packages |
-| Secret scan | `rg -i '(password\|secret\|api_key\|token)\s*[:=]' --glob '!node_modules' --glob '!*.lock'` | A02: Hardcoded secrets |
-| .gitignore check | Verify `.env`, `*.pem`, `*.key` are in `.gitignore` | A02: Committed secrets |
-| Git history secrets | `git log --all --diff-filter=A -- '*.env' '*.pem' '*.key'` | A02: Secrets in git history |
-| Debug/telemetry code | `rg 'fetch\(.*127\.0\.0\.1\|localhost:[0-9]{4}' --glob '*.{ts,js,jsx,tsx}'` | A04: Dev-only outbound requests |
+| npm/pnpm audit | `pnpm audit --json` (o `npm audit --json`) | A06: CVEs conocidos en dependencias |
+| ESLint security | `npx eslint --plugin security .` | A03, A05: vulnerabilidades a nivel de código |
+| Desactualizados | `pnpm outdated` | A06: paquetes desactualizados |
+| Escaneo de secretos | `rg -i '(password\|secret\|api_key\|token)\s*[:=]' --glob '!node_modules' --glob '!*.lock'` | A02: secretos embebidos |
+| Revisión de .gitignore | Verifica que `.env`, `*.pem`, `*.key` estén en `.gitignore` | A02: secretos versionados |
+| Secretos en historial git | `git log --all --diff-filter=A -- '*.env' '*.pem' '*.key'` | A02: secretos en el historial |
+| Código de depuración/telemetría | `rg 'fetch\(.*127\.0\.0\.1\|localhost:[0-9]{4}' --glob '*.{ts,js,jsx,tsx}'` | A04: peticiones salientes solo de desarrollo |
+| `NEXT_PUBLIC_` con secretos | `rg 'NEXT_PUBLIC_.*(SECRET\|TOKEN\|KEY\|PASSWORD)' ` | A02: secretos expuestos al navegador |
 
-**Record baseline metrics:** Total vulnerabilities by severity, outdated dependency count, secret scan hits.
+**Registra métricas base:** total de vulnerabilidades por severidad, cantidad de dependencias desactualizadas, hits del escaneo de secretos.
 
-### Phase 1: Systematic Category Audit
+### Fase 1: Auditoría sistemática por categoría
 
-Audit EVERY category using the checklist in the Quick Reference section. Do not skip categories even if they seem irrelevant - document "N/A" with justification.
+Audita TODAS las categorías con el checklist de Referencia Rápida. No omitas ninguna aunque parezca irrelevante: documenta "N/A" con justificación.
 
-For each category:
-1. Run the specific checks listed in the checklist
-2. Record findings with file path, line number, and severity
-3. Note what you checked even if clean (proves thoroughness)
+Para cada categoría: corre las verificaciones, registra hallazgos con ruta y línea y severidad, y anota qué revisaste aunque esté limpio (demuestra exhaustividad).
 
-### Phase 2: Findings Classification
+### Fase 2: Clasificación de hallazgos
 
-Rate each finding using this severity matrix:
-
-| Severity | Criteria | Example |
+| Severidad | Criterio | Ejemplo |
 |----------|----------|---------|
-| **Critical** | Exploitable remotely, no auth required, data breach likely | Hardcoded DB credentials in git, zero authentication |
-| **High** | Exploitable with some effort, significant impact | Missing security headers, no rate limiting, IDOR |
-| **Medium** | Requires specific conditions, moderate impact | Outdated dependencies without known exploits, weak validation |
-| **Low** | Minimal impact or unlikely exploitation | Missing CSP fine-tuning, verbose error messages in dev |
+| **Crítica** | Explotable remotamente, sin auth, fuga de datos probable | Credenciales de BD embebidas en git, sin autenticación |
+| **Alta** | Explotable con esfuerzo, impacto significativo | Faltan cabeceras de seguridad, sin rate limiting, IDOR |
+| **Media** | Requiere condiciones específicas, impacto moderado | Dependencias desactualizadas sin exploit conocido, validación débil |
+| **Baja** | Impacto mínimo o explotación poco probable | Ajuste fino de CSP, mensajes de error verbosos en dev |
 
-### Phase 3: Prioritized Remediation Plan
+### Fase 3: Plan de remediación priorizado
 
-Group fixes into implementation phases:
+**Fase A — Inmediato (< 1 día, crítica/alta):** rotar credenciales expuestas; agregar verificación de sesión/rol en route handlers; configurar cabeceras de seguridad; agregar rate limiting; corregir `.gitignore` y purgar secretos del historial.
 
-**Phase A - Immediate (< 1 day, critical/high):**
-- Rotate exposed credentials
-- Add authentication middleware
-- Install and configure Helmet
-- Add rate limiting
-- Fix `.gitignore` and purge secrets from git history
+**Fase B — Corto plazo (1–3 días, alta/media):** RBAC por jerarquía; sanitización/validación de entrada (Zod); logging estructurado; límites de tamaño de cuerpo; protección CSRF donde aplique.
 
-**Phase B - Short-term (1-3 days, high/medium):**
-- Implement RBAC authorization
-- Add input sanitization (xss/DOMPurify)
-- Configure structured logging
-- Set body size limits
-- Add CSRF protection
+**Fase C — Mediano plazo (1–2 semanas, media/baja):** actualizar dependencias; pipeline de seguridad en CI/CD; auditoría inmutable; monitoreo/alertas.
 
-**Phase C - Medium-term (1-2 weeks, medium/low):**
-- Upgrade outdated dependencies
-- Add CI/CD security pipeline
-- Implement audit logging
-- Add security monitoring/alerting
+Cada corrección incluye: qué cambiar, dónde, un ejemplo de código y cómo verificarlo.
 
-Each fix must include: what to change, where, a code example, and how to verify it works.
+### Fase 4: Verificación e integración CI/CD
 
-### Phase 4: Verification and CI/CD Integration
+Para cada remediación define una verificación: prueba unitaria (Vitest) o E2E (Playwright) que valide el control, y un check de CI que prevenga regresiones.
 
-For each remediation, define a verification step:
-- Unit test that validates the security control
-- curl command that proves the vulnerability is fixed
-- CI pipeline check that prevents regression
+## Referencia Rápida: Checklist OWASP Top 10
 
-## Quick Reference: OWASP Top 10 Audit Checklist
+### A01: Control de acceso roto
 
-### A01: Broken Access Control
+**Paso 1: enumera todos los endpoints.** Corre `rg -l 'export (async )?function (GET|POST|PUT|PATCH|DELETE)' app/api` y lista cada `route.ts`. Verifica que CADA UNO valide sesión y rol.
 
-**Step 1: Enumerate all routes first.** Run `rg 'router\.(get|post|put|patch|delete)' --glob '*.ts'` and list every endpoint. Then verify EACH has auth middleware.
-
-| Check | How | Severity if missing |
+| Verificación | Cómo | Severidad si falta |
 |-------|-----|-------------------|
-| Authentication middleware on ALL routes | Enumerate all routes, verify each has auth middleware in chain | Critical |
-| RBAC / role-based authorization | Check for role checks before data access | Critical |
-| IDOR protection | Verify resource ownership checks (e.g., `where: { id, userId }`) | High |
-| CORS configuration | Check `cors()` options - no wildcard in production | High |
-| Serverless CORS vs Express CORS | Compare `serverless.yml` CORS with Express CORS config | Medium |
-| CSRF protection | Check for `csurf` or double-submit cookie pattern | Medium |
+| Verificación de sesión en TODOS los route handlers | Revisa que cada handler valide la sesión de NextAuth | Crítica |
+| Autorización por rol (jerarquía País/Regional/Escuela/Staff) | Revisa el chequeo de rol antes de acceder a datos | Crítica |
+| Protección IDOR | Verifica chequeo de propiedad/ámbito (p. ej. filtrar por `escuela_id` del usuario) | Alta |
+| CORS | Si se exponen endpoints a otros orígenes, sin comodín en producción | Alta |
+| Protección CSRF | NextAuth mitiga en su flujo; verifica mutaciones sensibles | Media |
+| Autorización en servidor (no solo UI) | Confirma que ocultar acciones en la UI no sustituye la validación del servidor | Crítica |
 
-### A02: Cryptographic Failures
+### A02: Fallas criptográficas
 
-| Check | How | Severity if missing |
+| Verificación | Cómo | Severidad si falta |
 |-------|-----|-------------------|
-| No hardcoded secrets | `rg '(password\|secret\|key)\s*[:=]\s*["\x27]' --glob '!*.lock'` | Critical |
-| `.env` in `.gitignore` | `rg '\.env' .gitignore` — verify NOT commented out | Critical |
-| Secrets in git history | `git log --all --diff-filter=A -- '*.env' '*.pem'` — if found, recommend `bfg-repo-cleaner` purge | Critical |
-| Prisma uses `env("DATABASE_URL")` | Check `schema.prisma` datasource block — no inline connection string | Critical |
-| HTTPS enforcement | Check for `https` redirects or HSTS headers | High |
-| PII field filtering | Check API responses for unnecessary sensitive fields | Medium |
-| Password hashing (if auth exists) | Verify bcrypt/argon2, not SHA/MD5 | Critical |
+| Sin secretos embebidos | `rg '(password\|secret\|key)\s*[:=]\s*["\x27]' --glob '!*.lock'` | Crítica |
+| `.env` en `.gitignore` | `rg '\.env' .gitignore` — verificar que NO esté comentado | Crítica |
+| Secretos en historial git | `git log --all --diff-filter=A -- '*.env' '*.pem'` — si hay, recomendar purga con `bfg-repo-cleaner` | Crítica |
+| Secretos solo en servidor | El token de Turso y las credenciales de R2 NO usan prefijo `NEXT_PUBLIC_` | Crítica |
+| HTTPS forzado | Vercel sirve HTTPS; verificar HSTS en cabeceras | Alta |
+| Filtrado de PII | Revisar respuestas del API por campos personales innecesarios (Ley 8968) | Media |
+| Hash de contraseñas | Verificar bcrypt/argon2, no SHA/MD5 | Crítica |
 
-### A03: Injection
+### A03: Inyección
 
-| Check | How | Severity if missing |
+| Verificación | Cómo | Severidad si falta |
 |-------|-----|-------------------|
-| No raw SQL | `rg '\$(queryRaw\|executeRaw)\|rawQuery' --glob '*.ts'` | Critical |
-| Parameterized queries (Prisma/ORM) | Verify all DB access through ORM, no string concatenation | Critical |
-| Input validation on all endpoints | Check every route handler has validation before DB ops | High |
-| File upload filename sanitization | Check multer/upload config for `originalname` usage | High |
-| Sort/filter field allowlists | Verify user-supplied field names checked against allowlist | Medium |
-| No `eval()` or `Function()` | `rg 'eval\(\|new Function\(' --glob '*.{ts,js}'` | Critical |
-| No template literal injection in logs | Check log statements for unsanitized user input | Low |
-| Mass assignment prevention | Verify `req.body` is NOT spread directly into Prisma `create`/`update` — use explicit field allowlists | High |
+| Sin SQL crudo | `rg 'sql`raw\|execute\(`\|\.run\(`' src` — preferir el query builder de Drizzle | Crítica |
+| Consultas parametrizadas (Drizzle) | Verificar acceso a datos vía Drizzle, sin concatenar cadenas SQL | Crítica |
+| Validación de entrada en todos los endpoints | Revisar que cada route handler valide (Zod) antes de tocar la base | Alta |
+| Sanitización del nombre de archivo subido | Revisar la clave/nombre del objeto en R2 (sin `originalname` crudo) | Alta |
+| Allowlist de campos de orden/filtro | Verificar nombres de campo del usuario contra una allowlist | Media |
+| Sin `eval()` ni `Function()` | `rg 'eval\(\|new Function\(' --glob '*.{ts,js}'` | Crítica |
+| Prevención de asignación masiva | Verificar que el cuerpo NO se vuelque directo en `insert`/`update` de Drizzle — usar allowlist explícita de campos | Alta |
 
-### A04: Insecure Design
+### A04: Diseño inseguro
 
-| Check | How | Severity if missing |
+| Verificación | Cómo | Severidad si falta |
 |-------|-----|-------------------|
-| Request body size limits | Check `express.json({ limit: ... })` | Medium |
-| File upload size/type restrictions | Check multer config for `limits` and `fileFilter` | High |
-| File upload path traversal | Verify upload destination is absolute, filename is sanitized | High |
-| Validation not bypassable | Check validators cannot be skipped (e.g., with extra fields) | High |
-| No debug/telemetry endpoints in production | `rg 'fetch\(.*127\.0\.0\.1\|localhost:[0-9]' --glob '*.{ts,js,jsx}'` | High |
-| Error responses don't leak internals | Verify 500 errors return generic messages | Medium |
+| Límite de tamaño del cuerpo | Verificar validación de tamaño en route handlers / `middleware.ts` | Media |
+| Restricciones de tamaño/tipo de archivo | Revisar la validación antes de firmar la URL de subida a R2 | Alta |
+| Sin traversal de rutas | La clave del objeto en R2 se genera/sanitiza en servidor; no se confía en la entrada | Alta |
+| Validación no evitable | Verificar que la validación no se salte con campos extra | Alta |
+| Sin endpoints de depuración en producción | `rg 'fetch\(.*127\.0\.0\.1\|localhost:[0-9]' --glob '*.{ts,tsx}'` | Alta |
+| Errores no filtran internos | Verificar que los 500 devuelvan mensajes genéricos | Media |
+| Actas inmutables respetadas | Verificar que no existan endpoints que editen/eliminen actas | Alta |
 
-### A05: Security Misconfiguration
+### A05: Configuración de seguridad incorrecta
 
-| Check | How | Severity if missing |
+| Verificación | Cómo | Severidad si falta |
 |-------|-----|-------------------|
-| Helmet.js installed and configured | Check `package.json` for `helmet`, `index.ts` for `app.use(helmet())` | High |
-| `x-powered-by` disabled | `app.disable('x-powered-by')` or Helmet handles it | Low |
-| Rate limiting | Check for `express-rate-limit` or equivalent | High |
-| Strict CORS (no wildcard) | Verify `origin` is not `*` or `true` | High |
-| Environment variable validation | Check for startup validation of required env vars | Medium |
-| No default credentials | Check seed files, test configs for hardcoded passwords | Medium |
-| HTTP parameter pollution (HPP) | Check for `hpp` middleware or manual prevention | Low |
-| `trust proxy` configured (if behind LB) | Check `app.set('trust proxy', ...)` for Lambda/ALB | Medium |
-| CSP for React SPA | Verify `Content-Security-Policy` header restricts `script-src`, `style-src`, `connect-src` | High |
-| No inline `<script>` in public HTML | Check `public/index.html` for inline scripts or event handlers | Medium |
+| Cabeceras de seguridad | Configuradas en `next.config.js` (`headers()`) o `middleware.ts` (CSP, HSTS, X-Frame-Options, X-Content-Type-Options) | Alta |
+| `x-powered-by` deshabilitado | `poweredByHeader: false` en `next.config.js` | Baja |
+| Rate limiting | Verificar limitador en `middleware.ts` (p. ej. `@upstash/ratelimit`) en endpoints sensibles (login) | Alta |
+| CORS estricto | Si aplica, `origin` no es `*` ni `true` | Alta |
+| Validación de variables de entorno | Validación al arranque de las env requeridas (Turso/R2/NextAuth) | Media |
+| Sin credenciales por defecto | Revisar seeds/configs por contraseñas embebidas; el primer Admin País se crea por asistente | Media |
+| CSP | Verificar `Content-Security-Policy` restringiendo `script-src`, `connect-src`, `img-src` (incluir el dominio de R2) | Alta |
 
-### A06: Vulnerable and Outdated Components
+### A06: Componentes vulnerables y desactualizados
 
-| Check | How | Severity if missing |
+| Verificación | Cómo | Severidad si falta |
 |-------|-----|-------------------|
-| `npm audit` clean | Run `npm audit --json`, count critical/high | Varies |
-| Node.js runtime not EOL | Check `engines` field, Lambda runtime version | Medium |
-| No deprecated packages | Run `npm outdated`, check for major version gaps | Low |
-| Lock file exists and committed | Verify `package-lock.json` is in git | Medium |
-| TypeScript version current | Check `package.json` TypeScript version | Low |
-| No suspicious `postinstall` scripts | Check dependencies for `preinstall`/`postinstall` scripts: `rg '"preinstall\|postinstall"' node_modules/*/package.json \| head -20` | Medium |
-| No typosquatting risk | Spot-check unusual or less-known package names against npm registry | Low |
+| `audit` limpio | `pnpm audit --json`, contar crítica/alta | Varía |
+| Runtime de Node no EOL | Revisar `engines` y la versión de runtime de Vercel | Media |
+| Sin paquetes obsoletos | `pnpm outdated`, brechas de versión mayor | Baja |
+| Lock file versionado | Verificar `pnpm-lock.yaml`/`package-lock.json` en git | Media |
+| TypeScript actual | Revisar versión en `package.json` | Baja |
+| Sin scripts `postinstall` sospechosos | `rg '"preinstall\|postinstall"' node_modules/*/package.json \| head -20` | Media |
 
-### A07: Identification and Authentication Failures
+### A07: Fallas de identificación y autenticación
 
-| Check | How | Severity if missing |
+| Verificación | Cómo | Severidad si falta |
 |-------|-----|-------------------|
-| Auth mechanism exists | `rg 'jwt\|jsonwebtoken\|passport\|auth\|session' --glob '*.ts' -i` | Critical |
-| Password policy enforced | Check password validation (length, complexity) | High |
-| Account lockout after failed attempts | Check for brute-force protection | High |
-| Session/token expiration | Verify JWT expiry or session timeout | High |
-| Secure cookie flags | Check `httpOnly`, `secure`, `sameSite` flags | Medium |
+| Mecanismo de auth | Verificar configuración de NextAuth | Crítica |
+| Política de contraseñas | Validación de longitud/complejidad al crear/restablecer | Alta |
+| Bloqueo tras intentos fallidos | Protección contra fuerza bruta en login | Alta |
+| Expiración de sesión/token | Verificar expiración del JWT de NextAuth | Alta |
+| Flags seguros de cookies | `httpOnly`, `secure`, `sameSite` en cookies de sesión | Media |
+| Sin auto-registro | Confirmar que las cuentas se crean por invitación desde un nivel superior | Alta |
 
-### A08: Software and Data Integrity Failures
+### A08: Fallas de integridad de software y datos
 
-| Check | How | Severity if missing |
+| Verificación | Cómo | Severidad si falta |
 |-------|-----|-------------------|
-| HTML sanitization on text inputs | Check for `xss`, `sanitize-html`, or `DOMPurify` usage | Medium |
-| No `dangerouslySetInnerHTML` without sanitization | `rg 'dangerouslySetInnerHTML' --glob '*.{tsx,jsx}'` | High |
-| URL sanitization in `href`/`src` attributes | Check for `javascript:` protocol filtering | High |
-| Prototype pollution prevention | Check for `Object.freeze`, `--disable-proto` flag, or `hpp` | Medium |
-| Lock file integrity | Verify `package-lock.json` integrity hashes | Low |
+| Sanitización de entradas de texto | Buscar `xss`, `sanitize-html` o `DOMPurify` donde se renderice contenido | Media |
+| Sin `dangerouslySetInnerHTML` sin sanitizar | `rg 'dangerouslySetInnerHTML' --glob '*.{tsx,jsx}'` | Alta |
+| Sanitización de URL en `href`/`src` | Filtrar protocolo `javascript:` | Alta |
+| Integridad del lock file | Verificar hashes de integridad del lock file | Baja |
 
-### A09: Security Logging and Monitoring Failures
+### A09: Fallas de registro y monitoreo
 
-| Check | How | Severity if missing |
+| Verificación | Cómo | Severidad si falta |
 |-------|-----|-------------------|
-| Structured logging (not console.log) | Check for `winston`, `pino`, or structured logger | High |
-| Audit trail for CRUD operations | Verify create/update/delete actions are logged with actor | High |
-| Request logging middleware order | Verify logger is BEFORE route handlers | Medium |
-| No PII in error logs | Check error handlers for data leakage | Medium |
-| Log injection prevention | Verify user input is not interpolated into log templates | Low |
-| Failed auth attempt logging | Verify 401/403 responses are logged | Medium |
+| Logging estructurado (no console.log) | Buscar `pino`/`winston` o logger estructurado | Alta |
+| Auditoría de operaciones CRUD | Verificar que crear/editar/desactivar se registren en `auditoria` con actor | Alta |
+| Sin PII en logs de error | Revisar manejadores de error por fuga de datos (Ley 8968) | Media |
+| Prevención de inyección en logs | Verificar que la entrada del usuario no se interpole en plantillas de log | Baja |
+| Registro de auth fallido | Verificar que respuestas 401/403 se registren | Media |
+| Auditoría de solo lectura | Confirmar que no existen endpoints que modifiquen/eliminen `auditoria` | Alta |
 
-### A10: Server-Side Request Forgery (SSRF)
+### A10: Falsificación de petición del lado servidor (SSRF)
 
-| Check | How | Severity if missing |
+| Verificación | Cómo | Severidad si falta |
 |-------|-----|-------------------|
-| No outbound requests from user input | `rg 'fetch\(\|axios\.\|http\.request' --glob 'backend/**/*.ts'` | High |
-| URL allowlist for external calls | Verify outbound URLs are validated against allowlist | High |
-| No user-controlled redirect URLs | Check redirect endpoints for open redirect | Medium |
-| File operations use absolute paths | Verify no `path.join(userInput)` without validation | Medium |
+| Sin peticiones salientes desde entrada del usuario | `rg 'fetch\(\|axios\.' --glob 'app/api/**/*.ts' --glob 'src/server/**/*.ts'` | Alta |
+| Allowlist de URLs externas | Verificar que las URLs salientes se validen contra una allowlist | Alta |
+| Sin redirecciones controladas por el usuario | Revisar endpoints de redirección por open redirect | Media |
+| Operaciones de archivo con rutas/claves seguras | La clave del objeto R2 se genera en servidor; sin `path.join(entradaUsuario)` sin validar | Media |
 
-## Serverless/Lambda Specific Checks
+## Verificación específica de Next.js / Vercel
 
-If the project deploys to AWS Lambda (or similar FaaS), also check:
-
-| Check | How | Severity if missing |
+| Verificación | Cómo | Severidad si falta |
 |-------|-----|-------------------|
-| Lambda runtime not EOL | Check `serverless.yml` or `template.yaml` runtime version | Medium |
-| IAM permissions least-privilege | Verify Lambda role has minimal permissions, not `*` | High |
-| API Gateway CORS matches Express CORS | Compare gateway-level CORS with application-level | High |
-| Environment variables encrypted at rest | Verify sensitive values use KMS encryption | Medium |
-| Function timeout configured | Check for reasonable timeout to prevent resource exhaustion | Low |
-| VPC configuration (if accessing private resources) | Verify Lambda is in VPC with proper security groups | Medium |
+| Secretos solo del lado del servidor | Confirmar que Turso/R2/NextAuth NO usan `NEXT_PUBLIC_` | Crítica |
+| Cabeceras de seguridad en `next.config.js` | CSP, HSTS, X-Frame-Options, Referrer-Policy | Alta |
+| Rate limiting en `middleware.ts` | Sobre endpoints de login y mutación | Alta |
+| URLs firmadas de R2 de corta duración | Verificar expiración y que el navegador nunca reciba credenciales | Alta |
+| Variables de entorno de Vercel | Marcadas como secretas; no expuestas al cliente | Media |
 
-## Runtime Verification Commands
+## Comandos de verificación en runtime
 
-After implementing fixes, verify with actual HTTP requests:
+Tras implementar las correcciones, verifica con peticiones reales (ajusta el puerto de `next dev`, p. ej. 3000):
 
 ```bash
-# Verify Helmet headers
-curl -sI http://localhost:3010/ | grep -iE '(x-powered-by|x-content-type|strict-transport|x-frame)'
+# Cabeceras de seguridad
+curl -sI http://localhost:3000/ | grep -iE '(x-powered-by|x-content-type|strict-transport|x-frame|content-security-policy)'
 
-# Verify rate limiting
-for i in $(seq 1 110); do curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3010/; done | sort | uniq -c
+# Rate limiting en login
+for i in $(seq 1 50); do curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000/api/auth/callback/credentials; done | sort | uniq -c
 
-# Verify CORS rejects unknown origins
-curl -sI -H "Origin: http://evil.com" http://localhost:3010/ | grep -i access-control
+# Auth requerida (debe responder 401/redirección)
+curl -s http://localhost:3000/api/actas -w "\n%{http_code}"
 
-# Verify body size limit
-python3 -c "print('x'*2000000)" | curl -s -X POST -H "Content-Type: application/json" -d @- http://localhost:3010/candidates -w "\n%{http_code}"
-
-# Verify auth required
-curl -s http://localhost:3010/candidates -w "\n%{http_code}"
+# Secreto no expuesto al cliente (no debe aparecer en el bundle)
+rg 'TURSO_AUTH_TOKEN|R2_SECRET' .next/static 2>/dev/null && echo "FUGA" || echo "OK"
 ```
 
-## Report Template
+## Plantilla de reporte
 
 ```markdown
-# OWASP Top 10 Security Audit Report
+# Reporte de Auditoría de Seguridad OWASP Top 10
 
-- **Project**: [name]
-- **Stack**: [technologies]
-- **Date**: [YYYY-MM-DD]
-- **Scope**: Static code analysis + automated tooling
+- **Proyecto**: [nombre]
+- **Stack**: Next.js + Drizzle/Turso + NextAuth + Cloudflare R2 (Vercel)
+- **Fecha**: [YYYY-MM-DD]
+- **Alcance**: Análisis estático + herramientas automatizadas
 
-## Automated Scan Results
+## Resultados de escaneos automatizados
+### pnpm audit
+- Crítica: X | Alta: X | Media: X | Baja: X
+### Escaneo de secretos
+- Hits: X — Ubicaciones: [lista]
 
-### npm audit
-- Critical: X | High: X | Medium: X | Low: X
-- Key vulnerabilities: [list]
+## Hallazgos por categoría
+### A01: Control de acceso roto — [CRÍTICA/ALTA/MEDIA/BAJA/LIMPIO]
+**Revisado:** [qué se examinó]
+**Hallazgos:** [con referencias archivo:línea]
+**Remediación:** [ejemplos de código]
+[...repetir A02–A10...]
 
-### Secret Scan
-- Hits: X
-- Locations: [list]
+## Matriz de prioridad
+| Fase | Hallazgo | Severidad | Esfuerzo | Corrección |
+|------|----------|-----------|----------|------------|
 
-## Findings by Category
+## Checklist de verificación
+- [ ] [Hallazgo]: [cómo verificar la corrección]
 
-### A01: Broken Access Control — [CRITICAL/HIGH/MEDIUM/LOW/CLEAN]
-**Checked:** [list what was examined]
-**Findings:** [list with file:line references]
-**Remediation:** [code examples]
-
-[...repeat for A02-A10...]
-
-## Remediation Priority Matrix
-
-| Phase | Finding | Severity | Effort | Fix |
-|-------|---------|----------|--------|-----|
-| A | [finding] | Critical | [hours] | [brief description] |
-
-## Verification Checklist
-- [ ] [Finding 1]: [how to verify fix]
-- [ ] [Finding 2]: [how to verify fix]
-
-## CI/CD Security Integration
-- [ ] `npm audit` in CI pipeline (fail on critical/high)
-- [ ] ESLint security plugin in pre-commit hook
-- [ ] Dependency update bot (Dependabot/Renovate)
-- [ ] Secret scanning in CI (truffleHog/gitleaks)
+## Integración CI/CD
+- [ ] `pnpm audit` en CI (falla en crítica/alta)
+- [ ] Plugin de seguridad de ESLint en pre-commit
+- [ ] Bot de actualización de dependencias (Dependabot/Renovate)
+- [ ] Escaneo de secretos en CI (gitleaks)
 ```
 
-## Common Mistakes
+## Errores comunes
 
-| Mistake | Why it's wrong | Fix |
+| Error | Por qué está mal | Corrección |
 |---------|----------------|-----|
-| Skipping categories marked "N/A" without evidence | Auditor assumed rather than verified | Always document what you checked |
-| Not running automated tools | Missing known CVEs that are trivially exploitable | Run `npm audit` and secret scan FIRST |
-| Reporting findings without remediation code | Findings without fixes create toil, not progress | Every finding needs a code-level fix |
-| Not prioritizing fixes | Treating all findings equally paralyzes teams | Use the severity matrix and phase grouping |
-| Forgetting CI/CD integration | Manual audits rot; only automated gates persist | Always include pipeline integration steps |
-| Auditing only backend OR frontend | XSS vectors cross the boundary | Audit both, trace data flow end-to-end |
-| Trusting ORM = no injection risk | ORMs prevent SQL injection but not all injection types | Check for command injection, log injection, path traversal |
-| Skipping `.gitignore` and git history check | Secrets removed from code may still be in git history | Check `.gitignore` AND `git log` history AND recommend purge if needed |
-| Not checking for mass assignment | ORM prevents SQL injection but allows unfiltered field updates | Verify `req.body` is filtered through an allowlist before Prisma calls |
-| Static analysis only | Some vulnerabilities only appear at runtime (CORS headers, rate limits) | Include runtime verification commands in the report |
+| Omitir categorías marcadas "N/A" sin evidencia | El auditor asumió en lugar de verificar | Documenta siempre qué revisaste |
+| No correr herramientas automáticas | Se pierden CVEs trivialmente explotables | Corre `pnpm audit` y el escaneo de secretos PRIMERO |
+| Reportar hallazgos sin código de corrección | Crean trabajo, no progreso | Cada hallazgo necesita una corrección a nivel de código |
+| No priorizar | Tratar todo igual paraliza al equipo | Usa la matriz de severidad y el agrupamiento por fases |
+| Olvidar CI/CD | Las auditorías manuales se pudren; solo las compuertas automáticas persisten | Incluye pasos de integración en el pipeline |
+| Auditar solo backend O frontend | Los vectores XSS cruzan la frontera | Audita ambos, traza el flujo de datos de punta a punta |
+| Confiar en que el ORM elimina toda inyección | Drizzle previene inyección SQL pero no la asignación masiva ni otros tipos | Verifica asignación masiva, inyección en logs, traversal |
+| Omitir `.gitignore` e historial git | Los secretos eliminados del código pueden seguir en el historial | Revisa `.gitignore` Y `git log` Y recomienda purga si hace falta |
+| Solo análisis estático | Algunas vulnerabilidades solo aparecen en runtime (CSP, rate limits) | Incluye comandos de verificación en runtime |
 
-## Node.js/Express Specific Hardening Checklist
+## Endurecimiento específico de Next.js
 
-Essential middleware stack (order matters):
+Cabeceras de seguridad en `next.config.js`:
+
+```javascript
+// next.config.js
+const cabecerasSeguridad = [
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Content-Security-Policy', value: "default-src 'self'; img-src 'self' https://<tu-bucket>.r2.dev data:; connect-src 'self'" },
+];
+
+module.exports = {
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: '/:path*', headers: cabecerasSeguridad }];
+  },
+};
+```
+
+Verificación de sesión + rol en un route handler:
 
 ```typescript
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import cors from 'cors';
-import hpp from 'hpp';
+// app/api/actas/route.ts
+import { getServerSession } from 'next-auth';
+import { opcionesAuth } from '@/server/auth/opciones';
 
-// 1. Security headers
-app.use(helmet());
-app.disable('x-powered-by');
-
-// 2. Rate limiting
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-}));
-
-// 3. CORS - explicit origins only
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || [],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-}));
-
-// 4. Body parsing with size limits
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-
-// 5. HTTP Parameter Pollution protection
-app.use(hpp());
-
-// 6. Request logging (BEFORE routes)
-app.use(requestLogger);
-
-// 7. Routes
-app.use('/api', routes);
-
-// 8. Error handler (AFTER routes, generic messages only)
-app.use(errorHandler);
+export async function POST(req: Request) {
+  const sesion = await getServerSession(opcionesAuth);
+  if (!sesion) return Response.json({ error: { codigo: 'sin_sesion', mensaje: 'No autenticado' } }, { status: 401 });
+  if (sesion.usuario.nivel > 3) return Response.json({ error: { codigo: 'rol_insuficiente', mensaje: 'Sin permiso' } }, { status: 403 });
+  // validar entrada (Zod) → servicio → respuesta
+}
 ```
 
-## Prisma/ORM Security Notes
+## Notas de seguridad para Drizzle / Turso / R2
 
-- Always use `select` to limit returned fields (avoid PII leakage)
-- Never trust `env()` in `schema.prisma` if the `.env` is committed
-- Watch for validation bypass when `id` is present in request body
-- Prisma prevents SQL injection but NOT mass assignment - validate allowed fields explicitly
+- Usa `select` explícito para limitar los campos devueltos (evita fuga de PII; Ley 8968).
+- Nunca expongas `TURSO_AUTH_TOKEN` ni credenciales de R2 al cliente (sin `NEXT_PUBLIC_`).
+- Cuidado con el bypass de validación cuando el `id` viene en el cuerpo de la petición.
+- Drizzle previene inyección SQL pero NO la asignación masiva: valida los campos permitidos explícitamente (Zod + allowlist).
+- Las URLs de subida/lectura de R2 se firman en el servidor y expiran rápido; el navegador nunca recibe credenciales.

@@ -1,79 +1,96 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Contexto del proyecto (opcional)
+# Esto se muestra a la IA al crear artefactos.
+# Incluye el stack técnico, convenciones, guías de estilo, conocimiento de dominio, etc.
 context: |
-  Tech stack: TypeScript, Node.js, Express, Prisma, Domain-Driven Design (DDD)
-  Architecture: Clean Architecture with Domain, Application, and Presentation layers
-  We use conventional commits
-  Domain: LTI (Leadership. Technology. Impact) ATS platform
-  All code, comments, documentation, and technical artifacts must be in English
+  Stack técnico: TypeScript, Next.js (App Router; frontend y backend en un solo proyecto),
+  renderizado del lado del cliente (sin SSR), Turso (libSQL/SQLite) con Drizzle ORM,
+  NextAuth (JWT), Cloudflare R2 para archivos, desplegado en Vercel.
+  Arquitectura: por capas pragmática — route handlers en `app/api` → capa de servicios → repositorios
+  (acceso a datos con Drizzle). Mantener separación de responsabilidades y dominio tipado, sin la
+  ceremonia completa de DDD (sin entity.save(), sin 4 capas formales).
+  Estado en el cliente: SWR (datos), React Context (sesión/usuario), useReducer (formularios).
+  Pruebas: Vitest (unitarias/servicios) y Playwright (E2E). Cobertura pragmática del dominio y de
+  los servicios; sin umbral fijo del 90%.
+  Commits convencionales (prefijo en inglés `feat:`/`fix:`, descripción en español).
+  Dominio: Sistema de Consulta de Títulos del MEP (Ministerio de Educación Pública, Costa Rica) —
+  registro de actas de graduación, digitalización de folios y consulta de graduaciones.
+  Jerarquía: País → Región → Escuela → Actas → Estudiantes. Roles jerárquicos por nivel
+  (Admin País=1 … Staff=4). Actas inmutables. Auditoría inmutable de todo cambio.
+  Idioma: TODO el código, comentarios, documentación, esquema de base de datos (tablas/columnas en
+  español) y artefactos técnicos van en español (Costa Rica).
 
-  Project specs (single source of truth): All artifact creation and implementation MUST follow the project's technical context in docs/. Read and apply these when creating or implementing:
-  - docs/base-standards.md — core principles, TDD, language standards, links to backend/frontend/docs standards
-  - docs/backend-standards.md — API, database, testing, security (backend changes)
-  - docs/frontend-standards.md — React, UI/UX (frontend changes)
-  - docs/api-spec.yml — API contracts and endpoint definitions (create per project)
-  - docs/data-model.md — domain and data model (create per project)
-  - docs/documentation-standards.md — docs structure and maintenance
-  For implementation: adopt the relevant agent from ai-specs/agents/ (e.g. backend-developer.md for backend, frontend-developer.md for frontend).
+  Specs del proyecto (fuente única de verdad): toda creación de artefactos e implementación DEBE
+  seguir el contexto técnico en docs/. Leer y aplicar:
+  - docs/brd.md — documento de requerimientos de negocio (BRD); fuente de verdad del producto
+  - docs/base-standards.md — principios fundamentales, TDD, estándar de idioma, enlaces a estándares
+  - docs/backend-standards.md — API (route handlers), Drizzle/Turso, pruebas, seguridad (backend)
+  - docs/frontend-standards.md — Next.js/React, UI/UX, estado (frontend)
+  - docs/api-spec.yml — contratos de API y definición de endpoints (crear por proyecto)
+  - docs/data-model.md — modelo de dominio y de datos (crear por proyecto)
+  - docs/documentation-standards.md — estructura y mantenimiento de la documentación
+  Para implementar: adoptar el agente correspondiente de ai-specs/agents/
+  (backend-developer.md para backend, frontend-developer.md para frontend).
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
+# Reglas por artefacto (opcional)
 rules:
-  # Global: apply ai-specs when creating any artifact
+  # Global: aplicar los estándares al crear cualquier artefacto
   _global:
-    - Before creating any artifact, read and apply docs/base-standards.md
-    - For backend-related artifacts, read docs/backend-standards.md and adopt guidelines from ai-specs/agents/backend-developer.md
-    - For frontend-related artifacts, read docs/frontend-standards.md and adopt guidelines from ai-specs/agents/frontend-developer.md
-    - Use docs/api-spec.yml and docs/data-model.md for API and data consistency in specs and tasks
+    - Antes de crear cualquier artefacto, leer y aplicar docs/base-standards.md y docs/brd.md
+    - Para artefactos de backend, leer docs/backend-standards.md y adoptar ai-specs/agents/backend-developer.md
+    - Para artefactos de frontend, leer docs/frontend-standards.md y adoptar ai-specs/agents/frontend-developer.md
+    - Usar docs/api-spec.yml y docs/data-model.md para consistencia de API y de datos en specs y tareas
+    - Todo el contenido (código, esquema, documentación, nombres de tablas/columnas) va en español
 
-  # Rules for backend-related changes
+  # Reglas para tareas (tasks.md)
   tasks:
-    - Break tasks into chunks of max 2 hours
-    - For backend changes, follow the backend implementation plan structure
-    - All backend tasks must include mandatory steps: Create Feature Branch, Review/Update Tests, Run Tests, Manual Testing, Documentation Update
-  
-  # Rules for backend implementation plans and specs
-  spec:
-    - When creating backend implementation plans or specs, follow the Backend Implementation Plan Template Structure
+    - Dividir las tareas en bloques de máximo 2 horas
     - |
-      All backend plans must include these MANDATORY sections:
-      1. Header with ticket ID and feature name
-      2. Overview with DDD and clean architecture principles
-      3. Architecture Context (Domain, Application, Presentation layers)
-      4. Implementation Steps (must start with Step 0: Create Feature Branch)
-      5. Implementation Order (numbered list)
-      6. Testing Checklist with mandatory validations
-      7. Error Response Format
-      8. Dependencies
-      9. Notes
-      10. Next Steps After Implementation
-      11. Implementation Verification
-  
-  # Backend-specific implementation rules (flat strings so YAML parses)
+      Seguir TDD: escribir la prueba que falla primero, luego implementar hasta ponerla en verde
+    - |
+      Pasos obligatorios por cambio: crear rama de feature; escribir/actualizar pruebas (Vitest);
+      ejecutar pruebas; verificación E2E con Playwright cuando cambie un flujo de usuario;
+      actualizar documentación
+    - |
+      No incluir pasos de "curl manual"; la API se prueba con pruebas de route handlers/servicios
+
+  # Reglas para specs / planes de implementación
+  spec:
+    - Las specs deben referenciar los requisitos del BRD (docs/brd.md) y reflejar el modelo de datos (docs/data-model.md)
+    - Para cambios de datos, especificar tablas/columnas de Drizzle (nombres en español) y la migración correspondiente
+    - Definir el control de acceso por rol (Admin País/Regional/Escuela/Staff) para cada endpoint nuevo
+    - Toda escritura debe registrar auditoría (usuario, tabla, acción, datos_anteriores, datos_nuevos)
+
+  # Reglas específicas de backend
   backend:
     - |
-      Adopt backend-developer role; Domain-Driven Design; clean architecture
-      layers; all implementation follows TDD. Branch naming: feature/[ticket-id]-backend (required).
+      Arquitectura por capas pragmática: route handler (app/api) → servicio → repositorio (Drizzle).
+      El route handler no accede directamente a la base de datos; delega en la capa de servicios.
     - |
-      MANDATORY steps in backend implementation plans —
-      Step 0: Create Feature Branch (FIRST).
-      Step N: Review and update existing unit tests.
-      Step N+1: Run unit tests and verify database state (with report artifact).
-      Step N+2: Manual endpoint testing with curl.
-      Step N+3: Update technical documentation.
+      Seguridad: el token de Turso y las credenciales de R2 viven solo en el servidor
+      (variables de entorno de Vercel); nunca llegan al navegador. Las imágenes se sirven con
+      URLs firmadas de corta duración generadas en el servidor.
     - |
-      Common implementation order — validation function, service method,
-      controller method, route, then unit tests (success, validation errors, 404,
-      reference validation, server errors, edge cases).
+      Validación de entrada en el límite del API y verificación de rol según la jerarquía
+      en cada petición antes de ejecutar la acción.
     - |
-      Testing — review/update all impacted tests; new tests passing; full suite green;
-      restore database after tests; manual curl on new endpoints;
-      CREATE/UPDATE/DELETE tests restore DB; cover validation and 404 errors.
+      Respuestas de error con cuerpo JSON y mapeo de estado HTTP (400, 401, 403, 404, 409, 500).
     - |
-      Documentation — data-model changes → openspec/specs/data-model.md;
-      API changes → openspec/specs/api-spec.yml; standards changes → relevant *-standards.mdc; English only.
-    - Error responses must specify JSON bodies and HTTP status mapping.
-    - Verification checklist covers code quality, functionality, testing, integration, documentation updates.
+      Pruebas con Vitest (servicios y repositorios con datos de prueba); restaurar el estado de la
+      base tras pruebas que escriben. Cobertura pragmática, sin umbral fijo.
+    - |
+      Documentación — cambios de datos → docs/data-model.md; cambios de API → docs/api-spec.yml.
+      Todo en español.
+
+  # Reglas específicas de frontend
+  frontend:
+    - |
+      Componentes React en Next.js (App Router), renderizado en cliente. Datos con SWR,
+      sesión con React Context, formularios con useReducer. Sin acceso directo a la base
+      de datos desde el cliente: siempre vía route handlers de `app/api`.
+    - |
+      Usar tokens de diseño / variables CSS para la identidad MEP (azul/dorado/blanco);
+      sin colores embebidos. Accesibilidad WCAG AA.
+    - |
+      Toda la interfaz, mensajes y textos en español (Costa Rica).

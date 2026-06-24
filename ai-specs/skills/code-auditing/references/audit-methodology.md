@@ -176,8 +176,8 @@ Search for custom interfaces that mirror official types:
 - React types (React.FC, React.Component, event types)
 - Node.js types (Buffer, Process, Global)
 - DOM types (HTMLElement, Event types)
-- Express types (Request, Response)
-- Popular library types (lodash, axios, etc.)
+- Next.js types (NextRequest, NextResponse)
+- Popular library types (drizzle-orm, zod, etc.)
 
 ### Verify @types Packages
 ```bash
@@ -189,7 +189,7 @@ npm ls @types/*
 ```
 
 ### Common Issues
-- Custom `IRequest` when `express.Request` exists
+- Custom request types when `NextRequest`/`Request` already exist
 - Custom event types when React provides them
 - Duplicating `@types/node` built-in types
 
@@ -324,12 +324,12 @@ Description of the issue and why it matters.
 ### Context7
 ```
 # Resolve library ID first
-mcp__context7__resolve-library-id: "express"
+mcp__context7__resolve-library-id: "drizzle-orm"
 
 # Then get documentation
 mcp__context7__query-docs: {
-  "context7CompatibleLibraryID": "/expressjs/express",
-  "topic": "middleware"
+  "context7CompatibleLibraryID": "/drizzle-team/drizzle-orm",
+  "topic": "queries"
 }
 ```
 

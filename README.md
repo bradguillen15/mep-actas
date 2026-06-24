@@ -1,42 +1,63 @@
-# LIDR SDD Harness
+# Sistema de Consulta de Títulos — MEP Costa Rica
 
-Reusable AI development harness extracted from [AI4Devs-LTI-extended](https://github.com/LIDR-academy/AI4Devs-LTI-extended).
+Aplicación web cerrada y autenticada para que el personal del Ministerio de Educación Pública (MEP) de Costa Rica registre actas de graduación, digitalice los folios físicos y consulte instantáneamente si una persona se graduó (por nombre o por número de identificación).
 
-**This repo is the harness only** — not an application. Copy it into a new or existing project, then add your app code and project-specific documentation.
+> Arranca como piloto en una escuela y está diseñado para escalar a nivel nacional. Ver el documento de requerimientos completo en **[docs/brd.md](docs/brd.md)** (fuente de verdad del producto).
 
-## Quick start
+---
 
-```bash
-# Option A — new project: copy the whole harness as your starting point
-cp -R harness-lidr-sdd/ my-new-project/
-cd my-new-project
+## Stack
 
-# Option B — existing project: copy harness folders into it
-cp -R harness-lidr-sdd/{ai-specs,openspec,.cursor,.claude,.codegraph,AGENTS.md,CLAUDE.md} my-existing-project/
-cp -R harness-lidr-sdd/docs/* my-existing-project/docs/
-```
+| Capa | Tecnología |
+|---|---|
+| Framework | Next.js (App Router) — frontend y backend en un solo proyecto, renderizado en cliente |
+| Base de datos | Turso (libSQL/SQLite) con Drizzle ORM |
+| Autenticación | NextAuth (JWT), contraseñas con bcrypt |
+| Archivos | Cloudflare R2 (escaneos de folios, URLs firmadas del lado del servidor) |
+| Estado (cliente) | SWR (datos) · React Context (sesión) · useReducer (formularios) |
+| Pruebas | Vitest (unitarias/servicios) · Playwright (E2E) |
+| Despliegue | Vercel |
 
-Then follow **[docs/initialize-project.md](docs/initialize-project.md)** to finish setup.
+Detalles y convenciones: **[docs/backend-standards.md](docs/backend-standards.md)** y **[docs/frontend-standards.md](docs/frontend-standards.md)**.
 
-## What's in this repo
+---
 
-| Included (harness) | Not included (per project) |
-|--------------------|----------------------------|
-| `ai-specs/` agents & skills | `backend/`, `frontend/` application code |
-| `openspec/config.yaml` + `schemas/` | `openspec/specs/` domain capability specs |
-| `.cursor/`, `.claude/` agent surfaces | `openspec/changes/` feature history |
-| `docs/base-standards.md` and workflow docs | `docs/api-spec.yml`, `docs/data-model.md` |
-| `AGENTS.md`, `CLAUDE.md` | `docs/development_guide.md` |
+## Idioma
 
-## Prerequisites
+Es un producto del Gobierno de Costa Rica: **todo va en español (Costa Rica)** — código, comentarios, commits, documentación, esquema de base de datos (tablas/columnas) e interfaz.
 
-- [OpenSpec CLI](https://github.com/Fission-AI/OpenSpec): `npm install -g @fission-ai/openspec`
-- Cursor and/or Claude Code
+---
 
-## Workflow
+## Arquitectura (resumen)
 
 ```
-enrich-us → opsx:new → opsx:ff → opsx:apply → opsx:verify → opsx:archive
+Navegador → API de Next.js (route handlers, verifican sesión + rol) → Turso / Cloudflare R2
 ```
 
-Run `/opsx:onboard` in Cursor for a guided first cycle.
+Por capas pragmática: `app/api` (route handlers) → servicios → repositorios (Drizzle). El navegador nunca toca la base ni R2; los secretos viven solo en el servidor (variables de entorno de Vercel).
+
+---
+
+## Documentación
+
+- **[docs/brd.md](docs/brd.md)** — requerimientos de negocio (fuente de verdad).
+- **[docs/base-standards.md](docs/base-standards.md)** — principios, TDD, idioma.
+- **[docs/backend-standards.md](docs/backend-standards.md)** — API, Drizzle/Turso, seguridad, pruebas.
+- **[docs/frontend-standards.md](docs/frontend-standards.md)** — Next.js/React, estado, identidad MEP.
+- **[docs/documentation-standards.md](docs/documentation-standards.md)** — estándares de documentación.
+
+### Harness de desarrollo con IA
+
+Este proyecto usa un harness de desarrollo guiado por specs (OpenSpec) con Cursor y Claude Code:
+
+```
+enrich-us → /opsx:new → /opsx:ff → /opsx:apply → /opsx:verify → /opsx:archive
+```
+
+Requiere el [OpenSpec CLI](https://github.com/Fission-AI/OpenSpec): `npm install -g @fission-ai/openspec`. Ejecuta `/opsx:onboard` para un primer ciclo guiado.
+
+---
+
+## Estado
+
+En arranque. La estructura de la aplicación (`app/`, `src/`, esquema Drizzle, etc.) aún no está creada — ver **[docs/initialize-project.md](docs/initialize-project.md)**.
