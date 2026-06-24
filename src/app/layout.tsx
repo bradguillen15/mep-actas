@@ -1,6 +1,7 @@
 "use client";
 
 import "./globals.css";
+import { Providers } from "../../components/layout/Providers";
 
 export default function RootLayout({
   children,
@@ -9,7 +10,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
