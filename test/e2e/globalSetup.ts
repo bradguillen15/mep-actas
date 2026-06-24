@@ -36,6 +36,9 @@ export async function setup() {
     await db.run(
       sql`INSERT INTO personas (identificacion, nombres, apellidos) VALUES ('000000001', 'Admin Regional', 'E2E')`
     );
+    await db.run(
+      sql`INSERT INTO personas (identificacion, nombres, apellidos) VALUES ('000000002', 'Admin Escuela', 'E2E')`
+    );
 
     await db.run(
       sql`INSERT INTO funcionarios (persona_id, puesto) VALUES (1, 'Admin País')`
@@ -43,15 +46,31 @@ export async function setup() {
     await db.run(
       sql`INSERT INTO funcionarios (persona_id, puesto) VALUES (2, 'Admin Regional')`
     );
+    await db.run(
+      sql`INSERT INTO funcionarios (persona_id, puesto) VALUES (3, 'Admin Escuela')`
+    );
 
-    const passwordHash = hashSync("test-password", 10);
+    const ph = hashSync("test-password", 10);
     await db.run(
-      sql`INSERT INTO usuarios (funcionario_id, rol_id, email, password_hash) VALUES (1, 1, 'admin-pais@e2e.test', ${passwordHash})`
+      sql`INSERT INTO usuarios (funcionario_id, rol_id, email, password_hash) VALUES (1, 1, 'admin-pais@e2e.test', ${ph})`
     );
-    const passwordHashRegional = hashSync("test-password", 10);
     await db.run(
-      sql`INSERT INTO usuarios (funcionario_id, rol_id, email, password_hash) VALUES (2, 2, 'admin-regional@e2e.test', ${passwordHashRegional})`
+      sql`INSERT INTO usuarios (funcionario_id, rol_id, email, password_hash) VALUES (2, 2, 'admin-regional@e2e.test', ${ph})`
     );
+    await db.run(
+      sql`INSERT INTO usuarios (funcionario_id, rol_id, email, password_hash) VALUES (3, 3, 'admin-escuela@e2e.test', ${ph})`
+    );
+  }
+
+  const { rows: tipos } = await db.run(
+    sql`SELECT COUNT(*) as cnt FROM tipos_acta`
+  );
+  const cntTipos = Number(tipos?.[0]?.cnt ?? tipos?.[0]?.[0] ?? 0);
+
+  if (cntTipos === 0) {
+    await db.run(sql`INSERT INTO tipos_acta (nombre) VALUES ('Certificado de Graduación')`);
+    await db.run(sql`INSERT INTO tipos_acta (nombre) VALUES ('Acta de Notas')`);
+    await db.run(sql`INSERT INTO tipos_acta (nombre) VALUES ('Traslado')`);
   }
 
   client.close();

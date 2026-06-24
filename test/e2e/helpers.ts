@@ -50,3 +50,18 @@ export function datosSesionAdminRegional(
     regionId,
   };
 }
+
+export function datosSesionAdminEscuela(
+  usuarioId: number,
+  rolId: number,
+  escuelaId: number
+) {
+  return {
+    usuarioId,
+    email: "admin-escuela@e2e.test",
+    nivel: 3 as const,
+    rolId,
+    funcionarioId: 3,
+    escuelaId,
+  };
+}
