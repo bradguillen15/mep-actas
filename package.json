@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:local": "pnpm db:init-local && TURSO_DATABASE_URL=file:./mep-actas-local.db next dev",
+    "db:init-local": "tsx scripts/init-local-db.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -43,6 +45,7 @@
     "eslint-config-next": "16.2.9",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5",
     "vitest": "^3"
   },

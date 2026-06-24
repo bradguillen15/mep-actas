@@ -28,6 +28,10 @@ jobs:
 
       - run: pnpm test -- --reporter=verbose
 
+      - run: pnpm db:init-local
+        env:
+          TURSO_DATABASE_URL: file:./temp-ci.db
+
       - run: pnpm build
         env:
           NEXTAUTH_SECRET: placeholder
