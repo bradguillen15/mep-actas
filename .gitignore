@@ -1,0 +1,49 @@
+# Ignore in all directories
+**/.DS_Store
+**/node_modules
+**/prompts_master.md
+
+# Secrets / env — never commit. Keep .env.example as the template.
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+# Turso / libSQL local credentials & db files
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+**/.turso/
+
+# other dependencies
+**/.pnp
+**.pnp.js
+
+# testing
+**/coverage
+
+# production
+**/build
+**/dist
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.idea
+.vscode
+
+# .env
+.mcp.json
+
+# Claude Code per-user settings
+**/.claude/settings.json
+**/.claude/settings.local.json
+
+# temp files
+**/tmp
+
+# git worktrees
+.worktrees/

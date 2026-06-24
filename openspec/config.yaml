@@ -1,0 +1,79 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+context: |
+  Tech stack: TypeScript, Node.js, Express, Prisma, Domain-Driven Design (DDD)
+  Architecture: Clean Architecture with Domain, Application, and Presentation layers
+  We use conventional commits
+  Domain: LTI (Leadership. Technology. Impact) ATS platform
+  All code, comments, documentation, and technical artifacts must be in English
+
+  Project specs (single source of truth): All artifact creation and implementation MUST follow the project's technical context in docs/. Read and apply these when creating or implementing:
+  - docs/base-standards.md — core principles, TDD, language standards, links to backend/frontend/docs standards
+  - docs/backend-standards.md — API, database, testing, security (backend changes)
+  - docs/frontend-standards.md — React, UI/UX (frontend changes)
+  - docs/api-spec.yml — API contracts and endpoint definitions (create per project)
+  - docs/data-model.md — domain and data model (create per project)
+  - docs/documentation-standards.md — docs structure and maintenance
+  For implementation: adopt the relevant agent from ai-specs/agents/ (e.g. backend-developer.md for backend, frontend-developer.md for frontend).
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+rules:
+  # Global: apply ai-specs when creating any artifact
+  _global:
+    - Before creating any artifact, read and apply docs/base-standards.md
+    - For backend-related artifacts, read docs/backend-standards.md and adopt guidelines from ai-specs/agents/backend-developer.md
+    - For frontend-related artifacts, read docs/frontend-standards.md and adopt guidelines from ai-specs/agents/frontend-developer.md
+    - Use docs/api-spec.yml and docs/data-model.md for API and data consistency in specs and tasks
+
+  # Rules for backend-related changes
+  tasks:
+    - Break tasks into chunks of max 2 hours
+    - For backend changes, follow the backend implementation plan structure
+    - All backend tasks must include mandatory steps: Create Feature Branch, Review/Update Tests, Run Tests, Manual Testing, Documentation Update
+  
+  # Rules for backend implementation plans and specs
+  spec:
+    - When creating backend implementation plans or specs, follow the Backend Implementation Plan Template Structure
+    - |
+      All backend plans must include these MANDATORY sections:
+      1. Header with ticket ID and feature name
+      2. Overview with DDD and clean architecture principles
+      3. Architecture Context (Domain, Application, Presentation layers)
+      4. Implementation Steps (must start with Step 0: Create Feature Branch)
+      5. Implementation Order (numbered list)
+      6. Testing Checklist with mandatory validations
+      7. Error Response Format
+      8. Dependencies
+      9. Notes
+      10. Next Steps After Implementation
+      11. Implementation Verification
+  
+  # Backend-specific implementation rules (flat strings so YAML parses)
+  backend:
+    - |
+      Adopt backend-developer role; Domain-Driven Design; clean architecture
+      layers; all implementation follows TDD. Branch naming: feature/[ticket-id]-backend (required).
+    - |
+      MANDATORY steps in backend implementation plans —
+      Step 0: Create Feature Branch (FIRST).
+      Step N: Review and update existing unit tests.
+      Step N+1: Run unit tests and verify database state (with report artifact).
+      Step N+2: Manual endpoint testing with curl.
+      Step N+3: Update technical documentation.
+    - |
+      Common implementation order — validation function, service method,
+      controller method, route, then unit tests (success, validation errors, 404,
+      reference validation, server errors, edge cases).
+    - |
+      Testing — review/update all impacted tests; new tests passing; full suite green;
+      restore database after tests; manual curl on new endpoints;
+      CREATE/UPDATE/DELETE tests restore DB; cover validation and 404 errors.
+    - |
+      Documentation — data-model changes → openspec/specs/data-model.md;
+      API changes → openspec/specs/api-spec.yml; standards changes → relevant *-standards.mdc; English only.
+    - Error responses must specify JSON bodies and HTTP status mapping.
+    - Verification checklist covers code quality, functionality, testing, integration, documentation updates.
