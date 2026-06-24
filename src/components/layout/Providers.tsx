@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { SesionProvider, useSesionContext } from "@/contextos/SesionContext";
 import { Sidebar } from "./Sidebar";
+import { Header } from "./Header";
 import { Cargando } from "../ui/Cargando";
 
 function ContenidoLayout({ children }: { children: ReactNode }) {
@@ -25,9 +26,12 @@ function ContenidoLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto bg-superficie p-8">
-        {children}
-      </main>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto bg-superficie p-8">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

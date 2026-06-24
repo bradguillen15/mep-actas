@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
+import { hashSync } from "bcryptjs";
 import { crearAuditor } from "@/server/servicios/auditoria.servicio";
 import { crearServicioUsuarios } from "@/server/servicios/usuarios.servicio";
 import * as repositorio from "@/server/repositorios/usuarios.repositorio";
@@ -35,6 +36,9 @@ export async function GET(
         repositorio.actualizarPassword(db, i, pwHash),
       cambiarEstadoUsuario: (i, activo) =>
         repositorio.cambiarEstadoUsuario(db, i, activo),
+      obtenerNivelDeRol: (rolId) => repositorio.obtenerNivelDeRol(db, rolId),
+      obtenerAmbitoDeFuncionario: (funcId) =>
+        repositorio.obtenerAmbitoDeFuncionario(db, funcId),
     },
     auditor
   );
@@ -81,11 +85,19 @@ export async function PATCH(
         repositorio.actualizarPassword(db, i, pwHash),
       cambiarEstadoUsuario: (i, activo) =>
         repositorio.cambiarEstadoUsuario(db, i, activo),
+      obtenerNivelDeRol: (rolId) => repositorio.obtenerNivelDeRol(db, rolId),
+      obtenerAmbitoDeFuncionario: (funcId) =>
+        repositorio.obtenerAmbitoDeFuncionario(db, funcId),
     },
     auditor
   );
 
   try {
+    if (json.password) {
+      const passwordHash = hashSync(json.password, 10);
+      await servicio.actualizarPassword(Number(id), passwordHash, sesion);
+      return NextResponse.json({ ok: true });
+    }
     if (json.activo !== undefined) {
       const resultado = await servicio.cambiarEstado(
         Number(id),
@@ -96,6 +108,9 @@ export async function PATCH(
     }
     return NextResponse.json({ error: "Sin campos para actualizar" }, { status: 400 });
   } catch (error) {
+    if (error instanceof Error && error.name === "ForbiddenError") {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     if (error instanceof Error && error.name === "NotFoundError") {
       return NextResponse.json(
         { error: "Usuario no encontrado" },

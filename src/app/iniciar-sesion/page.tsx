@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Boton } from "@/components/ui/Boton";
 import { Campo } from "@/components/ui/Campo";
+import { useSesion } from "@/hooks/useSesion";
 
 export default function IniciarSesion() {
   const router = useRouter();
+  const { refrescar } = useSesion();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -42,6 +44,7 @@ export default function IniciarSesion() {
         return;
       }
 
+      await refrescar();
       router.push("/consultar");
     } catch {
       setError("Error de conexión. Intente de nuevo.");
@@ -53,16 +56,16 @@ export default function IniciarSesion() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-superficie px-4">
       <div className="w-full max-w-sm rounded-xl border border-borde bg-white p-8 shadow-sm">
-        <div className="mb-8 flex flex-col items-center gap-2">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primario">
-            <span className="text-2xl font-bold text-acento">MEP</span>
-          </div>
+        <div className="mb-8 flex flex-col items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-mep.svg"
+            alt="Ministerio de Educación Pública — Gobierno de Costa Rica"
+            className="h-10 w-auto"
+          />
           <h1 className="text-xl font-semibold text-texto">
             Sistema de Consulta de Títulos
           </h1>
-          <p className="text-sm text-gray-500">
-            Ministerio de Educación Pública
-          </p>
         </div>
 
         <form onSubmit={manejarEnvio} className="flex flex-col gap-4">

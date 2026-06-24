@@ -161,6 +161,8 @@ auditoria (independiente, solo lectura)
 | password_hash | TEXT | NOT NULL (bcrypt) |
 | activo | INTEGER (boolean) | NOT NULL, default true |
 
+> Control de acceso (jerarquía + ámbito): la creación y gestión de usuarios (crear, restablecer contraseña, activar/desactivar) exige que el `nivel` del rol destino sea igual o mayor (mismo nivel o inferior en privilegio) al del actor, y que el funcionario destino pertenezca a su ámbito — Admin Regional limitado a su `region_id`, Admin Escuela a su `escuela_id` (resuelto vía `funcionario_escuela` → `escuelas.region_id`), Admin País sin restricción. Una violación responde `403`.
+
 ### Auditoría
 
 **auditoria** (solo lectura, INSERT exclusivamente)

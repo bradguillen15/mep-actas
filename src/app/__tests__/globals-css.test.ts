@@ -25,12 +25,12 @@ describe("Tokens de diseño MEP", () => {
     });
   }
 
-  it("usa el valor hex correcto para primario (#0B3C8C)", () => {
-    expect(css).toContain("#0B3C8C");
+  it("usa el valor hex correcto para primario (#172B54)", () => {
+    expect(css).toContain("#172B54");
   });
 
-  it("usa el valor hex correcto para acento (#D4A017)", () => {
-    expect(css).toContain("#D4A017");
+  it("usa el valor hex correcto para acento (#CFAC65)", () => {
+    expect(css).toContain("#CFAC65");
   });
 
   it("usa el valor hex correcto para error (#C0392B)", () => {

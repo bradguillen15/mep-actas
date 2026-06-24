@@ -32,6 +32,9 @@ export async function GET() {
         repositorio.actualizarPassword(db, id, passwordHash),
       cambiarEstadoUsuario: (id, activo) =>
         repositorio.cambiarEstadoUsuario(db, id, activo),
+      obtenerNivelDeRol: (rolId) => repositorio.obtenerNivelDeRol(db, rolId),
+      obtenerAmbitoDeFuncionario: (funcId) =>
+        repositorio.obtenerAmbitoDeFuncionario(db, funcId),
     },
     auditor
   );
@@ -66,6 +69,9 @@ export async function POST(request: NextRequest) {
         repositorio.actualizarPassword(db, id, pwHash),
       cambiarEstadoUsuario: (id, activo) =>
         repositorio.cambiarEstadoUsuario(db, id, activo),
+      obtenerNivelDeRol: (rolId) => repositorio.obtenerNivelDeRol(db, rolId),
+      obtenerAmbitoDeFuncionario: (funcId) =>
+        repositorio.obtenerAmbitoDeFuncionario(db, funcId),
     },
     auditor
   );
@@ -84,6 +90,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof Error && error.name === "ConflictError") {
       return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    if (error instanceof Error && error.name === "ForbiddenError") {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+    if (error instanceof Error && error.name === "NotFoundError") {
+      return NextResponse.json({ error: error.message }, { status: 404 });
     }
     throw error;
   }

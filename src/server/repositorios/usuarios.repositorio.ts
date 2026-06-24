@@ -106,6 +106,45 @@ export async function obtenerUsuarioPorEmail(
   return resultado[0];
 }
 
+export type AmbitoFuncionario = {
+  escuelaIds: number[];
+  regionIds: number[];
+};
+
+export async function obtenerNivelDeRol(
+  db: LibSQLDatabase<typeof esquema>,
+  rolId: number
+): Promise<number | undefined> {
+  const resultado = await db
+    .select({ nivel: esquema.roles.nivel })
+    .from(esquema.roles)
+    .where(eq(esquema.roles.id, rolId));
+
+  return resultado[0]?.nivel;
+}
+
+export async function obtenerAmbitoDeFuncionario(
+  db: LibSQLDatabase<typeof esquema>,
+  funcionarioId: number
+): Promise<AmbitoFuncionario> {
+  const filas = await db
+    .select({
+      escuelaId: esquema.funcionarioEscuela.escuelaId,
+      regionId: esquema.escuelas.regionId,
+    })
+    .from(esquema.funcionarioEscuela)
+    .innerJoin(
+      esquema.escuelas,
+      eq(esquema.funcionarioEscuela.escuelaId, esquema.escuelas.id)
+    )
+    .where(eq(esquema.funcionarioEscuela.funcionarioId, funcionarioId));
+
+  return {
+    escuelaIds: [...new Set(filas.map((f) => f.escuelaId))],
+    regionIds: [...new Set(filas.map((f) => f.regionId))],
+  };
+}
+
 export async function crearUsuario(
   db: LibSQLDatabase<typeof esquema>,
   datos: DatosNuevoUsuario

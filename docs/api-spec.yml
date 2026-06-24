@@ -238,6 +238,155 @@ paths:
           $ref: "#/components/responses/NoEncontrado"
         "409":
           $ref: "#/components/responses/Conflicto"
+  /api/roles:
+    get:
+      summary: Listar los roles del sistema (para selectores de administración)
+      tags: [Usuarios]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Lista de roles ordenada por nivel
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Rol"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+  /api/usuarios:
+    get:
+      summary: Listar usuarios
+      description: Requiere rol administrador (nivel <= 2).
+      tags: [Usuarios]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Usuario"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+    post:
+      summary: Crear (invitar) un usuario
+      description: >
+        El rol solicitado debe tener un nivel igual o mayor (mismo nivel o
+        inferior en privilegio) al del usuario en sesión, y el funcionario
+        destino debe pertenecer al ámbito del actor (región para Admin Regional,
+        escuela para Admin Escuela; Admin País sin restricción). Una violación
+        de jerarquía o de ámbito responde 403.
+      tags: [Usuarios]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [funcionarioId, rolId, email, password]
+              properties:
+                funcionarioId:
+                  type: integer
+                rolId:
+                  type: integer
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "201":
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+        "409":
+          $ref: "#/components/responses/Conflicto"
+  /api/usuarios/{id}:
+    get:
+      summary: Obtener un usuario por id
+      tags: [Usuarios]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Usuario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+    patch:
+      summary: Restablecer contraseña o cambiar estado de un usuario
+      description: >
+        Acepta `password` (restablecer contraseña) o `activo` (activar/desactivar).
+        Aplica las mismas reglas de jerarquía y ámbito que la creación respecto
+        al usuario destino; una violación responde 403.
+      tags: [Usuarios]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                activo:
+                  type: boolean
+      responses:
+        "200":
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
 
 components:
   schemas:
@@ -263,6 +412,31 @@ components:
           type: string
         activo:
           type: boolean
+    Rol:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        nivel:
+          type: integer
+          description: 1 = Admin País … 4 = Staff
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        activo:
+          type: boolean
+        funcionarioId:
+          type: integer
+        rolId:
+          type: integer
+        nivel:
+          type: integer
     Error:
       type: object
       properties:

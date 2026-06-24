@@ -11,20 +11,20 @@ interface BotonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const clasesBase =
-  "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primario/40";
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primario focus-visible:ring-offset-2";
 
 const variantes: Record<Variante, string> = {
   primario: "bg-primario text-white hover:bg-primario-hover active:bg-primario-hover",
   secundario: "border border-borde bg-white text-texto hover:bg-superficie",
   peligro: "bg-error text-white hover:bg-red-700",
   ghost: "text-texto hover:bg-superficie",
-  acento: "bg-acento text-white hover:bg-amber-600",
+  acento: "bg-acento text-primario hover:bg-acento-suave",
 };
 
 const tamanos: Record<Tamano, string> = {
-  sm: "h-8 px-3 text-sm",
+  sm: "h-9 px-3 text-sm",
   md: "h-10 px-4 text-sm",
-  lg: "h-12 px-6 text-base",
+  lg: "h-11 px-8 text-base",
 };
 
 export function Boton({
