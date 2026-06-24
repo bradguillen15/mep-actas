@@ -46,6 +46,7 @@ yarn-error.log*
 # database
 *.sqlite
 *.sqlite3
+*.db
 .turso/
 
 # AI config (local overrides, never committed)
@@ -59,6 +60,3 @@ next-env.d.ts
 
 # allow example env file
 !.env.example
-
-# local database
-mep-actas-local.db
