@@ -7,7 +7,8 @@ vi.mock("next-auth", () => ({
 }));
 
 vi.mock("../auth.config", () => ({
-  config: {},
+  auth: mockAuth,
+  handlers: {},
 }));
 
 describe("obtenerSesion", () => {

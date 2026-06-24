@@ -1,9 +1,6 @@
-import NextAuth from "next-auth";
-import { config } from "./auth.config";
+import { auth } from "./auth.config";
 import type { SesionUsuario } from "./tipos";
 import type { NivelRol } from "./tipos";
-
-const { auth } = NextAuth(config);
 
 export async function obtenerSesion(): Promise<SesionUsuario | null> {
   const sesion = await auth();

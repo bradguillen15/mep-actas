@@ -14,7 +14,7 @@ alwaysApply: true
 - **Lenguaje:** TypeScript estricto. Componentes nuevos en `.tsx`.
 - **Datos:** SWR (`useSWR`, `useSWRMutation`).
 - **Sesión:** React Context (apoyado en NextAuth).
-- **Formularios:** `useReducer` (sin librería extra de formularios).
+- **Formularios:** React Hook Form (`useFieldArray` para tablas editables tipo estudiantes).
 - **Estilos:** variables CSS / tokens de diseño con la identidad MEP (ver `docs/brd.md` §9.3).
 
 ## 2. Arquitectura por componentes
@@ -48,10 +48,11 @@ app/globals.css            # tokens de diseño (variables CSS del MEP)
 - La UI muestra/oculta acciones según el rol jerárquico (Admin País/Regional/Escuela/Staff), pero **la autorización real siempre se valida en el servidor**.
 - Redirige a inicio de sesión cuando no hay sesión válida.
 
-## 5. Formularios con useReducer
+## 5. Formularios con React Hook Form
 
-- Los formularios de alta (actas, escaneos, usuarios) gestionan su estado con `useReducer`.
-- Validación en cliente solo para UX; la validación autoritativa ocurre en el backend.
+- Los formularios de alta (actas, escaneos, usuarios) se implementan con React Hook Form.
+- Usa `useFieldArray` para listas dinámicas (ej. tabla de estudiantes en un acta).
+- Validación en cliente con `zod` (via `@hookform/resolvers`) solo para UX; la validación autoritativa ocurre en el backend.
 - Deshabilita el envío mientras hay una operación en curso; muestra errores de campo en español.
 
 ## 6. Identidad visual y accesibilidad (MEP)
