@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, type ReactNode } from "react";
+import useSWR from "swr";
 import type { NivelRol } from "@/server/auth/tipos";
 
 interface UsuarioSesion {
@@ -23,57 +18,46 @@ interface UsuarioSesion {
 interface SesionContextType {
   usuario: UsuarioSesion | null;
   cargando: boolean;
-  refrescar: () => Promise<void>;
+  refrescar: () => Promise<unknown>;
   cerrarSesion: () => Promise<void>;
 }
 
 const SesionContext = createContext<SesionContextType | null>(null);
 
-export function SesionProvider({ children }: { children: ReactNode }) {
-  const [usuario, setUsuario] = useState<UsuarioSesion | null>(null);
-  const [cargando, setCargando] = useState(true);
+async function fetcher(url: string) {
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (!data?.user) return null;
+  return {
+    usuarioId: data.user.usuarioId,
+    email: data.user.email,
+    nombre: data.user.name ?? data.user.email,
+    rolId: data.user.rolId,
+    nivel: data.user.nivel as NivelRol,
+    funcionarioId: data.user.funcionarioId,
+    escuelaId: data.user.escuelaId,
+    regionId: data.user.regionId,
+  } as UsuarioSesion;
+}
 
-  const refrescar = async () => {
-    try {
-      const res = await fetch("/api/auth/session");
-      if (!res.ok) {
-        setUsuario(null);
-        return;
-      }
-      const data = await res.json();
-      if (data?.user) {
-        setUsuario({
-          usuarioId: data.user.usuarioId,
-          email: data.user.email,
-          nombre: data.user.name ?? data.user.email,
-          rolId: data.user.rolId,
-          nivel: data.user.nivel,
-          funcionarioId: data.user.funcionarioId,
-          escuelaId: data.user.escuelaId,
-          regionId: data.user.regionId,
-        });
-      } else {
-        setUsuario(null);
-      }
-    } catch {
-      setUsuario(null);
-    } finally {
-      setCargando(false);
-    }
-  };
+export function SesionProvider({ children }: { children: ReactNode }) {
+  const {
+    data: usuario = null,
+    isLoading: cargando,
+    mutate: refrescar,
+  } = useSWR("/api/auth/session", fetcher, {
+    revalidateOnFocus: false,
+  });
 
   const cerrarSesion = async () => {
     await fetch("/api/auth/signout", { method: "POST" });
-    setUsuario(null);
+    await refrescar();
   };
-
-  useEffect(() => {
-    refrescar();
-  }, []);
 
   return (
     <SesionContext.Provider
-      value={{ usuario, cargando, refrescar, cerrarSesion }}
+      value={{ usuario, cargando: cargando as boolean, refrescar, cerrarSesion }}
     >
       {children}
     </SesionContext.Provider>
