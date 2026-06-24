@@ -8,6 +8,7 @@ import {
 export const regiones = sqliteTable("regiones", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   nombre: text("nombre").notNull(),
+  activo: integer("activo", { mode: "boolean" }).notNull().default(true),
 });
 
 export const escuelas = sqliteTable("escuelas", {
@@ -17,6 +18,7 @@ export const escuelas = sqliteTable("escuelas", {
     .references(() => regiones.id),
   codigoMep: text("codigo_mep").notNull(),
   nombre: text("nombre").notNull(),
+  activo: integer("activo", { mode: "boolean" }).notNull().default(true),
 });
 
 export const tiposActas = sqliteTable("tipos_acta", {

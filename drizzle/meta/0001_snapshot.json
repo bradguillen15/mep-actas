@@ -1,0 +1,939 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "788365fe-ef15-4e74-b8bf-a0a82caa00ef",
+  "prevId": "f0e064b7-bd38-4c0f-aec8-1614344b7d17",
+  "tables": {
+    "acta_escaneos": {
+      "name": "acta_escaneos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "acta_id": {
+          "name": "acta_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "escaneo_id": {
+          "name": "escaneo_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "acta_escaneos_acta_id_actas_id_fk": {
+          "name": "acta_escaneos_acta_id_actas_id_fk",
+          "tableFrom": "acta_escaneos",
+          "tableTo": "actas",
+          "columnsFrom": [
+            "acta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acta_escaneos_escaneo_id_escaneos_id_fk": {
+          "name": "acta_escaneos_escaneo_id_escaneos_id_fk",
+          "tableFrom": "acta_escaneos",
+          "tableTo": "escaneos",
+          "columnsFrom": [
+            "escaneo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "acta_estudiantes": {
+      "name": "acta_estudiantes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "acta_id": {
+          "name": "acta_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "estudiante_id": {
+          "name": "estudiante_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "numero_certificado": {
+          "name": "numero_certificado",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "acta_estudiantes_acta_id_actas_id_fk": {
+          "name": "acta_estudiantes_acta_id_actas_id_fk",
+          "tableFrom": "acta_estudiantes",
+          "tableTo": "actas",
+          "columnsFrom": [
+            "acta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acta_estudiantes_estudiante_id_estudiantes_id_fk": {
+          "name": "acta_estudiantes_estudiante_id_estudiantes_id_fk",
+          "tableFrom": "acta_estudiantes",
+          "tableTo": "estudiantes",
+          "columnsFrom": [
+            "estudiante_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "acta_firmantes": {
+      "name": "acta_firmantes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "acta_id": {
+          "name": "acta_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "funcionario_id": {
+          "name": "funcionario_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rol_firma": {
+          "name": "rol_firma",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "acta_firmantes_acta_id_actas_id_fk": {
+          "name": "acta_firmantes_acta_id_actas_id_fk",
+          "tableFrom": "acta_firmantes",
+          "tableTo": "actas",
+          "columnsFrom": [
+            "acta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acta_firmantes_funcionario_id_funcionarios_id_fk": {
+          "name": "acta_firmantes_funcionario_id_funcionarios_id_fk",
+          "tableFrom": "acta_firmantes",
+          "tableTo": "funcionarios",
+          "columnsFrom": [
+            "funcionario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "actas": {
+      "name": "actas",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "escuela_id": {
+          "name": "escuela_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tipo_acta_id": {
+          "name": "tipo_acta_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "acta_referencia_id": {
+          "name": "acta_referencia_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "numero_tomo": {
+          "name": "numero_tomo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "folio_inicio": {
+          "name": "folio_inicio",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "folio_fin": {
+          "name": "folio_fin",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_actas_escuela_id": {
+          "name": "idx_actas_escuela_id",
+          "columns": [
+            "escuela_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "actas_escuela_id_escuelas_id_fk": {
+          "name": "actas_escuela_id_escuelas_id_fk",
+          "tableFrom": "actas",
+          "tableTo": "escuelas",
+          "columnsFrom": [
+            "escuela_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "actas_tipo_acta_id_tipos_acta_id_fk": {
+          "name": "actas_tipo_acta_id_tipos_acta_id_fk",
+          "tableFrom": "actas",
+          "tableTo": "tipos_acta",
+          "columnsFrom": [
+            "tipo_acta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "auditoria": {
+      "name": "auditoria",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tabla": {
+          "name": "tabla",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "registro_id": {
+          "name": "registro_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "accion": {
+          "name": "accion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "datos_anteriores": {
+          "name": "datos_anteriores",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "datos_nuevos": {
+          "name": "datos_nuevos",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "auditoria_usuario_id_usuarios_id_fk": {
+          "name": "auditoria_usuario_id_usuarios_id_fk",
+          "tableFrom": "auditoria",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "escaneos": {
+      "name": "escaneos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "escuela_id": {
+          "name": "escuela_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "numero_tomo": {
+          "name": "numero_tomo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "numero_folio": {
+          "name": "numero_folio",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "formato": {
+          "name": "formato",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "uploaded_by": {
+          "name": "uploaded_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_escaneos_escuela_id": {
+          "name": "idx_escaneos_escuela_id",
+          "columns": [
+            "escuela_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "escaneos_escuela_id_escuelas_id_fk": {
+          "name": "escaneos_escuela_id_escuelas_id_fk",
+          "tableFrom": "escaneos",
+          "tableTo": "escuelas",
+          "columnsFrom": [
+            "escuela_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "escaneos_uploaded_by_usuarios_id_fk": {
+          "name": "escaneos_uploaded_by_usuarios_id_fk",
+          "tableFrom": "escaneos",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "uploaded_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "escuelas": {
+      "name": "escuelas",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "region_id": {
+          "name": "region_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "codigo_mep": {
+          "name": "codigo_mep",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "escuelas_region_id_regiones_id_fk": {
+          "name": "escuelas_region_id_regiones_id_fk",
+          "tableFrom": "escuelas",
+          "tableTo": "regiones",
+          "columnsFrom": [
+            "region_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "estudiantes": {
+      "name": "estudiantes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "persona_id": {
+          "name": "persona_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "estudiantes_persona_id_personas_id_fk": {
+          "name": "estudiantes_persona_id_personas_id_fk",
+          "tableFrom": "estudiantes",
+          "tableTo": "personas",
+          "columnsFrom": [
+            "persona_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "funcionario_escuela": {
+      "name": "funcionario_escuela",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "funcionario_id": {
+          "name": "funcionario_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "escuela_id": {
+          "name": "escuela_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "funcionario_escuela_funcionario_id_funcionarios_id_fk": {
+          "name": "funcionario_escuela_funcionario_id_funcionarios_id_fk",
+          "tableFrom": "funcionario_escuela",
+          "tableTo": "funcionarios",
+          "columnsFrom": [
+            "funcionario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "funcionario_escuela_escuela_id_escuelas_id_fk": {
+          "name": "funcionario_escuela_escuela_id_escuelas_id_fk",
+          "tableFrom": "funcionario_escuela",
+          "tableTo": "escuelas",
+          "columnsFrom": [
+            "escuela_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "funcionarios": {
+      "name": "funcionarios",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "persona_id": {
+          "name": "persona_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "puesto": {
+          "name": "puesto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "funcionarios_persona_id_personas_id_fk": {
+          "name": "funcionarios_persona_id_personas_id_fk",
+          "tableFrom": "funcionarios",
+          "tableTo": "personas",
+          "columnsFrom": [
+            "persona_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "personas": {
+      "name": "personas",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "identificacion": {
+          "name": "identificacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nombres": {
+          "name": "nombres",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "apellidos": {
+          "name": "apellidos",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "personas_identificacion_unique": {
+          "name": "personas_identificacion_unique",
+          "columns": [
+            "identificacion"
+          ],
+          "isUnique": true
+        },
+        "idx_personas_identificacion": {
+          "name": "idx_personas_identificacion",
+          "columns": [
+            "identificacion"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "regiones": {
+      "name": "regiones",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "roles": {
+      "name": "roles",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nivel": {
+          "name": "nivel",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "tipos_acta": {
+      "name": "tipos_acta",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "usuarios": {
+      "name": "usuarios",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "funcionario_id": {
+          "name": "funcionario_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rol_id": {
+          "name": "rol_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        }
+      },
+      "indexes": {
+        "usuarios_email_unique": {
+          "name": "usuarios_email_unique",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "usuarios_funcionario_id_funcionarios_id_fk": {
+          "name": "usuarios_funcionario_id_funcionarios_id_fk",
+          "tableFrom": "usuarios",
+          "tableTo": "funcionarios",
+          "columnsFrom": [
+            "funcionario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "usuarios_rol_id_roles_id_fk": {
+          "name": "usuarios_rol_id_roles_id_fk",
+          "tableFrom": "usuarios",
+          "tableTo": "roles",
+          "columnsFrom": [
+            "rol_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

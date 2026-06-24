@@ -1,8 +1,9 @@
+import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import * as esquema from "./esquema";
 
-let instancia: ReturnType<typeof drizzle> | null = null;
+let instancia: LibSQLDatabase<typeof esquema> | null = null;
 
 export function clienteDb() {
   if (instancia) return instancia;

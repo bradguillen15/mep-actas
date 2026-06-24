@@ -1,7 +1,7 @@
 # Modelo de datos — Sistema de Consulta de Títulos del MEP
 
 > Fuente: BRD §10. Este documento describe el modelo de dominio y la estructura de la base de datos.
-> Última actualización: fundación del proyecto.
+> Última actualización: jerarquía-geográfica (columna activo agregada a regiones y escuelas).
 
 ## Principios de diseño
 
@@ -37,6 +37,7 @@ auditoria (independiente, solo lectura)
 |---|---|---|
 | id | INTEGER | PK, auto-incremental |
 | nombre | TEXT | NOT NULL |
+| activo | INTEGER (boolean) | NOT NULL, default true |
 
 **escuelas**
 | Columna | Tipo | Restricciones |
@@ -45,6 +46,7 @@ auditoria (independiente, solo lectura)
 | region_id | INTEGER | FK → regiones.id, NOT NULL |
 | codigo_mep | TEXT | NOT NULL |
 | nombre | TEXT | NOT NULL |
+| activo | INTEGER (boolean) | NOT NULL, default true |
 
 ### Actas y estudiantes
 
