@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/libsql";
 import path from "path";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
+import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { crearAuditor } from "@/server/servicios/auditoria.servicio";
 import { crearServicioActas } from "@/server/servicios/actas.servicio";
 import * as actasRepositorio from "@/server/repositorios/actas.repositorio";
@@ -15,7 +16,7 @@ import {
 } from "./helpers";
 
 const DB_PATH = path.resolve(__dirname, "../../temp-e2e.db");
-let db: ReturnType<typeof drizzle>;
+let db: LibSQLDatabase<typeof esquema>;
 
 const idsRegion: number[] = [];
 const idsEscuela: number[] = [];
@@ -28,7 +29,7 @@ let escuelaId: number;
 
 beforeAll(async () => {
   const client = createClient({ url: `file:${DB_PATH}` });
-  db = drizzle(client);
+  db = drizzle(client, { schema: esquema }) as LibSQLDatabase<typeof esquema>;
 
   const rolAdminEscuela = await obtenerRolPorNivel(db, 3);
   const usuarioAdminEscuela = await obtenerUsuarioPorEmail(
@@ -38,14 +39,14 @@ beforeAll(async () => {
 
   const [{ id: regionId }] = await db
     .insert(esquema.regiones)
-    .values({ nombre: "Región Test Actas", activo: 1 })
+    .values({ nombre: "Región Test Actas", activo: true })
     .returning()
     .all();
   idsRegion.push(regionId);
 
   const [{ id: escId }] = await db
     .insert(esquema.escuelas)
-    .values({ nombre: "Escuela Test Actas", regionId, codigoMep: "ACTAS-TEST-001", activo: 1 })
+    .values({ nombre: "Escuela Test Actas", regionId, codigoMep: "ACTAS-TEST-001", activo: true })
     .returning()
     .all();
   idsEscuela.push(escId);
