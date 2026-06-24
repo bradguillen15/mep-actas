@@ -2,6 +2,7 @@ import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { sql } from "drizzle-orm";
+import { hashSync } from "bcryptjs";
 import fs from "fs";
 import path from "path";
 
@@ -43,11 +44,13 @@ export async function setup() {
       sql`INSERT INTO funcionarios (persona_id, puesto) VALUES (2, 'Admin Regional')`
     );
 
+    const passwordHash = hashSync("test-password", 10);
     await db.run(
-      sql`INSERT INTO usuarios (funcionario_id, rol_id, email, password_hash) VALUES (1, 1, 'admin-pais@e2e.test', 'hash_dummy')`
+      sql`INSERT INTO usuarios (funcionario_id, rol_id, email, password_hash) VALUES (1, 1, 'admin-pais@e2e.test', ${passwordHash})`
     );
+    const passwordHashRegional = hashSync("test-password", 10);
     await db.run(
-      sql`INSERT INTO usuarios (funcionario_id, rol_id, email, password_hash) VALUES (2, 2, 'admin-regional@e2e.test', 'hash_dummy')`
+      sql`INSERT INTO usuarios (funcionario_id, rol_id, email, password_hash) VALUES (2, 2, 'admin-regional@e2e.test', ${passwordHashRegional})`
     );
   }
 
