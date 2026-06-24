@@ -3,8 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Boton } from "../../../components/ui/Boton";
-import { Campo } from "../../../components/ui/Campo";
+import { Boton } from "@/components/ui/Boton";
+import { Campo } from "@/components/ui/Campo";
 
 export default function IniciarSesion() {
   const router = useRouter();

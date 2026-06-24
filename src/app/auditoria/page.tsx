@@ -4,11 +4,11 @@ import { useState } from "react";
 import useSWR from "swr";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ShieldAlert } from "lucide-react";
-import { Tabla } from "../../../components/ui/Tabla";
-import { Modal } from "../../../components/ui/Modal";
-import { Cargando } from "../../../components/ui/Cargando";
-import { EstadoVacio } from "../../../components/ui/EstadoVacio";
-import { Badge } from "../../../components/ui/Badge";
+import { Tabla } from "@/components/ui/Tabla";
+import { Modal } from "@/components/ui/Modal";
+import { Cargando } from "@/components/ui/Cargando";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
+import { Badge } from "@/components/ui/Badge";
 import { useSesion } from "../../../src/hooks/useSesion";
 
 interface RegistroAuditoria {

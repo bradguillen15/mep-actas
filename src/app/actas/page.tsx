@@ -5,13 +5,13 @@ import useSWR from "swr";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
-import { Tabla } from "../../../components/ui/Tabla";
-import { Selector } from "../../../components/ui/Selector";
-import { Modal } from "../../../components/ui/Modal";
-import { Boton } from "../../../components/ui/Boton";
-import { Cargando } from "../../../components/ui/Cargando";
-import { EstadoVacio } from "../../../components/ui/EstadoVacio";
-import { Badge } from "../../../components/ui/Badge";
+import { Tabla } from "@/components/ui/Tabla";
+import { Selector } from "@/components/ui/Selector";
+import { Modal } from "@/components/ui/Modal";
+import { Boton } from "@/components/ui/Boton";
+import { Cargando } from "@/components/ui/Cargando";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
+import { Badge } from "@/components/ui/Badge";
 import { useEscuelaActual } from "../../../src/hooks/useEscuelaActual";
 
 interface Acta {

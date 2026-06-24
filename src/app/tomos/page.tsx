@@ -8,12 +8,12 @@ import {
   ChevronRight,
   ImageIcon,
 } from "lucide-react";
-import { Boton } from "../../../components/ui/Boton";
-import { Campo } from "../../../components/ui/Campo";
-import { Selector } from "../../../components/ui/Selector";
-import { Cargando } from "../../../components/ui/Cargando";
-import { EstadoVacio } from "../../../components/ui/EstadoVacio";
-import { Tarjeta } from "../../../components/ui/Tarjeta";
+import { Boton } from "@/components/ui/Boton";
+import { Campo } from "@/components/ui/Campo";
+import { Selector } from "@/components/ui/Selector";
+import { Cargando } from "@/components/ui/Cargando";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
+import { Tarjeta } from "@/components/ui/Tarjeta";
 import { useEscuelaActual } from "../../../src/hooks/useEscuelaActual";
 
 interface Escaneo {

@@ -4,13 +4,13 @@ import { useState } from "react";
 import useSWR from "swr";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Search } from "lucide-react";
-import { Tabla } from "../../../components/ui/Tabla";
-import { Campo } from "../../../components/ui/Campo";
-import { Selector } from "../../../components/ui/Selector";
-import { Modal } from "../../../components/ui/Modal";
-import { Cargando } from "../../../components/ui/Cargando";
-import { EstadoVacio } from "../../../components/ui/EstadoVacio";
-import { Badge } from "../../../components/ui/Badge";
+import { Tabla } from "@/components/ui/Tabla";
+import { Campo } from "@/components/ui/Campo";
+import { Selector } from "@/components/ui/Selector";
+import { Modal } from "@/components/ui/Modal";
+import { Cargando } from "@/components/ui/Cargando";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
+import { Badge } from "@/components/ui/Badge";
 import { useEscuelaActual } from "../../../src/hooks/useEscuelaActual";
 
 interface Graduacion {

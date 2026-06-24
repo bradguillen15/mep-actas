@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import useSWR from "swr";
-import { Boton } from "../../../../components/ui/Boton";
-import { Campo } from "../../../../components/ui/Campo";
-import { Selector } from "../../../../components/ui/Selector";
-import { Tarjeta } from "../../../../components/ui/Tarjeta";
-import { CargandoChico } from "../../../../components/ui/Cargando";
+import { Boton } from "@/components/ui/Boton";
+import { Campo } from "@/components/ui/Campo";
+import { Selector } from "@/components/ui/Selector";
+import { Tarjeta } from "@/components/ui/Tarjeta";
+import { CargandoChico } from "@/components/ui/Cargando";
 import { useEscuelaActual } from "../../../../src/hooks/useEscuelaActual";
 
 interface TipoActa {
