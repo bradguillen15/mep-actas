@@ -7,3 +7,4 @@ export { Badge } from "./Badge";
 export { Tarjeta } from "./Tarjeta";
 export { EstadoVacio } from "./EstadoVacio";
 export { Paginacion } from "./Paginacion";
+export { Tabla } from "./Tabla";
