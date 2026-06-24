@@ -1,0 +1,28 @@
+# Especificación de API — Sistema de Consulta de Títulos del MEP
+# Versión: 0.1.0 (fundación)
+# Formato: OpenAPI 3.0
+#
+# Este archivo se completa a medida que se implementan los endpoints.
+# Por ahora solo contiene la estructura base.
+
+openapi: "3.0.0"
+info:
+  title: API de Consulta de Títulos del MEP
+  description: API del Sistema de Consulta de Títulos del Ministerio de Educación Pública de Costa Rica
+  version: "0.1.0"
+servers:
+  - url: /
+    description: Mismo dominio que la aplicación (Next.js)
+paths: {}
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            codigo:
+              type: string
+            mensaje:
+              type: string

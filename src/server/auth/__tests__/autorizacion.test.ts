@@ -1,0 +1,109 @@
+import { describe, it, expect } from "vitest";
+import type { SesionUsuario } from "../tipos";
+
+describe("verificarRol", () => {
+  const sesionAdminPais: SesionUsuario = {
+    usuarioId: 1,
+    email: "admin@pais.go.cr",
+    rolId: 1,
+    nivel: 1,
+    funcionarioId: 1,
+  };
+
+  const sesionAdminRegional: SesionUsuario = {
+    usuarioId: 2,
+    email: "admin@region.go.cr",
+    rolId: 2,
+    nivel: 2,
+    funcionarioId: 2,
+    regionId: 5,
+  };
+
+  const sesionAdminEscuela: SesionUsuario = {
+    usuarioId: 3,
+    email: "admin@escuela.go.cr",
+    rolId: 3,
+    nivel: 3,
+    funcionarioId: 3,
+    escuelaId: 10,
+  };
+
+  const sesionStaff: SesionUsuario = {
+    usuarioId: 4,
+    email: "staff@escuela.go.cr",
+    rolId: 4,
+    nivel: 4,
+    funcionarioId: 4,
+    escuelaId: 10,
+  };
+
+  it("autoriza a Admin Pais para cualquier nivel minimo", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionAdminPais, 4);
+    expect(resultado.autorizado).toBe(true);
+  });
+
+  it("autoriza a Admin Pais para nivel 1", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionAdminPais, 1);
+    expect(resultado.autorizado).toBe(true);
+  });
+
+  it("rechaza a Staff para nivel 3", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionStaff, 3);
+    expect(resultado.autorizado).toBe(false);
+    expect(resultado.error).toBe(403);
+  });
+
+  it("autoriza a Admin Regional para nivel 3", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionAdminRegional, 3);
+    expect(resultado.autorizado).toBe(true);
+  });
+
+  it("autoriza a Admin Escuela para nivel 3", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionAdminEscuela, 3);
+    expect(resultado.autorizado).toBe(true);
+  });
+
+  it("rechaza a Admin Escuela para nivel 1", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionAdminEscuela, 1);
+    expect(resultado.autorizado).toBe(false);
+    expect(resultado.error).toBe(403);
+  });
+
+  it("verifica ambito por escuela correctamente", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionAdminEscuela, 3, { escuelaId: 10 });
+    expect(resultado.autorizado).toBe(true);
+  });
+
+  it("rechaza ambito por escuela incorrecto", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionAdminEscuela, 3, { escuelaId: 99 });
+    expect(resultado.autorizado).toBe(false);
+    expect(resultado.error).toBe(403);
+  });
+
+  it("Admin Pais pasa cualquier ambito de escuela", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionAdminPais, 3, { escuelaId: 999 });
+    expect(resultado.autorizado).toBe(true);
+  });
+
+  it("verifica ambito por region correctamente", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionAdminRegional, 2, { regionId: 5 });
+    expect(resultado.autorizado).toBe(true);
+  });
+
+  it("rechaza ambito por region incorrecto", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionAdminRegional, 2, { regionId: 99 });
+    expect(resultado.autorizado).toBe(false);
+    expect(resultado.error).toBe(403);
+  });
+});
