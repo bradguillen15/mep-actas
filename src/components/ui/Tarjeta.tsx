@@ -1,21 +1,18 @@
 import type { ReactNode } from "react";
 
+import { cn } from "@/lib/utils";
+import { Card } from "./card";
+
 interface TarjetaProps {
   children: ReactNode;
   className?: string;
   padding?: boolean;
 }
 
-export function Tarjeta({
-  children,
-  className = "",
-  padding = true,
-}: TarjetaProps) {
+export function Tarjeta({ children, className, padding = true }: TarjetaProps) {
   return (
-    <div
-      className={`rounded-xl border border-borde bg-white ${padding ? "p-6" : ""} ${className}`}
-    >
+    <Card className={cn("gap-0 bg-white", padding && "p-6", className)}>
       {children}
-    </div>
+    </Card>
   );
 }

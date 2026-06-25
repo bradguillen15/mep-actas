@@ -1,5 +1,8 @@
 import type { SelectHTMLAttributes } from "react";
 
+import { cn } from "@/lib/utils";
+import { Label } from "./label";
+
 interface SelectorProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
@@ -12,7 +15,7 @@ export function Selector({
   error,
   opciones,
   placeholder,
-  className = "",
+  className,
   id,
   ...props
 }: SelectorProps) {
@@ -20,16 +23,17 @@ export function Selector({
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label
-          htmlFor={idReal}
-          className="text-sm font-medium text-texto"
-        >
+        <Label htmlFor={idReal} className="text-texto">
           {label}
-        </label>
+        </Label>
       )}
       <select
         id={idReal}
-        className={`h-10 rounded-lg border border-borde bg-white px-3 text-sm text-texto focus:outline-none focus:ring-2 focus:ring-primario/40 focus:border-primario disabled:bg-superficie disabled:opacity-60 ${error ? "border-error" : ""} ${className}`}
+        className={cn(
+          "h-10 rounded-lg border border-input bg-white px-3 text-sm text-texto outline-none transition-colors focus-visible:border-primario focus-visible:ring-2 focus-visible:ring-primario/40 disabled:bg-superficie disabled:opacity-60",
+          error && "border-error",
+          className
+        )}
         {...props}
       >
         {placeholder && (

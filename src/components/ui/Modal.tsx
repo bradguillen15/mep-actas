@@ -1,7 +1,15 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { X } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from "./dialog";
 
 interface ModalProps {
   abierto: boolean;
@@ -11,11 +19,11 @@ interface ModalProps {
   tamano?: "sm" | "md" | "lg" | "xl";
 }
 
-const tamanos: Record<string, string> = {
-  sm: "max-w-md",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
-  xl: "max-w-4xl",
+const tamanos: Record<NonNullable<ModalProps["tamano"]>, string> = {
+  sm: "sm:max-w-md",
+  md: "sm:max-w-lg",
+  lg: "sm:max-w-2xl",
+  xl: "sm:max-w-4xl",
 };
 
 export function Modal({
@@ -25,51 +33,23 @@ export function Modal({
   children,
   tamano = "md",
 }: ModalProps) {
-  useEffect(() => {
-    if (abierto) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [abierto]);
-
-  useEffect(() => {
-    const manejarEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCerrar();
-    };
-    if (abierto) {
-      document.addEventListener("keydown", manejarEscape);
-    }
-    return () => document.removeEventListener("keydown", manejarEscape);
-  }, [abierto, onCerrar]);
-
-  if (!abierto) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="fixed inset-0 bg-black/50"
-        onClick={onCerrar}
-      />
-      <div
-        className={`relative z-10 w-full ${tamanos[tamano as keyof typeof tamanos]} mx-4 rounded-xl bg-white shadow-xl`}
+    <Dialog open={abierto} onOpenChange={(estado) => !estado && onCerrar()}>
+      <DialogContent
+        showCloseButton={false}
+        className={cn("gap-0 p-0", tamanos[tamano as keyof typeof tamanos])}
       >
         <div className="flex items-center justify-between border-b border-borde px-6 py-4">
-          <h2 className="text-lg font-semibold text-texto">{titulo}</h2>
-          <button
-            onClick={onCerrar}
-            className="rounded-lg p-1 text-gray-400 hover:text-texto hover:bg-superficie transition-colors"
-          >
+          <DialogTitle className="text-lg font-semibold text-texto">
+            {titulo}
+          </DialogTitle>
+          <DialogClose className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-superficie hover:text-texto">
             <X className="h-5 w-5" />
-          </button>
+            <span className="sr-only">Cerrar</span>
+          </DialogClose>
         </div>
-        <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
-          {children}
-        </div>
-      </div>
-    </div>
+        <div className="max-h-[70vh] overflow-y-auto px-6 py-4">{children}</div>
+      </DialogContent>
+    </Dialog>
   );
 }

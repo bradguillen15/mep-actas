@@ -11,6 +11,16 @@ import {
 } from "@tanstack/react-table";
 import { useState } from "react";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./table";
 import { Paginacion } from "./Paginacion";
 
 interface TablaProps<T> {
@@ -43,61 +53,63 @@ export function Tabla<T>({
   });
 
   return (
-    <div className={`overflow-hidden rounded-xl border border-borde bg-white ${className}`}>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            {tabla.getHeaderGroups().map((grupo) => (
-              <tr key={grupo.id} className="border-b border-borde bg-superficie">
-                {grupo.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 ${
-                      header.column.getCanSort()
-                        ? "cursor-pointer select-none hover:text-texto"
-                        : ""
-                    }`}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <div className="flex items-center gap-1">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {{
-                        asc: <ChevronUp className="h-3 w-3" />,
-                        desc: <ChevronDown className="h-3 w-3" />,
-                      }[header.column.getIsSorted() as string] ??
-                        (header.column.getCanSort() && (
-                          <ChevronsUpDown className="h-3 w-3 text-gray-300" />
-                        ))}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {tabla.getRowModel().rows.map((fila) => (
-              <tr
-                key={fila.id}
-                className={`border-b border-borde last:border-0 transition-colors ${
-                  onFilaClick
-                    ? "cursor-pointer hover:bg-superficie"
-                    : ""
-                } ${fila.index % 2 === 1 ? "bg-superficie/50" : ""}`}
-                onClick={() => onFilaClick?.(fila.original)}
-              >
-                {fila.getVisibleCells().map((celda) => (
-                  <td key={celda.id} className="px-4 py-3 text-texto">
-                    {flexRender(celda.column.columnDef.cell, celda.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div
+      className={cn(
+        "overflow-hidden rounded-xl border border-borde bg-white",
+        className
+      )}
+    >
+      <Table>
+        <TableHeader>
+          {tabla.getHeaderGroups().map((grupo) => (
+            <TableRow key={grupo.id} className="bg-superficie hover:bg-superficie">
+              {grupo.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  className={cn(
+                    "text-xs font-semibold uppercase tracking-wider text-gray-500",
+                    header.column.getCanSort() &&
+                      "cursor-pointer select-none hover:text-texto"
+                  )}
+                  onClick={header.column.getToggleSortingHandler()}
+                >
+                  <div className="flex items-center gap-1">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                    {{
+                      asc: <ChevronUp className="h-3 w-3" />,
+                      desc: <ChevronDown className="h-3 w-3" />,
+                    }[header.column.getIsSorted() as string] ??
+                      (header.column.getCanSort() && (
+                        <ChevronsUpDown className="h-3 w-3 text-gray-300" />
+                      ))}
+                  </div>
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {tabla.getRowModel().rows.map((fila) => (
+            <TableRow
+              key={fila.id}
+              className={cn(
+                onFilaClick && "cursor-pointer",
+                fila.index % 2 === 1 && "bg-superficie/50"
+              )}
+              onClick={() => onFilaClick?.(fila.original)}
+            >
+              {fila.getVisibleCells().map((celda) => (
+                <TableCell key={celda.id} className="text-texto">
+                  {flexRender(celda.column.columnDef.cell, celda.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
       {paginacion && (
         <Paginacion
           pagina={tabla.getState().pagination.pageIndex + 1}

@@ -5,10 +5,22 @@ import * as esquema from "./esquema";
 
 let instancia: LibSQLDatabase<typeof esquema> | null = null;
 
+function resolverUrlBaseDeDatos(): string | undefined {
+  if (process.env.TURSO_DATABASE_URL) {
+    return process.env.TURSO_DATABASE_URL;
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    return "file:./mep-actas-local.db";
+  }
+
+  return undefined;
+}
+
 export function clienteDb() {
   if (instancia) return instancia;
 
-  const url = process.env.TURSO_DATABASE_URL;
+  const url = resolverUrlBaseDeDatos();
   const authToken = process.env.TURSO_AUTH_TOKEN;
 
   if (!url) {

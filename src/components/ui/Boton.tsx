@@ -1,4 +1,9 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { Loader2 } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+import { Button, type buttonVariants } from "./button";
+import type { VariantProps } from "class-variance-authority";
 
 type Variante = "primario" | "secundario" | "peligro" | "ghost" | "acento";
 type Tamano = "sm" | "md" | "lg";
@@ -10,18 +15,25 @@ interface BotonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
-const clasesBase =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primario focus-visible:ring-offset-2";
+type VarianteShadcn = NonNullable<VariantProps<typeof buttonVariants>["variant"]>;
 
-const variantes: Record<Variante, string> = {
-  primario: "bg-primario text-white hover:bg-primario-hover active:bg-primario-hover",
-  secundario: "border border-borde bg-white text-texto hover:bg-superficie",
-  peligro: "bg-error text-white hover:bg-red-700",
-  ghost: "text-texto hover:bg-superficie",
+const varianteBase: Record<Variante, VarianteShadcn> = {
+  primario: "default",
+  secundario: "outline",
+  peligro: "destructive",
+  ghost: "ghost",
+  acento: "default",
+};
+
+const varianteClases: Record<Variante, string> = {
+  primario: "hover:bg-primario-hover",
+  secundario: "border-borde bg-white text-texto hover:bg-superficie hover:text-texto",
+  peligro: "hover:bg-red-700",
+  ghost: "text-texto hover:bg-superficie hover:text-texto",
   acento: "bg-acento text-primario hover:bg-acento-suave",
 };
 
-const tamanos: Record<Tamano, string> = {
+const tamanoClases: Record<Tamano, string> = {
   sm: "h-9 px-3 text-sm",
   md: "h-10 px-4 text-sm",
   lg: "h-11 px-8 text-base",
@@ -32,38 +44,24 @@ export function Boton({
   tamano = "md",
   cargando = false,
   children,
-  className = "",
+  className,
   disabled,
   ...props
 }: BotonProps) {
   return (
-    <button
-      className={`${clasesBase} ${variantes[variante as keyof typeof variantes]} ${tamanos[tamano as keyof typeof tamanos]} ${className}`}
+    <Button
+      variant={varianteBase[variante as keyof typeof varianteBase]}
+      className={cn(
+        "focus-visible:ring-primario focus-visible:ring-offset-2",
+        varianteClases[variante as keyof typeof varianteClases],
+        tamanoClases[tamano as keyof typeof tamanoClases],
+        className
+      )}
       disabled={disabled || cargando}
       {...props}
     >
-      {cargando && (
-        <svg
-          className="animate-spin h-4 w-4"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-          />
-        </svg>
-      )}
+      {cargando && <Loader2 className="size-4 animate-spin" />}
       {children}
-    </button>
+    </Button>
   );
 }

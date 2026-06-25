@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "./button";
+
 interface PaginacionProps {
   pagina: number;
   totalPaginas: number;
@@ -21,23 +23,27 @@ export function Paginacion({
         {totalRegistros} registro{totalRegistros !== 1 ? "s" : ""} en total
       </p>
       <div className="flex items-center gap-2">
-        <button
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-borde text-texto hover:bg-superficie"
           onClick={() => onChange(pagina - 1)}
           disabled={pagina <= 1}
-          className="rounded-lg border border-borde px-3 py-1.5 text-sm text-texto hover:bg-superficie disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Anterior
-        </button>
+        </Button>
         <span className="px-2 text-sm text-gray-500">
           {pagina} de {totalPaginas}
         </span>
-        <button
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-borde text-texto hover:bg-superficie"
           onClick={() => onChange(pagina + 1)}
           disabled={pagina >= totalPaginas}
-          className="rounded-lg border border-borde px-3 py-1.5 text-sm text-texto hover:bg-superficie disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Siguiente
-        </button>
+        </Button>
       </div>
     </div>
   );

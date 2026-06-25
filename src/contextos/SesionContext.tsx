@@ -2,6 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import useSWR from "swr";
+import { cerrarSesion } from "@/lib/auth/cerrar-sesion";
 import type { NivelRol } from "@/server/auth/tipos";
 
 interface UsuarioSesion {
@@ -49,11 +50,6 @@ export function SesionProvider({ children }: { children: ReactNode }) {
   } = useSWR("/api/auth/session", fetcher, {
     revalidateOnFocus: false,
   });
-
-  const cerrarSesion = async () => {
-    await fetch("/api/auth/signout", { method: "POST" });
-    await refrescar();
-  };
 
   return (
     <SesionContext.Provider

@@ -60,12 +60,12 @@ export function Sidebar() {
         <img
           src="/icon.svg"
           alt="Escudo del Ministerio de Educación Pública"
-          className="h-10 w-10 rounded-lg ring-1 ring-white/20"
+          className="h-10 w-10 shrink-0 rounded-lg ring-1 ring-white/20"
         />
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold">SCT</span>
-          <span className="text-[10px] text-white/60">Consulta de Títulos</span>
-        </div>
+        <p className="flex-1 text-center text-sm font-semibold leading-snug">
+          <span className="block">Sistema de Consulta</span>
+          <span className="block">de Títulos</span>
+        </p>
       </div>
 
       <nav className="flex-1 space-y-5 overflow-y-auto px-2 py-2">
@@ -111,7 +111,8 @@ export function Sidebar() {
           <span className="truncate">{usuario.nombre}</span>
         </div>
         <button
-          onClick={cerrarSesion}
+          type="button"
+          onClick={() => void cerrarSesion()}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
         >
           <LogOut className="h-4 w-4" />

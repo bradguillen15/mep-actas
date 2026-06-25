@@ -28,13 +28,32 @@ export default function IniciarSesion() {
       });
 
       if (res?.error) {
-        const datos = JSON.parse(res.error);
-        if (datos.code === "RATE_LIMITED") {
-          setError(
-            `Demasiados intentos. Intente de nuevo en ${datos.retryAfter} segundos.`
-          );
-        } else {
+        if (res.error === "CredentialsSignin") {
           setError("Credenciales inválidas. Verifique su correo y contraseña.");
+          return;
+        }
+
+        if (res.error === "Configuration") {
+          setError(
+            "Error de configuración del servidor. Verifique que la base de datos local esté inicializada (pnpm run dev:local)."
+          );
+          return;
+        }
+
+        try {
+          const datos = JSON.parse(res.error) as {
+            code?: string;
+            retryAfter?: number;
+          };
+          if (datos.code === "RATE_LIMITED") {
+            setError(
+              `Demasiados intentos. Intente de nuevo en ${datos.retryAfter} segundos.`
+            );
+          } else {
+            setError("Credenciales inválidas. Verifique su correo y contraseña.");
+          }
+        } catch {
+          setError("No se pudo iniciar sesión. Intente de nuevo.");
         }
         return;
       }
