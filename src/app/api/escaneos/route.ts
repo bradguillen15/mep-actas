@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     : undefined;
 
   const servicio = await crearServicio();
-  const escaneos = await servicio.listarEscaneos({
+  const escaneos = await servicio.listarConUrlLectura({
     escuelaId,
     tomo,
   });

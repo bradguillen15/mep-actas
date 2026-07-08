@@ -13,6 +13,7 @@ describe("obtenerUsuarioPorEmail", () => {
         passwordHash: "hash",
         funcionarioId: 1,
         rolId: 1,
+        activo: true,
         nivel: 1,
       },
     ];
@@ -36,6 +37,7 @@ describe("obtenerUsuarioPorEmail", () => {
 
     expect(resultado?.email).toBe("admin@prueba.cr");
     expect(resultado?.nivel).toBe(1);
+    expect(resultado?.activo).toBe(true);
   });
 
   it("retorna undefined si el email no existe", async () => {

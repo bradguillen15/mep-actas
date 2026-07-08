@@ -23,6 +23,7 @@ interface Escaneo {
   numeroTomo: number;
   numeroFolio: number;
   url: string;
+  urlLectura: string;
   formato: string;
   createdAt: string;
 }
@@ -184,7 +185,7 @@ export default function Tomos() {
           {escaneoVisible && (
             <Tarjeta className="flex items-center justify-center p-4">
               <Image
-                src={escaneoVisible.url}
+                src={escaneoVisible.urlLectura}
                 alt={`Folio ${escaneoVisible.numeroFolio}`}
                 width={800}
                 height={600}

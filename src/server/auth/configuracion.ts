@@ -32,17 +32,21 @@ export const config = {
         }
 
         const { clienteDb } = await import("@/db/cliente");
-        const { obtenerUsuarioPorEmail } = await import(
-          "@/server/repositorios/usuarios.repositorio"
-        );
+        const { obtenerUsuarioPorEmail, obtenerAmbitoDeFuncionario } =
+          await import("@/server/repositorios/usuarios.repositorio");
 
         const db = clienteDb();
         const usuario = await obtenerUsuarioPorEmail(db, email);
 
-        if (!usuario) return null;
+        if (!usuario || !usuario.activo) return null;
 
         const passwordValida = await compare(password, usuario.passwordHash);
         if (!passwordValida) return null;
+
+        const ambito = await obtenerAmbitoDeFuncionario(
+          db,
+          usuario.funcionarioId
+        );
 
         return {
           id: String(usuario.id),
@@ -51,6 +55,8 @@ export const config = {
           nivel: usuario.nivel,
           funcionarioId: usuario.funcionarioId,
           usuarioId: usuario.id,
+          escuelaId: ambito.escuelaIds[0],
+          regionId: ambito.regionIds[0],
         };
       },
     }),
@@ -64,6 +70,8 @@ export const config = {
         tk.rolId = u.rolId;
         tk.nivel = u.nivel;
         tk.funcionarioId = u.funcionarioId;
+        tk.escuelaId = u.escuelaId;
+        tk.regionId = u.regionId;
       }
       return token;
     },
@@ -74,8 +82,14 @@ export const config = {
       usr.rolId = tk.rolId;
       usr.nivel = tk.nivel;
       usr.funcionarioId = tk.funcionarioId;
+      usr.escuelaId = tk.escuelaId;
+      usr.regionId = tk.regionId;
       return session;
     },
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 8 * 60 * 60,
   },
   pages: {
     signIn: "/iniciar-sesion",

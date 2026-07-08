@@ -4,6 +4,7 @@ import { crearServicioEscaneos } from "@/server/servicios/escaneos.servicio";
 import * as repositorio from "@/server/repositorios/escaneos.repositorio";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
+import { verificarRol } from "@/server/auth/autorizacion.servicio";
 
 async function crearServicio() {
   const db = clienteDb();
@@ -56,8 +57,35 @@ export async function DELETE(
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  const verificacionNivel = verificarRol(sesion, 3);
+  if (!verificacionNivel.autorizado) {
+    return NextResponse.json(
+      { error: "No tiene permisos para eliminar escaneos" },
+      { status: verificacionNivel.error }
+    );
+  }
+
   const { id } = await params;
   const servicio = await crearServicio();
+  const existente = await servicio.obtenerEscaneoPorId(Number(id));
+
+  if (!existente) {
+    return NextResponse.json(
+      { error: "Escaneo no encontrado" },
+      { status: 404 }
+    );
+  }
+
+  const verificacionAmbito = verificarRol(sesion, 3, {
+    escuelaId: existente.escuelaId,
+  });
+  if (!verificacionAmbito.autorizado) {
+    return NextResponse.json(
+      { error: "No tiene permisos para eliminar escaneos de esta escuela" },
+      { status: verificacionAmbito.error }
+    );
+  }
+
   const escaneo = await servicio.eliminarEscaneo(Number(id), sesion);
 
   if (!escaneo) {

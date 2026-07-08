@@ -6,7 +6,7 @@ export type FilaUsuario = typeof esquema.usuarios.$inferSelect;
 
 export type FilaUsuarioConRol = Pick<
   FilaUsuario,
-  "id" | "email" | "passwordHash" | "funcionarioId" | "rolId"
+  "id" | "email" | "passwordHash" | "funcionarioId" | "rolId" | "activo"
 > & {
   nivel: number;
 };
@@ -97,6 +97,7 @@ export async function obtenerUsuarioPorEmail(
       passwordHash: esquema.usuarios.passwordHash,
       funcionarioId: esquema.usuarios.funcionarioId,
       rolId: esquema.usuarios.rolId,
+      activo: esquema.usuarios.activo,
       nivel: esquema.roles.nivel,
     })
     .from(esquema.usuarios)

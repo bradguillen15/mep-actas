@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import useSWR from "swr";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ChevronDown, ChevronUp, Search } from "lucide-react";
@@ -66,9 +66,7 @@ export default function Consultar() {
   const numeroCertificadoDebounced = useDebouncedValue(numeroCertificado, 300);
   const tituloActaDebounced = useDebouncedValue(tituloActa, 300);
 
-  useEffect(() => {
-    setPagina(1);
-  }, [
+  const filtrosActuales = [
     busquedaDebounced,
     tipoFiltro,
     escuelaFiltro,
@@ -78,7 +76,12 @@ export default function Consultar() {
     fechaHastaDebounced,
     numeroCertificadoDebounced,
     tituloActaDebounced,
-  ]);
+  ].join("|");
+  const [filtrosPrevios, setFiltrosPrevios] = useState(filtrosActuales);
+  if (filtrosPrevios !== filtrosActuales) {
+    setFiltrosPrevios(filtrosActuales);
+    setPagina(1);
+  }
 
   const { data: tiposActa } = useSWR<TipoActa[]>("/api/tipos-acta", fetcher);
 

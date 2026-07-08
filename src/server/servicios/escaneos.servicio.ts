@@ -25,6 +25,10 @@ export interface ServicioEscaneos {
     escuelaId?: number;
     tomo?: number;
   }) => Promise<FilaEscaneo[]>;
+  listarConUrlLectura: (filtros: {
+    escuelaId?: number;
+    tomo?: number;
+  }) => Promise<(FilaEscaneo & { urlLectura: string })[]>;
   obtenerEscaneoPorId: (id: number) => Promise<FilaEscaneo | undefined>;
   prepararSubida: (
     datos: { escuelaId: number; numeroTomo: number; numeroFolio: number; formato: string },
@@ -46,6 +50,16 @@ export function crearServicioEscaneos(
   return {
     async listarEscaneos(filtros) {
       return repositorio.listarEscaneos(filtros);
+    },
+
+    async listarConUrlLectura(filtros) {
+      const escaneos = await repositorio.listarEscaneos(filtros);
+      return Promise.all(
+        escaneos.map(async (escaneo) => ({
+          ...escaneo,
+          urlLectura: await generarUrlLectura(escaneo.url),
+        }))
+      );
     },
 
     async obtenerEscaneoPorId(id) {

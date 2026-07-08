@@ -42,10 +42,19 @@ El selector de rol del formulario filtra a `nivel >= sesion.nivel`; el ámbito (
 - **Funcionario con múltiples escuelas/regiones cruzando ámbitos** → se autoriza si *alguna* de sus escuelas cae en el ámbito del actor; se documenta como comportamiento intencional (alineado a que un funcionario puede pertenecer a varias escuelas, BRD §5.3).
 - **Queries adicionales por operación (nivel del rol + ámbito del funcionario)** → impacto mínimo (lecturas indexadas por PK/FK); aceptable frente a la correctitud de seguridad.
 - **Divergencia UI/serverside** → mitigado manteniendo el backend como única autoridad y agregando pruebas que verifiquen el 403 aunque la UI lo permitiera.
+- **Ámbito de sesión = primera escuela/región del funcionario (Decisión 6)** → un Admin Regional/Escuela cuyo funcionario pertenece a varias escuelas/regiones queda limitado, para efectos de `verificarRol`, a la primera. No afecta a Admin País (sin ámbito) ni a la validación de ámbito del *destino* en `usuarios.servicio` (que sí recorre todas las escuelas del funcionario objetivo). Aceptable para el piloto de una escuela; revisar al expandir a Fase 2 (multi-escuela por funcionario con rol regional).
 
 ## Migration Plan
 
 Sin migración de datos. Cambio aditivo de comportamiento (más restrictivo). Despliegue estándar; rollback = revertir el commit. Verificar que el seed/admin inicial (Admin País) siga pudiendo crear todos los niveles tras el cambio.
+
+### Decisión 6: El ámbito del actor se resuelve en el login, no en cada petición
+
+Una auditoría de seguridad (2026-07-08) encontró que `SesionUsuario.escuelaId`/`regionId` nunca se poblaban: el callback `jwt` de NextAuth solo copiaba `usuarioId`, `rolId`, `nivel`, `funcionarioId`. Como consecuencia, tanto `verificarRol(..., ambito)` (capability `autenticacion-roles`) como `dentroDeAmbito` (esta capability) evaluaban siempre `undefined`, y las pruebas solo pasaban porque construyen `SesionUsuario` manualmente. En producción esto era **doblemente incorrecto**: sub-restrictivo hacia otras escuelas (fuga de datos vía `escuelaId` de query string sin validar) y sobre-restrictivo hacia la propia gestión de usuarios (ningún Admin Regional/Escuela real podía pasar el chequeo de ámbito).
+
+Se decide resolver `obtenerAmbitoDeFuncionario(funcionarioId)` (ya existente, sección 2) dentro del callback `jwt` en el primer login y persistir `escuelaId`/`regionId` en el token. Si el funcionario pertenece a varias escuelas/regiones, se usa la primera como ámbito "propio" de la sesión (limitación conocida; ver Risks). Esto no cambia el modelo de datos ni el contrato de `verificarRol`/`dentroDeAmbito`, solo corrige que la sesión llegue con los datos que esas funciones siempre esperaron recibir.
+
+- *Alternativa considerada:* resolver el ámbito en cada petición desde la BD en vez del JWT. Rechazada por ahora: agrega una consulta por request a todos los endpoints protegidos; el JWT ya se re-firma en cada login y la ventana de staleness (cambio de escuela de un funcionario sin volver a iniciar sesión) se considera aceptable para el piloto.
 
 ## Open Questions
 

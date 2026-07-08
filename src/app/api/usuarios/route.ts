@@ -6,6 +6,7 @@ import * as repositorio from "@/server/repositorios/usuarios.repositorio";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
+import { validarPassword } from "@/server/auth/politica-password";
 
 const db = clienteDb();
 
@@ -55,6 +56,12 @@ export async function POST(request: NextRequest) {
   }
 
   const json = await request.json();
+
+  const errorPassword = validarPassword(json.password ?? "");
+  if (errorPassword) {
+    return NextResponse.json({ error: errorPassword }, { status: 400 });
+  }
+
   const passwordHash = hashSync(json.password, 10);
 
   const auditor = crearAuditor(db);

@@ -15,5 +15,9 @@ export async function obtenerSesion(): Promise<SesionUsuario | null> {
     rolId: Number(usuario.rolId),
     nivel: Number(usuario.nivel) as NivelRol,
     funcionarioId: Number(usuario.funcionarioId),
+    escuelaId:
+      usuario.escuelaId !== undefined ? Number(usuario.escuelaId) : undefined,
+    regionId:
+      usuario.regionId !== undefined ? Number(usuario.regionId) : undefined,
   };
 }

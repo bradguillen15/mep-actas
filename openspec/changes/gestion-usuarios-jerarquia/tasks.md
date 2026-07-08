@@ -41,3 +41,13 @@
 - [x] 7.1 Ejecutar `pnpm verify` (lint + typecheck + test + e2e) en verde.
 - [x] 7.2 Verificación manual de flujo en la app: Admin País crea usuarios de todos los niveles; Admin Regional limitado a su región; Staff sin acceso a la sección.
 - [x] 7.3 Actualizar documentación: `docs/api-spec.yml` (respuestas 403 de usuarios) y `docs/data-model.md`/notas de roles si aplica; todo en español.
+
+## 8. Cierre de brechas descubiertas en auditoría de seguridad (BRD §7.4)
+
+Una auditoría contra `docs/brd.md` encontró que la validación de ámbito de esta change (sección 3) descansa sobre `sesion.escuelaId`/`sesion.regionId`, pero ningún flujo real los llena — el JWT y `obtenerSesion()` solo cargan `usuarioId`, `email`, `rolId`, `nivel`, `funcionarioId`. En producción, `dentroDeAmbito` siempre evalúa `undefined` y el escenario "Verificación de ámbito por escuela" de `autenticacion-roles/spec.md` no se cumple fuera de las pruebas unitarias (que construyen `SesionUsuario` a mano). Además, `cambiarEstado` (desactivar) no tiene efecto real: el login no verifica `usuarios.activo`.
+
+- [x] 8.1 Escribir prueba que falle: `authorize()` de NextAuth rechaza credenciales válidas de un usuario con `activo = false`.
+- [x] 8.2 Implementar el chequeo de `activo` en `obtenerUsuarioPorEmail` (agregar `activo` al select) y en `authorize()`.
+- [x] 8.3 Escribir prueba que falle: el callback `jwt` de NextAuth resuelve y adjunta `escuelaId`/`regionId` reales a partir de `obtenerAmbitoDeFuncionario` (o equivalente) en el primer login.
+- [x] 8.4 Implementar la resolución de ámbito real en el callback `jwt`/`session`, cubriendo el caso de un funcionario con varias escuelas (usar la primera escuela/región como ámbito "propio" para las comparaciones de `verificarRol`, documentando la limitación si el funcionario pertenece a varias).
+- [x] 8.5 Re-ejecutar `pnpm test` y `pnpm test:e2e`; confirmar que el escenario de `autenticacion-roles/spec.md` ("Admin Escuela de escuela_id=5 no accede a escuela_id=10") pasa con una sesión real, no solo mockeada. Verificado además en el navegador (`pnpm dev:local`): login de `admin@pais.local` devuelve `escuelaId`/`regionId` reales en `/api/auth/session` (antes siempre `undefined`).
