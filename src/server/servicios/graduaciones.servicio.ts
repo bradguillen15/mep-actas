@@ -1,34 +1,71 @@
-import type { ResultadoGraduacion } from "@/server/repositorios/graduaciones.repositorio";
+import type {
+  ParametrosBusquedaGraduaciones,
+  ResultadoBusquedaGraduaciones,
+  ResultadoGraduacion,
+} from "@/server/repositorios/graduaciones.repositorio";
+
+export type GraduacionDto = {
+  id: number;
+  nombreCompleto: string;
+  identificacion: string;
+  escuela: string;
+  tipoActa: string;
+  fecha: string;
+  numeroCertificado: number;
+  actaId: number;
+  tituloActa: string;
+};
 
 type RepositorioGraduaciones = {
-  buscarGraduaciones: (params: {
-    identificacion?: string;
-    nombre?: string;
-    escuelaId?: number;
-  }) => Promise<ResultadoGraduacion[]>;
+  buscarGraduaciones: (
+    params: ParametrosBusquedaGraduaciones
+  ) => Promise<ResultadoBusquedaGraduaciones>;
   obtenerGraduacionPorId: (id: number) => Promise<ResultadoGraduacion[]>;
 };
 
+export type RespuestaBusquedaGraduaciones = {
+  datos: GraduacionDto[];
+  total: number;
+  pagina: number;
+  limite: number;
+};
+
 export type ServicioGraduaciones = {
-  buscar: (params: {
-    identificacion?: string;
-    nombre?: string;
-    escuelaId?: number;
-  }) => Promise<ResultadoGraduacion[]>;
+  buscar: (
+    params: ParametrosBusquedaGraduaciones
+  ) => Promise<RespuestaBusquedaGraduaciones>;
   obtenerPorId: (id: number) => Promise<{
-    acta: ResultadoGraduacion[];
+    acta: GraduacionDto[];
   }>;
 };
+
+function mapearGraduacion(resultado: ResultadoGraduacion): GraduacionDto {
+  return {
+    id: resultado.actaEstudianteId,
+    nombreCompleto: `${resultado.nombres} ${resultado.apellidos}`,
+    identificacion: resultado.identificacion,
+    escuela: resultado.escuelaNombre,
+    tipoActa: resultado.tipoActaNombre,
+    fecha: resultado.fecha,
+    numeroCertificado: resultado.numeroCertificado,
+    actaId: resultado.actaId,
+    tituloActa: resultado.titulo,
+  };
+}
 
 export function crearServicioGraduaciones(
   repositorio: RepositorioGraduaciones
 ): ServicioGraduaciones {
   return {
     async buscar(params) {
-      if (!params.identificacion && !params.nombre) {
-        return [];
-      }
-      return repositorio.buscarGraduaciones(params);
+      const { datos, total, pagina, limite } =
+        await repositorio.buscarGraduaciones(params);
+      return {
+        datos: datos.map(mapearGraduacion),
+        total,
+        pagina,
+        limite,
+      };
     },
 
     async obtenerPorId(id) {
@@ -38,7 +75,7 @@ export function crearServicioGraduaciones(
         error.name = "NotFoundError";
         throw error;
       }
-      return { acta: resultados };
+      return { acta: resultados.map(mapearGraduacion) };
     },
   };
 }

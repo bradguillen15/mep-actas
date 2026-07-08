@@ -6,6 +6,14 @@ import { obtenerSesion } from "@/server/auth/sesion.servicio";
 
 const db = clienteDb();
 
+function parametroOpcional(
+  searchParams: URLSearchParams,
+  clave: string
+): string | undefined {
+  const valor = searchParams.get(clave);
+  return valor && valor.trim() !== "" ? valor : undefined;
+}
+
 export async function GET(request: NextRequest) {
   const sesion = await obtenerSesion();
   if (!sesion) {
@@ -13,11 +21,11 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const identificacion = searchParams.get("identificacion") ?? undefined;
-  const nombre = searchParams.get("nombre") ?? undefined;
-  const escuelaId = searchParams.get("escuelaId")
-    ? Number(searchParams.get("escuelaId"))
-    : undefined;
+  const escuelaIdParam = searchParams.get("escuelaId");
+  const tipoActaIdParam = searchParams.get("tipoActaId");
+
+  const paginaParam = searchParams.get("pagina");
+  const limiteParam = searchParams.get("limite");
 
   const servicio = crearServicioGraduaciones({
     buscarGraduaciones: (params) =>
@@ -27,9 +35,16 @@ export async function GET(request: NextRequest) {
   });
 
   const resultados = await servicio.buscar({
-    identificacion,
-    nombre,
-    escuelaId,
+    identificacion: parametroOpcional(searchParams, "identificacion"),
+    nombre: parametroOpcional(searchParams, "nombre"),
+    escuelaId: escuelaIdParam ? Number(escuelaIdParam) : undefined,
+    tipoActaId: tipoActaIdParam ? Number(tipoActaIdParam) : undefined,
+    fechaDesde: parametroOpcional(searchParams, "fechaDesde"),
+    fechaHasta: parametroOpcional(searchParams, "fechaHasta"),
+    numeroCertificado: parametroOpcional(searchParams, "numeroCertificado"),
+    tituloActa: parametroOpcional(searchParams, "tituloActa"),
+    pagina: paginaParam ? Number(paginaParam) : undefined,
+    limite: limiteParam ? Number(limiteParam) : undefined,
   });
 
   return NextResponse.json(resultados);

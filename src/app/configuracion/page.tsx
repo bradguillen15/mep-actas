@@ -3,7 +3,7 @@
 import { useState } from "react";
 import useSWR, { mutate } from "swr";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Tabla } from "@/components/ui/Tabla";
 import { Boton } from "@/components/ui/Boton";
 import { Campo } from "@/components/ui/Campo";
@@ -187,10 +187,13 @@ function GestionTiposActa() {
   );
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [creando, setCreando] = useState(false);
+  const [eliminandoId, setEliminandoId] = useState<number | null>(null);
+  const [error, setError] = useState("");
 
   const agregarTipo = async () => {
     if (!nuevoNombre.trim()) return;
     setCreando(true);
+    setError("");
     try {
       await fetch("/api/tipos-acta", {
         method: "POST",
@@ -204,9 +207,54 @@ function GestionTiposActa() {
     }
   };
 
+  const eliminarTipo = async (tipo: TipoActa) => {
+    const confirmado = window.confirm(
+      `¿Eliminar el tipo de acta "${tipo.nombre}"?`
+    );
+    if (!confirmado) return;
+
+    setEliminandoId(tipo.id);
+    setError("");
+    try {
+      const res = await fetch(`/api/tipos-acta/${tipo.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({
+          error: "Error al eliminar el tipo de acta",
+        }));
+        throw new Error(err.error ?? "Error al eliminar el tipo de acta");
+      }
+      refreshTipos();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Error al eliminar el tipo de acta"
+      );
+    } finally {
+      setEliminandoId(null);
+    }
+  };
+
   const columnas: ColumnDef<TipoActa>[] = [
     { header: "ID", accessorKey: "id" },
     { header: "Nombre", accessorKey: "nombre", enableSorting: true },
+    {
+      header: "",
+      id: "acciones",
+      enableSorting: false,
+      cell: ({ row }) => (
+        <button
+          type="button"
+          onClick={() => eliminarTipo(row.original)}
+          disabled={eliminandoId === row.original.id}
+          title="Eliminar tipo de acta"
+          aria-label="Eliminar tipo de acta"
+          className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-error/10 hover:text-error disabled:opacity-50"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      ),
+    },
   ];
 
   return (
@@ -228,6 +276,11 @@ function GestionTiposActa() {
           Agregar
         </Boton>
       </div>
+      {error && (
+        <div className="rounded-lg bg-error/10 px-3 py-2 text-sm text-error">
+          {error}
+        </div>
+      )}
       {isLoading && <Cargando />}
       {tipos && <Tabla columnas={columnas} datos={tipos} />}
     </div>

@@ -1,0 +1,1 @@
+export const LIMITE_GRADUACIONES_POR_PAGINA = 20;

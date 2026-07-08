@@ -1,8 +1,10 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { eq, and, like, or, type SQL } from "drizzle-orm";
+import { eq, and, or, desc, gte, lte, sql, count, type SQL } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
+import { LIMITE_GRADUACIONES_POR_PAGINA } from "@/lib/graduaciones";
 
 export type ResultadoGraduacion = {
+  actaEstudianteId: number;
   actaId: number;
   titulo: string;
   fecha: string;
@@ -20,7 +22,28 @@ export type ResultadoGraduacion = {
   numeroCertificado: number;
 };
 
+export type ParametrosBusquedaGraduaciones = {
+  identificacion?: string;
+  nombre?: string;
+  escuelaId?: number;
+  tipoActaId?: number;
+  fechaDesde?: string;
+  fechaHasta?: string;
+  numeroCertificado?: string;
+  tituloActa?: string;
+  pagina?: number;
+  limite?: number;
+};
+
+export type ResultadoBusquedaGraduaciones = {
+  datos: ResultadoGraduacion[];
+  total: number;
+  pagina: number;
+  limite: number;
+};
+
 const COLUMNAS = {
+  actaEstudianteId: esquema.actaEstudiantes.id,
   actaId: esquema.actas.id,
   titulo: esquema.actas.titulo,
   fecha: esquema.actas.fecha,
@@ -38,23 +61,27 @@ const COLUMNAS = {
   numeroCertificado: esquema.actaEstudiantes.numeroCertificado,
 };
 
-export async function buscarGraduaciones(
-  db: LibSQLDatabase<typeof esquema>,
-  params: { identificacion?: string; nombre?: string; escuelaId?: number }
-): Promise<ResultadoGraduacion[]> {
+function patronLike(term: string): string {
+  return `%${term.trim().toLowerCase()}%`;
+}
+
+function construirCondiciones(params: ParametrosBusquedaGraduaciones): SQL[] {
   const condiciones: SQL[] = [];
 
   if (params.identificacion) {
+    const patron = patronLike(params.identificacion);
     condiciones.push(
-      eq(esquema.personas.identificacion, params.identificacion)
+      sql`lower(${esquema.personas.identificacion}) like ${patron}`
     );
   }
 
   if (params.nombre) {
+    const patron = patronLike(params.nombre);
     condiciones.push(
       or(
-        like(esquema.personas.nombres, `%${params.nombre}%`),
-        like(esquema.personas.apellidos, `%${params.nombre}%`)
+        sql`lower(${esquema.personas.nombres}) like ${patron}`,
+        sql`lower(${esquema.personas.apellidos}) like ${patron}`,
+        sql`lower(${esquema.personas.nombres} || ' ' || ${esquema.personas.apellidos}) like ${patron}`
       )!
     );
   }
@@ -63,8 +90,45 @@ export async function buscarGraduaciones(
     condiciones.push(eq(esquema.actas.escuelaId, params.escuelaId));
   }
 
-  const query = db
-    .select(COLUMNAS)
+  if (params.tipoActaId) {
+    condiciones.push(eq(esquema.actas.tipoActaId, params.tipoActaId));
+  }
+
+  if (params.fechaDesde) {
+    condiciones.push(gte(esquema.actas.fecha, params.fechaDesde));
+  }
+
+  if (params.fechaHasta) {
+    condiciones.push(lte(esquema.actas.fecha, params.fechaHasta));
+  }
+
+  if (params.numeroCertificado) {
+    const patron = `%${params.numeroCertificado.trim()}%`;
+    condiciones.push(
+      sql`cast(${esquema.actaEstudiantes.numeroCertificado} as text) like ${patron}`
+    );
+  }
+
+  if (params.tituloActa) {
+    const patron = patronLike(params.tituloActa);
+    condiciones.push(sql`lower(${esquema.actas.titulo}) like ${patron}`);
+  }
+
+  return condiciones;
+}
+
+export async function buscarGraduaciones(
+  db: LibSQLDatabase<typeof esquema>,
+  params: ParametrosBusquedaGraduaciones
+): Promise<ResultadoBusquedaGraduaciones> {
+  const condiciones = construirCondiciones(params);
+  const limite = params.limite ?? LIMITE_GRADUACIONES_POR_PAGINA;
+  const pagina = Math.max(1, params.pagina ?? 1);
+  const offset = (pagina - 1) * limite;
+  const filtro = condiciones.length > 0 ? and(...condiciones) : undefined;
+
+  const conteoQuery = db
+    .select({ conteo: count() })
     .from(esquema.actas)
     .innerJoin(
       esquema.tiposActas,
@@ -87,11 +151,40 @@ export async function buscarGraduaciones(
       eq(esquema.estudiantes.personaId, esquema.personas.id)
     );
 
-  if (condiciones.length > 0) {
-    return query.where(and(...condiciones));
-  }
+  const [{ conteo: total }] = filtro
+    ? await conteoQuery.where(filtro)
+    : await conteoQuery;
 
-  return query;
+  const datosQuery = db
+    .select(COLUMNAS)
+    .from(esquema.actas)
+    .innerJoin(
+      esquema.tiposActas,
+      eq(esquema.actas.tipoActaId, esquema.tiposActas.id)
+    )
+    .innerJoin(
+      esquema.escuelas,
+      eq(esquema.actas.escuelaId, esquema.escuelas.id)
+    )
+    .innerJoin(
+      esquema.actaEstudiantes,
+      eq(esquema.actas.id, esquema.actaEstudiantes.actaId)
+    )
+    .innerJoin(
+      esquema.estudiantes,
+      eq(esquema.actaEstudiantes.estudianteId, esquema.estudiantes.id)
+    )
+    .innerJoin(
+      esquema.personas,
+      eq(esquema.estudiantes.personaId, esquema.personas.id)
+    )
+    .orderBy(desc(esquema.actas.fecha))
+    .limit(limite)
+    .offset(offset);
+
+  const datos = filtro ? await datosQuery.where(filtro) : await datosQuery;
+
+  return { datos, total, pagina, limite };
 }
 
 export async function obtenerGraduacionPorId(

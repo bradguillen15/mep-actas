@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { Tabla } from "@/components/ui/Tabla";
 import { Selector } from "@/components/ui/Selector";
-import { Modal } from "@/components/ui/Modal";
 import { Boton } from "@/components/ui/Boton";
 import { Cargando } from "@/components/ui/Cargando";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
-import { Badge } from "@/components/ui/Badge";
 import { useEscuelaActual } from "../../../src/hooks/useEscuelaActual";
 
 interface Acta {
@@ -26,39 +25,13 @@ interface Acta {
   actaReferenciaId: number | null;
 }
 
-interface ActaEstudiante {
-  id: number;
-  actaId: number;
-  estudianteId: number;
-  numeroCertificado: number;
-  identificacion: string;
-  nombres: string;
-  apellidos: string;
-}
-
-interface ActaFirmante {
-  id: number;
-  actaId: number;
-  funcionarioId: number;
-  rolFirma: string;
-  nombres: string;
-  apellidos: string;
-  puesto: string;
-}
-
-interface ActaDetalle {
-  acta: Acta;
-  estudiantes: ActaEstudiante[];
-  firmantes: ActaFirmante[];
-}
-
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function Actas() {
+  const router = useRouter();
   const { escuelaId, escuelas, puedeElegirEscuela } = useEscuelaActual();
   const [escuelaFiltro, setEscuelaFiltro] = useState("");
   const [tomoFiltro, _setTomoFiltro] = useState("");
-  const [detalleId, setDetalleId] = useState<number | null>(null);
 
   const params = new URLSearchParams();
   if (escuelaFiltro) params.set("escuelaId", escuelaFiltro);
@@ -70,11 +43,6 @@ export default function Actas() {
     fetcher
   );
 
-  const { data: detalle } = useSWR<ActaDetalle>(
-    detalleId ? `/api/actas/${detalleId}` : null,
-    fetcher
-  );
-
   const columnas: ColumnDef<Acta>[] = [
     {
       header: "N° de acta",
@@ -83,7 +51,8 @@ export default function Actas() {
     },
     {
       header: "Tomo / Folios",
-      accessorFn: (row) => `Tomo ${row.numeroTomo}, folios ${row.folioInicio}–${row.folioFin}`,
+      accessorFn: (row) =>
+        `Tomo ${row.numeroTomo}, folios ${row.folioInicio}–${row.folioFin}`,
       id: "tomoFolios",
       enableSorting: false,
     },
@@ -110,9 +79,6 @@ export default function Actas() {
     valor: e.id,
     etiqueta: e.nombre,
   }));
-
-  const numEstudiantes = detalle?.estudiantes?.length ?? 0;
-  const numFirmantes = detalle?.firmantes?.length ?? 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -167,148 +133,9 @@ export default function Actas() {
         <Tabla
           columnas={columnas}
           datos={actas}
-          onFilaClick={(fila) => setDetalleId(fila.id)}
+          onFilaClick={(fila) => router.push(`/actas/${fila.id}`)}
         />
       )}
-
-      <Modal
-        abierto={detalleId !== null}
-        onCerrar={() => setDetalleId(null)}
-        titulo="Detalle de acta"
-        tamano="xl"
-      >
-        {detalle && (
-          <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-medium text-gray-500">
-                  Título
-                </label>
-                <p className="text-sm text-texto">{detalle.acta.titulo}</p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500">
-                  Fecha
-                </label>
-                <p className="text-sm text-texto">
-                  {new Date(detalle.acta.fecha).toLocaleDateString("es-CR")}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500">
-                  Tomo
-                </label>
-                <p className="text-sm text-texto">{detalle.acta.numeroTomo}</p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500">
-                  Folios
-                </label>
-                <p className="text-sm text-texto">
-                  {detalle.acta.folioInicio} – {detalle.acta.folioFin}
-                </p>
-              </div>
-              {detalle.acta.actaReferenciaId && (
-                <div className="col-span-2">
-                  <label className="text-xs font-medium text-gray-500">
-                    Acta de referencia
-                  </label>
-                  <p className="text-sm text-primario">
-                    #{detalle.acta.actaReferenciaId}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <h3 className="mb-3 text-sm font-semibold text-texto">
-                Estudiantes ({numEstudiantes})
-              </h3>
-              {numEstudiantes === 0 ? (
-                <p className="text-sm text-gray-500">
-                  Sin estudiantes asociados.
-                </p>
-              ) : (
-                <div className="overflow-hidden rounded-lg border border-borde">
-                  <table className="w-full text-sm">
-                    <thead className="bg-superficie">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          Nombre
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          Identificación
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          N° certificado
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detalle.estudiantes.map((est) => (
-                        <tr
-                          key={est.id}
-                          className="border-t border-borde"
-                        >
-                          <td className="px-3 py-2">
-                            {est.nombres} {est.apellidos}
-                          </td>
-                          <td className="px-3 py-2">{est.identificacion}</td>
-                          <td className="px-3 py-2">
-                            {est.numeroCertificado}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <h3 className="mb-3 text-sm font-semibold text-texto">
-                Firmantes ({numFirmantes})
-              </h3>
-              {numFirmantes === 0 ? (
-                <p className="text-sm text-gray-500">
-                  Sin firmantes registrados.
-                </p>
-              ) : (
-                <div className="overflow-hidden rounded-lg border border-borde">
-                  <table className="w-full text-sm">
-                    <thead className="bg-superficie">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          Nombre
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          Puesto
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          Rol de firma
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detalle.firmantes.map((f) => (
-                        <tr key={f.id} className="border-t border-borde">
-                          <td className="px-3 py-2">
-                            {f.nombres} {f.apellidos}
-                          </td>
-                          <td className="px-3 py-2">{f.puesto}</td>
-                          <td className="px-3 py-2">
-                            <Badge variante="neutral">{f.rolFirma}</Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

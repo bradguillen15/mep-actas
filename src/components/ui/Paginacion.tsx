@@ -6,22 +6,45 @@ interface PaginacionProps {
   pagina: number;
   totalPaginas: number;
   totalRegistros: number;
+  limite: number;
+  registrosEnPagina: number;
   onChange: (pagina: number) => void;
+}
+
+function textoRango(
+  pagina: number,
+  limite: number,
+  totalRegistros: number,
+  registrosEnPagina: number
+): string {
+  if (totalRegistros === 0) {
+    return "Sin registros";
+  }
+
+  const inicio = (pagina - 1) * limite + 1;
+  const fin = inicio + registrosEnPagina - 1;
+
+  return `Mostrando ${inicio}–${fin} de ${totalRegistros} registro${
+    totalRegistros !== 1 ? "s" : ""
+  }`;
 }
 
 export function Paginacion({
   pagina,
   totalPaginas,
   totalRegistros,
+  limite,
+  registrosEnPagina,
   onChange,
 }: PaginacionProps) {
-  if (totalPaginas <= 1) return null;
+  if (totalRegistros === 0) return null;
 
   return (
     <div className="flex items-center justify-between border-t border-borde px-4 py-3">
       <p className="text-sm text-gray-500">
-        {totalRegistros} registro{totalRegistros !== 1 ? "s" : ""} en total
+        {textoRango(pagina, limite, totalRegistros, registrosEnPagina)}
       </p>
+      {totalPaginas > 1 && (
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
@@ -45,6 +68,7 @@ export function Paginacion({
           Siguiente
         </Button>
       </div>
+      )}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import * as esquema from "@/db/esquema";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { crearServicioGraduaciones } from "@/server/servicios/graduaciones.servicio";
 import * as repositorio from "@/server/repositorios/graduaciones.repositorio";
+import { LIMITE_GRADUACIONES_POR_PAGINA } from "@/lib/graduaciones";
 
 const DB_PATH = path.resolve(__dirname, "../../temp-e2e.db");
 let db: LibSQLDatabase<typeof esquema>;
@@ -105,10 +106,26 @@ describe("Consulta graduaciones e2e", () => {
       identificacion: "999999999",
     });
 
-    expect(resultados.length).toBeGreaterThanOrEqual(1);
-    expect(resultados[0].identificacion).toBe("999999999");
-    expect(resultados[0].nombres).toBe("Graduado Test");
-    expect(resultados[0].numeroCertificado).toBe(5001);
+    expect(resultados.datos.length).toBeGreaterThanOrEqual(1);
+    expect(resultados.datos[0].identificacion).toBe("999999999");
+    expect(resultados.datos[0].nombreCompleto).toBe("Graduado Test Consulta E2E");
+    expect(resultados.datos[0].numeroCertificado).toBe(5001);
+  });
+
+  it("busca por identificacion parcial", async () => {
+    const servicio = crearServicioGraduaciones({
+      buscarGraduaciones: (params) =>
+        repositorio.buscarGraduaciones(db, params),
+      obtenerGraduacionPorId: (id) =>
+        repositorio.obtenerGraduacionPorId(db, id),
+    });
+
+    const resultados = await servicio.buscar({
+      identificacion: "99999",
+    });
+
+    expect(resultados.datos.length).toBeGreaterThanOrEqual(1);
+    expect(resultados.datos[0].identificacion).toBe("999999999");
   });
 
   it("busca por nombre parcial", async () => {
@@ -123,7 +140,7 @@ describe("Consulta graduaciones e2e", () => {
       nombre: "Graduado",
     });
 
-    expect(resultados.length).toBeGreaterThanOrEqual(1);
+    expect(resultados.datos.length).toBeGreaterThanOrEqual(1);
   });
 
   it("retorna vacio si no hay coincidencias", async () => {
@@ -138,10 +155,11 @@ describe("Consulta graduaciones e2e", () => {
       identificacion: "000000000",
     });
 
-    expect(resultados).toHaveLength(0);
+    expect(resultados.datos).toHaveLength(0);
+    expect(resultados.total).toBe(0);
   });
 
-  it("retorna vacio si no se especifica criterio de busqueda", async () => {
+  it("lista graduaciones recientes cuando no hay criterio de busqueda", async () => {
     const servicio = crearServicioGraduaciones({
       buscarGraduaciones: (params) =>
         repositorio.buscarGraduaciones(db, params),
@@ -150,7 +168,40 @@ describe("Consulta graduaciones e2e", () => {
     });
 
     const resultados = await servicio.buscar({});
-    expect(resultados).toHaveLength(0);
+    expect(resultados.datos.length).toBeGreaterThanOrEqual(1);
+    expect(resultados.datos[0].nombreCompleto).toBeTruthy();
+    expect(resultados.datos[0].fecha).toBeTruthy();
+    expect(resultados.total).toBeGreaterThanOrEqual(1);
+    expect(resultados.pagina).toBe(1);
+    expect(resultados.limite).toBe(LIMITE_GRADUACIONES_POR_PAGINA);
+  });
+
+  it("pagina resultados cuando hay mas registros que el limite", async () => {
+    const servicio = crearServicioGraduaciones({
+      buscarGraduaciones: (params) =>
+        repositorio.buscarGraduaciones(db, params),
+      obtenerGraduacionPorId: (id) =>
+        repositorio.obtenerGraduacionPorId(db, id),
+    });
+
+    const primeraPagina = await servicio.buscar({
+      pagina: 1,
+      limite: 1,
+    });
+    const segundaPagina = await servicio.buscar({
+      pagina: 2,
+      limite: 1,
+    });
+
+    expect(primeraPagina.datos).toHaveLength(1);
+    expect(primeraPagina.pagina).toBe(1);
+    expect(primeraPagina.limite).toBe(1);
+    expect(primeraPagina.total).toBeGreaterThanOrEqual(1);
+
+    if (primeraPagina.total > 1) {
+      expect(segundaPagina.datos).toHaveLength(1);
+      expect(segundaPagina.datos[0].id).not.toBe(primeraPagina.datos[0].id);
+    }
   });
 
   it("obtiene detalle por id", async () => {
@@ -163,7 +214,7 @@ describe("Consulta graduaciones e2e", () => {
 
     const detalle = await servicio.obtenerPorId(idsActa[0]);
     expect(detalle.acta.length).toBeGreaterThanOrEqual(1);
-    expect(detalle.acta[0].titulo).toBe("Acta de Graduación 2026");
+    expect(detalle.acta[0].tituloActa).toBe("Acta de Graduación 2026");
   });
 
   it("lanza NotFoundError si id no existe", async () => {

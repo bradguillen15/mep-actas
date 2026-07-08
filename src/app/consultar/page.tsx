@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Search } from "lucide-react";
+import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { Tabla } from "@/components/ui/Tabla";
 import { Campo } from "@/components/ui/Campo";
 import { Selector } from "@/components/ui/Selector";
@@ -11,7 +11,11 @@ import { Modal } from "@/components/ui/Modal";
 import { Cargando } from "@/components/ui/Cargando";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import { Badge } from "@/components/ui/Badge";
-import { useEscuelaActual } from "../../../src/hooks/useEscuelaActual";
+import { Boton } from "@/components/ui/Boton";
+import { Paginacion } from "@/components/ui/Paginacion";
+import { useEscuelaActual } from "@/hooks/useEscuelaActual";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { LIMITE_GRADUACIONES_POR_PAGINA } from "@/lib/graduaciones";
 
 interface Graduacion {
   id: number;
@@ -23,7 +27,18 @@ interface Graduacion {
   numeroCertificado: number;
   actaId: number;
   tituloActa: string;
-  estudiantes: { nombre: string; identificacion: string; numeroCertificado: number }[];
+}
+
+interface TipoActa {
+  id: number;
+  nombre: string;
+}
+
+interface RespuestaGraduaciones {
+  datos: Graduacion[];
+  total: number;
+  pagina: number;
+  limite: number;
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -31,25 +46,121 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 export default function Consultar() {
   const { escuelaId, escuelas, puedeElegirEscuela } = useEscuelaActual();
   const [busqueda, setBusqueda] = useState("");
-  const [tipoFiltro, setTipoFiltro] = useState<"identificacion" | "nombre">("identificacion");
+  const [tipoFiltro, setTipoFiltro] = useState<"identificacion" | "nombre">(
+    "identificacion"
+  );
   const [escuelaFiltro, setEscuelaFiltro] = useState<string>("");
+  const [avanzadaAbierta, setAvanzadaAbierta] = useState(false);
+  const [tipoActaFiltro, setTipoActaFiltro] = useState("");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
+  const [numeroCertificado, setNumeroCertificado] = useState("");
+  const [tituloActa, setTituloActa] = useState("");
   const [seleccionado, setSeleccionado] = useState<Graduacion | null>(null);
+  const [pagina, setPagina] = useState(1);
 
-  const params = new URLSearchParams();
-  if (busqueda) {
-    params.set(tipoFiltro, busqueda);
-  }
-  if (escuelaFiltro) {
-    params.set("escuelaId", escuelaFiltro);
-  } else if (escuelaId) {
-    params.set("escuelaId", String(escuelaId));
-  }
+  const busquedaDebounced = useDebouncedValue(busqueda, 300);
+  const tipoActaDebounced = useDebouncedValue(tipoActaFiltro, 300);
+  const fechaDesdeDebounced = useDebouncedValue(fechaDesde, 300);
+  const fechaHastaDebounced = useDebouncedValue(fechaHasta, 300);
+  const numeroCertificadoDebounced = useDebouncedValue(numeroCertificado, 300);
+  const tituloActaDebounced = useDebouncedValue(tituloActa, 300);
 
-  const url = busqueda ? `/api/graduaciones?${params.toString()}` : null;
+  useEffect(() => {
+    setPagina(1);
+  }, [
+    busquedaDebounced,
+    tipoFiltro,
+    escuelaFiltro,
+    escuelaId,
+    tipoActaDebounced,
+    fechaDesdeDebounced,
+    fechaHastaDebounced,
+    numeroCertificadoDebounced,
+    tituloActaDebounced,
+  ]);
 
-  const { data: resultados, isLoading } = useSWR<Graduacion[]>(url, fetcher);
+  const { data: tiposActa } = useSWR<TipoActa[]>("/api/tipos-acta", fetcher);
 
-  const columnas: ColumnDef<Graduacion>[] = [
+  const urlConsulta = useMemo(() => {
+    const params = new URLSearchParams();
+
+    if (busquedaDebounced) {
+      params.set(tipoFiltro, busquedaDebounced);
+    }
+
+    if (escuelaFiltro) {
+      params.set("escuelaId", escuelaFiltro);
+    } else if (escuelaId) {
+      params.set("escuelaId", String(escuelaId));
+    }
+
+    if (tipoActaDebounced) {
+      params.set("tipoActaId", tipoActaDebounced);
+    }
+    if (fechaDesdeDebounced) {
+      params.set("fechaDesde", fechaDesdeDebounced);
+    }
+    if (fechaHastaDebounced) {
+      params.set("fechaHasta", fechaHastaDebounced);
+    }
+    if (numeroCertificadoDebounced) {
+      params.set("numeroCertificado", numeroCertificadoDebounced);
+    }
+    if (tituloActaDebounced) {
+      params.set("tituloActa", tituloActaDebounced);
+    }
+
+    params.set("pagina", String(pagina));
+    params.set("limite", String(LIMITE_GRADUACIONES_POR_PAGINA));
+
+    return `/api/graduaciones?${params.toString()}`;
+  }, [
+    busquedaDebounced,
+    tipoFiltro,
+    escuelaFiltro,
+    escuelaId,
+    tipoActaDebounced,
+    fechaDesdeDebounced,
+    fechaHastaDebounced,
+    numeroCertificadoDebounced,
+    tituloActaDebounced,
+    pagina,
+  ]);
+
+  const { data: respuesta, isLoading, isValidating } = useSWR<RespuestaGraduaciones>(
+    urlConsulta,
+    fetcher
+  );
+
+  const resultados = respuesta?.datos ?? [];
+  const cargaInicial = isLoading && !respuesta;
+
+  const buscando =
+    busqueda !== busquedaDebounced ||
+    tipoActaFiltro !== tipoActaDebounced ||
+    fechaDesde !== fechaDesdeDebounced ||
+    fechaHasta !== fechaHastaDebounced ||
+    numeroCertificado !== numeroCertificadoDebounced ||
+    tituloActa !== tituloActaDebounced;
+
+  const columnas: ColumnDef<Graduacion>[] = useMemo(() => {
+    const indiceBase = respuesta
+      ? (respuesta.pagina - 1) * respuesta.limite
+      : 0;
+
+    return [
+    {
+      id: "indice",
+      header: "#",
+      enableSorting: false,
+      size: 48,
+      cell: ({ row }) => (
+        <span className="tabular-nums text-gray-500">
+          {indiceBase + row.index + 1}
+        </span>
+      ),
+    },
     {
       header: "Nombre completo",
       accessorKey: "nombreCompleto",
@@ -86,81 +197,187 @@ export default function Consultar() {
       enableSorting: true,
     },
   ];
+  }, [respuesta]);
 
   const escuelaOpciones = escuelas.map((e) => ({
     valor: e.id,
     etiqueta: e.nombre,
   }));
 
+  const tipoActaOpciones =
+    tiposActa?.map((tipo) => ({
+      valor: tipo.id,
+      etiqueta: tipo.nombre,
+    })) ?? [];
+
+  const limpiarAvanzados = () => {
+    setTipoActaFiltro("");
+    setFechaDesde("");
+    setFechaHasta("");
+    setNumeroCertificado("");
+    setTituloActa("");
+  };
+
   return (
-    <div className="flex flex-col gap-6">
-      <div>
+    <div className="flex h-[calc(100dvh-8rem)] flex-col gap-4 overflow-hidden">
+      <div className="flex-shrink-0">
         <h1 className="text-2xl font-semibold text-texto">Consultar graduados</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Busque por identificación o nombre para verificar si una persona se graduó.
+          Vea los graduados registrados recientemente o busque por identificación,
+          nombre u otros criterios.
         </p>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex-1 min-w-[280px]">
-          <Campo
-            placeholder={
-              tipoFiltro === "identificacion"
-                ? "Buscar por cédula..."
-                : "Buscar por nombre..."
-            }
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
-        </div>
-        <Selector
-          opciones={[
-            { valor: "identificacion", etiqueta: "Cédula" },
-            { valor: "nombre", etiqueta: "Nombre" },
-          ]}
-          value={tipoFiltro}
-          onChange={(e) =>
-            setTipoFiltro(e.target.value as "identificacion" | "nombre")
-          }
-          className="w-36"
-        />
-        {puedeElegirEscuela && (
+      <div className="flex-shrink-0 space-y-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-[280px] flex-1">
+            <Campo
+              placeholder={
+                tipoFiltro === "identificacion"
+                  ? "Buscar por cédula (coincidencias parciales)..."
+                  : "Buscar por nombre o apellido..."
+              }
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+            />
+          </div>
           <Selector
             opciones={[
-              { valor: "", etiqueta: "Todas las escuelas" },
-              ...escuelaOpciones,
+              { valor: "identificacion", etiqueta: "Cédula" },
+              { valor: "nombre", etiqueta: "Nombre" },
             ]}
-            value={escuelaFiltro}
-            onChange={(e) => setEscuelaFiltro(e.target.value)}
-            className="w-56"
+            value={tipoFiltro}
+            onChange={(e) =>
+              setTipoFiltro(e.target.value as "identificacion" | "nombre")
+            }
+            className="w-36"
           />
+          {puedeElegirEscuela && (
+            <Selector
+              opciones={[
+                { valor: "", etiqueta: "Todas las escuelas" },
+                ...escuelaOpciones,
+              ]}
+              value={escuelaFiltro}
+              onChange={(e) => setEscuelaFiltro(e.target.value)}
+              className="w-56"
+            />
+          )}
+          <Boton
+            type="button"
+            variante="secundario"
+            onClick={() => setAvanzadaAbierta((abierta) => !abierta)}
+            className="gap-2"
+          >
+            <Search className="h-4 w-4" />
+            Búsqueda avanzada
+            {avanzadaAbierta ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Boton>
+        </div>
+
+        {avanzadaAbierta && (
+          <div className="grid gap-3 rounded-xl border border-borde bg-white p-4 md:grid-cols-2 xl:grid-cols-3">
+            <Selector
+              label="Tipo de acta"
+              opciones={[
+                { valor: "", etiqueta: "Todos los tipos" },
+                ...tipoActaOpciones,
+              ]}
+              value={tipoActaFiltro}
+              onChange={(e) => setTipoActaFiltro(e.target.value)}
+            />
+            <Campo
+              label="Fecha desde"
+              type="date"
+              value={fechaDesde}
+              onChange={(e) => setFechaDesde(e.target.value)}
+            />
+            <Campo
+              label="Fecha hasta"
+              type="date"
+              value={fechaHasta}
+              onChange={(e) => setFechaHasta(e.target.value)}
+            />
+            <Campo
+              label="N° certificado"
+              placeholder="Ej. 5001"
+              value={numeroCertificado}
+              onChange={(e) => setNumeroCertificado(e.target.value)}
+            />
+            <Campo
+              label="Título del acta"
+              placeholder="Buscar por título..."
+              value={tituloActa}
+              onChange={(e) => setTituloActa(e.target.value)}
+              className="md:col-span-2"
+            />
+            <div className="flex items-end md:col-span-2 xl:col-span-3">
+              <Boton type="button" variante="secundario" onClick={limpiarAvanzados}>
+                Limpiar filtros avanzados
+              </Boton>
+            </div>
+          </div>
         )}
       </div>
 
-      {isLoading && <Cargando />}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {(cargaInicial || buscando) && <Cargando />}
 
-      {!isLoading && resultados === undefined && (
-        <EstadoVacio
-          mensaje="Realice una búsqueda"
-          descripcion="Ingrese una cédula o nombre para comenzar."
-          icono={<Search className="h-8 w-8 text-gray-400" />}
-        />
-      )}
+        {!cargaInicial &&
+          !buscando &&
+          respuesta &&
+          resultados.length === 0 && (
+            <EstadoVacio
+              mensaje="Sin registros encontrados"
+              descripcion={
+                busquedaDebounced ||
+                tipoActaDebounced ||
+                fechaDesdeDebounced ||
+                fechaHastaDebounced ||
+                numeroCertificadoDebounced ||
+                tituloActaDebounced
+                  ? "No se encontraron graduaciones con los criterios ingresados."
+                  : "No hay graduados registrados todavía."
+              }
+            />
+          )}
 
-      {!isLoading && resultados !== undefined && resultados.length === 0 && (
-        <EstadoVacio
-          mensaje="Sin registros encontrados"
-          descripcion="No se encontraron graduaciones con los criterios ingresados."
-        />
-      )}
-
-      {resultados && resultados.length > 0 && (
-        <Tabla
-          columnas={columnas}
-          datos={resultados}
-          onFilaClick={(fila) => setSeleccionado(fila)}
-        />
-      )}
+        {!cargaInicial &&
+          !buscando &&
+          respuesta &&
+          resultados.length > 0 && (
+            <div
+              className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-borde bg-white ${
+                isValidating ? "opacity-60" : ""
+              }`}
+            >
+              <div className="min-h-0 flex-1 overflow-auto">
+                <Tabla
+                  columnas={columnas}
+                  datos={resultados}
+                  onFilaClick={(fila) => setSeleccionado(fila)}
+                  paginacion={false}
+                  className="rounded-none border-0"
+                />
+              </div>
+              <Paginacion
+                pagina={respuesta.pagina}
+                totalPaginas={Math.max(
+                  1,
+                  Math.ceil(respuesta.total / respuesta.limite)
+                )}
+                totalRegistros={respuesta.total}
+                limite={respuesta.limite}
+                registrosEnPagina={resultados.length}
+                onChange={setPagina}
+              />
+            </div>
+          )}
+      </div>
 
       <Modal
         abierto={seleccionado !== null}
