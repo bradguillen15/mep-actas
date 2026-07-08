@@ -53,12 +53,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const verificacion = verificarRol(sesion, 3);
+  const verificacion = verificarRol(sesion, 4);
   if (!verificacion.autorizado) {
     return NextResponse.json({ error: verificacion.error }, { status: 403 });
   }
 
   const cuerpo = await request.json();
+
+  const verificacionAmbito = verificarRol(sesion, 4, {
+    escuelaId: cuerpo.escuelaId,
+  });
+  if (!verificacionAmbito.autorizado) {
+    return NextResponse.json(
+      { error: verificacionAmbito.error },
+      { status: 403 }
+    );
+  }
+
   const servicio = await crearServicio();
 
   try {

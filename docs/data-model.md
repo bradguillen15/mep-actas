@@ -73,6 +73,8 @@ auditoria (independiente, solo lectura)
 
 Índices: `idx_actas_escuela_id` sobre `escuela_id`.
 
+> Control de acceso: `POST /api/actas` exige nivel mínimo 4 (Staff). Cuando el actor tiene nivel > 2 (Escuela o Staff), el `escuela_id` de la petición debe coincidir con el `escuela_id` de su sesión; una violación responde `403`. Admin País y Admin Regional no tienen esta restricción de escuela.
+
 **personas**
 | Columna | Tipo | Restricciones |
 |---|---|---|
@@ -112,6 +114,8 @@ auditoria (independiente, solo lectura)
 | created_at | TEXT (ISO-8601) | NOT NULL, default now |
 
 Índices: `idx_escaneos_escuela_id` sobre `escuela_id`.
+
+> Control de acceso: `POST /api/escaneos` exige nivel mínimo 4 (Staff), con la misma restricción de ámbito por escuela descrita para `actas` (nivel > 2 exige `escuela_id` coincidente con la sesión).
 
 **acta_escaneos** (puente acta ↔ escaneo)
 | Columna | Tipo | Restricciones |
