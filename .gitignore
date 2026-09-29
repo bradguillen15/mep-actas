@@ -60,3 +60,11 @@ next-env.d.ts
 
 # allow example env file
 !.env.example
+
+# herramientas de IA (salidas de trabajo locales)
+.archify/
+.atl/
+docs/arquitectura/**/*.finalize.json
+docs/arquitectura/**/*.finalize-summary.json
+docs/arquitectura/**/*.browser-check.json
+docs/arquitectura/**/*.delivery.json
