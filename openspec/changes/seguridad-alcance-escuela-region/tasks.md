@@ -40,16 +40,16 @@ Orden: las unidades siguen el orden de implementación del diseño (10 pasos), c
 
 ## 0. Preparación: rama de feature (OBLIGATORIO, PRIMER PASO)
 
-- [ ] 0.1 Verificar la rama actual con `git branch --show-current`. La rama de trabajo es `feat/gestion-usuarios-jerarquia` (rama única del trabajo en curso, ya publicada); no crear otra.
-- [ ] 0.2 Confirmar que el árbol de trabajo está limpio (`git status`) y ejecutar `pnpm verify:fast` como línea base; registrar cualquier falla previa antes de continuar.
-- [ ] 0.3 Releer `docs/brd.md` §6/§7.5, `docs/backend-standards.md` y `docs/frontend-standards.md`, y las specs `alcance-datos`, `autenticacion-roles`, `gestion-usuarios` y `auditoria` del cambio.
+- [x] 0.1 Verificar la rama actual con `git branch --show-current`. La rama de trabajo es `feat/gestion-usuarios-jerarquia` (rama única del trabajo en curso, ya publicada); no crear otra.
+- [x] 0.2 Confirmar que el árbol de trabajo está limpio (`git status`) y ejecutar `pnpm verify:fast` como línea base; registrar cualquier falla previa antes de continuar. Línea base: lint y typecheck OK; Vitest 31 archivos, 146 pruebas en verde.
+- [x] 0.3 Releer `docs/brd.md` §6/§7.5, `docs/backend-standards.md` y `docs/frontend-standards.md`, y las specs `alcance-datos`, `autenticacion-roles`, `gestion-usuarios` y `auditoria` del cambio.
 
 ## 1. Fundamentos de ámbito: `AmbitoConsulta`, errores y `verificarRol` (TDD)
 
 Requisitos: spec `alcance-datos` (regla de ámbito por nivel) y `autenticacion-roles` (autorización con región resuelta). Diseño: Decisiones 1, 2, 5 y 7.
 
-- [ ] 1.1 RED: crear `src/server/auth/__tests__/ambito.test.ts` con tabla de casos para `derivarAmbitoConsulta` (nivel 1 → `pais`; nivel 2 con `regionId` → `region`; nivel 2 sin `regionId` → `ninguno`; niveles 3 y 4 con `escuelaId` → `escuela`; niveles 3 y 4 sin `escuelaId` → `ninguno`) y para `escuelasDentroDeAmbito` (los cuatro tipos). Confirmar que falla.
-- [ ] 1.2 GREEN: crear `src/server/auth/ambito.ts` con el tipo `AmbitoConsulta`, `derivarAmbitoConsulta(sesion)` y `escuelasDentroDeAmbito(ambito, escuelaIds, regionIds)` según las firmas del diseño.
+- [x] 1.1 RED: crear `src/server/auth/__tests__/ambito.test.ts` con tabla de casos para `derivarAmbitoConsulta` (nivel 1 → `pais`; nivel 2 con `regionId` → `region`; nivel 2 sin `regionId` → `ninguno`; niveles 3 y 4 con `escuelaId` → `escuela`; niveles 3 y 4 sin `escuelaId` → `ninguno`) y para `escuelasDentroDeAmbito` (los cuatro tipos). Confirmar que falla.
+- [x] 1.2 GREEN: crear `src/server/auth/ambito.ts` con el tipo `AmbitoConsulta`, `derivarAmbitoConsulta(sesion)` y `escuelasDentroDeAmbito(ambito, escuelaIds, regionIds)` según las firmas del diseño.
 - [ ] 1.3 RED: crear `src/server/__tests__/errores.test.ts` que verifique que `ErrorNoEncontrado` tiene `name === "NotFoundError"` y `ErrorProhibido` tiene `name === "ForbiddenError"`, y que ambos son instancias de `Error`.
 - [ ] 1.4 GREEN: crear `src/server/errores.ts` con `ErrorNoEncontrado` y `ErrorProhibido`.
 - [ ] 1.5 RED: agregar casos a `src/server/auth/__tests__/autorizacion.test.ts`: nivel 2 con `escuelaId` de otra región → `403`; nivel 2 con `escuelaId` de su región → autorizado; nivel 2 con `escuelaId` y sin `regionId` → `403` (falla cerrado); nivel 2 con solo `regionId` ajeno → `403`; niveles 3–4 con `escuelaId` distinto → `403`; nivel 1 autorizado; casos actuales intactos.
