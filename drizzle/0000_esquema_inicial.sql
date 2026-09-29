@@ -52,10 +52,16 @@ CREATE TABLE `auditoria` (
 	`accion` text NOT NULL,
 	`datos_anteriores` text,
 	`datos_nuevos` text,
+	`escuela_id` integer,
+	`region_id` integer,
 	`created_at` text NOT NULL,
-	FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`usuario_id`) REFERENCES `usuarios`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`escuela_id`) REFERENCES `escuelas`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`region_id`) REFERENCES `regiones`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE INDEX `idx_auditoria_escuela_id` ON `auditoria` (`escuela_id`);--> statement-breakpoint
+CREATE INDEX `idx_auditoria_region_id` ON `auditoria` (`region_id`);--> statement-breakpoint
 CREATE TABLE `escaneos` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`escuela_id` integer NOT NULL,

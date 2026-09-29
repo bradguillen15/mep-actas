@@ -60,3 +60,26 @@ describe("Índices de apoyo al ámbito", () => {
     expect(filas).toHaveLength(1);
   });
 });
+
+describe("Auditoría con ámbito", () => {
+  it("auditoria tiene escuela_id y region_id opcionales", async () => {
+    const esquema = await import("../esquema");
+    expect(esquema.auditoria.escuelaId.notNull).toBe(false);
+    expect(esquema.auditoria.regionId.notNull).toBe(false);
+  });
+
+  it.each(["idx_auditoria_escuela_id", "idx_auditoria_region_id"])(
+    "la base migrada tiene el índice %s",
+    async (nombreIndice) => {
+      const { crearDbEnMemoria } = await import(
+        "@/server/repositorios/__tests__/db-en-memoria"
+      );
+      const { sql } = await import("drizzle-orm");
+      const db = await crearDbEnMemoria();
+      const filas = await db.all<{ name: string }>(
+        sql`select name from sqlite_master where type = 'index' and name = ${nombreIndice}`
+      );
+      expect(filas).toHaveLength(1);
+    }
+  );
+});

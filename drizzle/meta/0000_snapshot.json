@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "3e6919e9-c012-4003-be6e-3f1e7325b804",
+  "id": "eb55c79c-633a-4b5f-89a5-e01787e3866e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "acta_escaneos": {
@@ -389,6 +389,20 @@
           "notNull": false,
           "autoincrement": false
         },
+        "escuela_id": {
+          "name": "escuela_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "region_id": {
+          "name": "region_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "text",
@@ -397,7 +411,22 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_auditoria_escuela_id": {
+          "name": "idx_auditoria_escuela_id",
+          "columns": [
+            "escuela_id"
+          ],
+          "isUnique": false
+        },
+        "idx_auditoria_region_id": {
+          "name": "idx_auditoria_region_id",
+          "columns": [
+            "region_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "auditoria_usuario_id_usuarios_id_fk": {
           "name": "auditoria_usuario_id_usuarios_id_fk",
@@ -405,6 +434,32 @@
           "tableTo": "usuarios",
           "columnsFrom": [
             "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "auditoria_escuela_id_escuelas_id_fk": {
+          "name": "auditoria_escuela_id_escuelas_id_fk",
+          "tableFrom": "auditoria",
+          "tableTo": "escuelas",
+          "columnsFrom": [
+            "escuela_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "auditoria_region_id_regiones_id_fk": {
+          "name": "auditoria_region_id_regiones_id_fk",
+          "tableFrom": "auditoria",
+          "tableTo": "regiones",
+          "columnsFrom": [
+            "region_id"
           ],
           "columnsTo": [
             "id"

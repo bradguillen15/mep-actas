@@ -205,20 +205,29 @@ export const usuarios = sqliteTable("usuarios", {
   activo: integer("activo", { mode: "boolean" }).notNull().default(true),
 });
 
-export const auditoria = sqliteTable("auditoria", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  usuarioId: integer("usuario_id")
-    .notNull()
-    .references(() => usuarios.id),
-  tabla: text("tabla").notNull(),
-  registroId: integer("registro_id").notNull(),
-  accion: text("accion").notNull(),
-  datosAnteriores: text("datos_anteriores"),
-  datosNuevos: text("datos_nuevos"),
-  createdAt: text("created_at")
-    .notNull()
-    .$defaultFn(() => new Date().toISOString()),
-});
+export const auditoria = sqliteTable(
+  "auditoria",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    usuarioId: integer("usuario_id")
+      .notNull()
+      .references(() => usuarios.id),
+    tabla: text("tabla").notNull(),
+    registroId: integer("registro_id").notNull(),
+    accion: text("accion").notNull(),
+    datosAnteriores: text("datos_anteriores"),
+    datosNuevos: text("datos_nuevos"),
+    escuelaId: integer("escuela_id").references(() => escuelas.id),
+    regionId: integer("region_id").references(() => regiones.id),
+    createdAt: text("created_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+  },
+  (tabla) => ({
+    escuelaIdx: index("idx_auditoria_escuela_id").on(tabla.escuelaId),
+    regionIdx: index("idx_auditoria_region_id").on(tabla.regionId),
+  })
+);
 
 export const indices = {
   personasIdentificacion: index("idx_personas_identificacion").on(

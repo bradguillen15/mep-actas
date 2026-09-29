@@ -144,8 +144,8 @@ Requisitos: spec `gestion-usuarios` (ámbito en lectura, restablecer y cambiar e
 
 Requisitos: spec `auditoria` (registro con `escuela_id`/`region_id`, lectura por ámbito niveles 1–4). Diseño: Decisión 4, D3; paso 9.
 
-- [ ] 9.1 RED: ampliar `src/db/__tests__/esquema.test.ts` con `auditoria.escuela_id` y `auditoria.region_id` (nullable, con referencias) y con los índices `idx_auditoria_escuela_id` e `idx_auditoria_region_id`.
-- [ ] 9.2 GREEN: modificar `src/db/esquema.ts` agregando ambas columnas nullable con sus referencias y los dos índices; regenerar la migración inicial única (`drizzle/0000_*.sql`) y recrear las bases locales y de prueba.
+- [x] 9.1 RED: ampliar `src/db/__tests__/esquema.test.ts` con `auditoria.escuela_id` y `auditoria.region_id` (nullable, con referencias) y con los índices `idx_auditoria_escuela_id` e `idx_auditoria_region_id`.
+- [x] 9.2 GREEN: modificar `src/db/esquema.ts` agregando ambas columnas nullable con sus referencias y los dos índices; regenerar la migración inicial única (`drizzle/0000_*.sql`) y recrear las bases locales y de prueba.
 - [x] 9.3 ~~Prueba del relleno histórico~~ — eliminada: la base no se ha publicado y no hay filas previas (decisión 2026-09-29).
 - [x] 9.4 ~~SQL de relleno idempotente~~ — eliminada por la misma decisión.
 - [ ] 9.5 RED: ampliar `src/server/repositorios/__tests__/auditoria.repositorio.test.ts` y `src/server/servicios/__tests__/auditoria.servicio.test.ts`: la inserción guarda `escuelaId` y `regionId`; el `Auditor` deriva `regionId` desde `escuelaId` con `resolverAmbitoDeEscuela` cuando falta; recurso regional sin escuela (`regiones` actualizar/desactivar) → `escuelaId` `NULL` y `regionId` de la región; recursos nacionales (creación de región, `tipos_acta`, `personas`, `funcionarios`) → ambos `NULL`; `listarAuditoria(ambito)` (`pais` sin filtro, `region` por `region_id`, `escuela` por `escuela_id`, `ninguno` vacío).
