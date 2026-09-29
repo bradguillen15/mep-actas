@@ -1,6 +1,8 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { eq, and, type SQL } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
+import type { AmbitoConsulta } from "@/server/auth/ambito";
+import { condicionEscuelaEnAmbito } from "./ambito.condiciones";
 
 export type FilaActa = typeof esquema.actas.$inferSelect;
 
@@ -17,9 +19,12 @@ export type DatosNuevaActa = {
 
 export async function listarActas(
   db: LibSQLDatabase<typeof esquema>,
-  filtros: { escuelaId?: number; tipoActaId?: number; tomo?: number }
+  filtros: { escuelaId?: number; tipoActaId?: number; tomo?: number },
+  ambito: AmbitoConsulta
 ): Promise<FilaActa[]> {
-  const condiciones: SQL[] = [];
+  const condiciones: (SQL | undefined)[] = [
+    condicionEscuelaEnAmbito(ambito, esquema.actas.escuelaId),
+  ];
   if (filtros.escuelaId)
     condiciones.push(eq(esquema.actas.escuelaId, filtros.escuelaId));
   if (filtros.tipoActaId)
@@ -27,24 +32,26 @@ export async function listarActas(
   if (filtros.tomo)
     condiciones.push(eq(esquema.actas.numeroTomo, filtros.tomo));
 
-  if (condiciones.length > 0) {
-    return db
-      .select()
-      .from(esquema.actas)
-      .where(and(...condiciones));
-  }
-
-  return db.select().from(esquema.actas);
+  return db
+    .select()
+    .from(esquema.actas)
+    .where(and(...condiciones));
 }
 
 export async function obtenerActaPorId(
   db: LibSQLDatabase<typeof esquema>,
-  id: number
+  id: number,
+  ambito: AmbitoConsulta
 ): Promise<FilaActa | undefined> {
   const resultado = await db
     .select()
     .from(esquema.actas)
-    .where(eq(esquema.actas.id, id));
+    .where(
+      and(
+        eq(esquema.actas.id, id),
+        condicionEscuelaEnAmbito(ambito, esquema.actas.escuelaId)
+      )
+    );
   return resultado[0];
 }
 

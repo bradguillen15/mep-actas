@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockObtenerSesion = vi.fn();
 const mockResolverAmbitoDeEscuela = vi.fn();
 const mockCrearActa = vi.fn();
+const mockListarActas = vi.fn();
 
 vi.mock("@/server/auth/sesion.servicio", () => ({
   obtenerSesion: mockObtenerSesion,
@@ -30,7 +31,7 @@ vi.mock("@/server/servicios/auditoria.servicio", () => ({
 }));
 
 vi.mock("@/server/repositorios/actas.repositorio", () => ({
-  listarActas: vi.fn(),
+  listarActas: mockListarActas,
   obtenerActaPorId: vi.fn(),
   crearActa: mockCrearActa,
   actualizarActa: vi.fn(),
@@ -199,5 +200,65 @@ describe("POST /api/actas", () => {
     const respuesta = await POST(req as never);
 
     expect(respuesta.status).toBe(201);
+  });
+});
+
+describe("GET /api/actas con ámbito", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockListarActas.mockResolvedValue([]);
+  });
+
+  async function listarComo(sesion: object, consulta = "") {
+    mockObtenerSesion.mockResolvedValue(sesion);
+    const { GET } = await import("../route");
+    const respuesta = await GET(
+      new Request(`http://localhost/api/actas${consulta}`) as never
+    );
+    return respuesta;
+  }
+
+  it("Admin Escuela lista solo su escuela", async () => {
+    const respuesta = await listarComo(sesionAdminEscuela());
+    expect(respuesta.status).toBe(200);
+    expect(mockListarActas).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(Object),
+      { tipo: "escuela", escuelaId: 5 }
+    );
+  });
+
+  it("Admin Regional lista solo su región", async () => {
+    await listarComo(sesionAdminRegional());
+    expect(mockListarActas).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(Object),
+      { tipo: "region", regionId: 1 }
+    );
+  });
+
+  it("Admin País lista todo el país", async () => {
+    await listarComo(sesionAdminPais());
+    expect(mockListarActas).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(Object),
+      { tipo: "pais" }
+    );
+  });
+
+  it("un filtro de escuela del cliente no amplía el ámbito", async () => {
+    await listarComo(sesionAdminEscuela(), "?escuelaId=10");
+    expect(mockListarActas).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ escuelaId: 10 }),
+      { tipo: "escuela", escuelaId: 5 }
+    );
+  });
+
+  it("sin sesión responde 401", async () => {
+    mockObtenerSesion.mockResolvedValue(null);
+    const { GET } = await import("../route");
+    const respuesta = await GET(new Request("http://localhost/api/actas") as never);
+    expect(respuesta.status).toBe(401);
   });
 });

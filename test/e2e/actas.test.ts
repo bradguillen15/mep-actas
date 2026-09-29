@@ -5,10 +5,7 @@ import path from "path";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioActas } from "@/server/servicios/actas.servicio";
-import * as actasRepositorio from "@/server/repositorios/actas.repositorio";
-import * as detalleRepositorio from "@/server/repositorios/actas.detalle.repositorio";
+import { crearServicioActasDesdeDb } from "@/server/servicios/actas.fabrica";
 import {
   obtenerRolPorNivel,
   obtenerUsuarioPorEmail,
@@ -92,37 +89,7 @@ afterAll(async () => {
 
 describe("Actas e2e", () => {
   it("crea acta via servicio", async () => {
-    const auditor = crearAuditor(db);
-    const servicio = crearServicioActas(
-      {
-        listarActas: (filtros) => actasRepositorio.listarActas(db, filtros),
-        obtenerActaPorId: (id) => actasRepositorio.obtenerActaPorId(db, id),
-        crearActa: (datos) => actasRepositorio.crearActa(db, datos),
-        actualizarActa: (id, datos) =>
-          actasRepositorio.actualizarActa(db, id, datos),
-      },
-      {
-        listarEstudiantesDeActa: (actaId) =>
-          detalleRepositorio.listarEstudiantesDeActa(db, actaId),
-        agregarEstudianteAActa: (actaId, personaId, numeroCertificado) =>
-          detalleRepositorio.agregarEstudianteAActa(
-            db,
-            actaId,
-            personaId,
-            numeroCertificado
-          ),
-        listarFirmantesDeActa: (actaId) =>
-          detalleRepositorio.listarFirmantesDeActa(db, actaId),
-        agregarFirmante: (actaId, funcionarioId, rolFirma) =>
-          detalleRepositorio.agregarFirmante(
-            db,
-            actaId,
-            funcionarioId,
-            rolFirma
-          ),
-      },
-      auditor
-    );
+    const servicio = crearServicioActasDesdeDb(db);
 
     const acta = await servicio.crearActa(
       {
@@ -148,77 +115,17 @@ describe("Actas e2e", () => {
   });
 
   it("lista actas por escuela", async () => {
-    const auditor = crearAuditor(db);
-    const servicio = crearServicioActas(
-      {
-        listarActas: (filtros) => actasRepositorio.listarActas(db, filtros),
-        obtenerActaPorId: (id) => actasRepositorio.obtenerActaPorId(db, id),
-        crearActa: (datos) => actasRepositorio.crearActa(db, datos),
-        actualizarActa: (id, datos) =>
-          actasRepositorio.actualizarActa(db, id, datos),
-      },
-      {
-        listarEstudiantesDeActa: (actaId) =>
-          detalleRepositorio.listarEstudiantesDeActa(db, actaId),
-        agregarEstudianteAActa: (actaId, personaId, numeroCertificado) =>
-          detalleRepositorio.agregarEstudianteAActa(
-            db,
-            actaId,
-            personaId,
-            numeroCertificado
-          ),
-        listarFirmantesDeActa: (actaId) =>
-          detalleRepositorio.listarFirmantesDeActa(db, actaId),
-        agregarFirmante: (actaId, funcionarioId, rolFirma) =>
-          detalleRepositorio.agregarFirmante(
-            db,
-            actaId,
-            funcionarioId,
-            rolFirma
-          ),
-      },
-      auditor
-    );
+    const servicio = crearServicioActasDesdeDb(db);
 
-    const actas = await servicio.listarActas({ escuelaId });
+    const actas = await servicio.listarActas({ escuelaId }, { tipo: "pais" });
     expect(actas.length).toBeGreaterThanOrEqual(1);
   });
 
   it("obtiene acta con detalle completo", async () => {
-    const auditor = crearAuditor(db);
-    const servicio = crearServicioActas(
-      {
-        listarActas: (filtros) => actasRepositorio.listarActas(db, filtros),
-        obtenerActaPorId: (id) => actasRepositorio.obtenerActaPorId(db, id),
-        crearActa: (datos) => actasRepositorio.crearActa(db, datos),
-        actualizarActa: (id, datos) =>
-          actasRepositorio.actualizarActa(db, id, datos),
-      },
-      {
-        listarEstudiantesDeActa: (actaId) =>
-          detalleRepositorio.listarEstudiantesDeActa(db, actaId),
-        agregarEstudianteAActa: (actaId, personaId, numeroCertificado) =>
-          detalleRepositorio.agregarEstudianteAActa(
-            db,
-            actaId,
-            personaId,
-            numeroCertificado
-          ),
-        listarFirmantesDeActa: (actaId) =>
-          detalleRepositorio.listarFirmantesDeActa(db, actaId),
-        agregarFirmante: (actaId, funcionarioId, rolFirma) =>
-          detalleRepositorio.agregarFirmante(
-            db,
-            actaId,
-            funcionarioId,
-            rolFirma
-          ),
-      },
-      auditor
-    );
+    const servicio = crearServicioActasDesdeDb(db);
 
     const actaId = idsActa[0];
-    const detalle = await servicio.obtenerActaPorId(actaId);
+    const detalle = await servicio.obtenerActaPorId(actaId, { tipo: "pais" });
 
     expect(detalle.acta).toBeDefined();
     expect(detalle.acta.id).toBe(actaId);
@@ -227,37 +134,7 @@ describe("Actas e2e", () => {
   });
 
   it("agrega estudiante a acta", async () => {
-    const auditor = crearAuditor(db);
-    const servicio = crearServicioActas(
-      {
-        listarActas: (filtros) => actasRepositorio.listarActas(db, filtros),
-        obtenerActaPorId: (id) => actasRepositorio.obtenerActaPorId(db, id),
-        crearActa: (datos) => actasRepositorio.crearActa(db, datos),
-        actualizarActa: (id, datos) =>
-          actasRepositorio.actualizarActa(db, id, datos),
-      },
-      {
-        listarEstudiantesDeActa: (actaId) =>
-          detalleRepositorio.listarEstudiantesDeActa(db, actaId),
-        agregarEstudianteAActa: (actaId, personaId, numeroCertificado) =>
-          detalleRepositorio.agregarEstudianteAActa(
-            db,
-            actaId,
-            personaId,
-            numeroCertificado
-          ),
-        listarFirmantesDeActa: (actaId) =>
-          detalleRepositorio.listarFirmantesDeActa(db, actaId),
-        agregarFirmante: (actaId, funcionarioId, rolFirma) =>
-          detalleRepositorio.agregarFirmante(
-            db,
-            actaId,
-            funcionarioId,
-            rolFirma
-          ),
-      },
-      auditor
-    );
+    const servicio = crearServicioActasDesdeDb(db);
 
     const actaId = idsActa[0];
     const resultado = await servicio.agregarEstudiante(
@@ -273,40 +150,10 @@ describe("Actas e2e", () => {
   });
 
   it("lanza NotFoundError si acta no existe", async () => {
-    const auditor = crearAuditor(db);
-    const servicio = crearServicioActas(
-      {
-        listarActas: (filtros) => actasRepositorio.listarActas(db, filtros),
-        obtenerActaPorId: (id) => actasRepositorio.obtenerActaPorId(db, id),
-        crearActa: (datos) => actasRepositorio.crearActa(db, datos),
-        actualizarActa: (id, datos) =>
-          actasRepositorio.actualizarActa(db, id, datos),
-      },
-      {
-        listarEstudiantesDeActa: (actaId) =>
-          detalleRepositorio.listarEstudiantesDeActa(db, actaId),
-        agregarEstudianteAActa: (actaId, personaId, numeroCertificado) =>
-          detalleRepositorio.agregarEstudianteAActa(
-            db,
-            actaId,
-            personaId,
-            numeroCertificado
-          ),
-        listarFirmantesDeActa: (actaId) =>
-          detalleRepositorio.listarFirmantesDeActa(db, actaId),
-        agregarFirmante: (actaId, funcionarioId, rolFirma) =>
-          detalleRepositorio.agregarFirmante(
-            db,
-            actaId,
-            funcionarioId,
-            rolFirma
-          ),
-      },
-      auditor
-    );
+    const servicio = crearServicioActasDesdeDb(db);
 
     await expect(
-      servicio.obtenerActaPorId(99999)
+      servicio.obtenerActaPorId(99999, { tipo: "pais" })
     ).rejects.toThrow("Acta no encontrada");
   });
 });

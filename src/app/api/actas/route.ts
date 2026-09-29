@@ -1,43 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioActas } from "@/server/servicios/actas.servicio";
-import * as actasRepositorio from "@/server/repositorios/actas.repositorio";
-import * as detalleRepositorio from "@/server/repositorios/actas.detalle.repositorio";
+import { crearServicioActasDesdeDb } from "@/server/servicios/actas.fabrica";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
-import { ambitoDeEscuelaObjetivo } from "@/server/auth/ambito";
+import { ambitoDeEscuelaObjetivo, derivarAmbitoConsulta } from "@/server/auth/ambito";
 import { resolverAmbitoDeEscuela } from "@/server/repositorios/escuelas.repositorio";
-
-function crearServicio() {
-  const db = clienteDb();
-  const auditor = crearAuditor(db);
-  return crearServicioActas(
-    {
-      listarActas: (filtros) => actasRepositorio.listarActas(db, filtros),
-      obtenerActaPorId: (id) => actasRepositorio.obtenerActaPorId(db, id),
-      crearActa: (datos) => actasRepositorio.crearActa(db, datos),
-      actualizarActa: (id, datos) =>
-        actasRepositorio.actualizarActa(db, id, datos),
-    },
-    {
-      listarEstudiantesDeActa: (actaId) =>
-        detalleRepositorio.listarEstudiantesDeActa(db, actaId),
-      agregarEstudianteAActa: (actaId, personaId, numeroCertificado) =>
-        detalleRepositorio.agregarEstudianteAActa(
-          db,
-          actaId,
-          personaId,
-          numeroCertificado
-        ),
-      listarFirmantesDeActa: (actaId) =>
-        detalleRepositorio.listarFirmantesDeActa(db, actaId),
-      agregarFirmante: (actaId, funcionarioId, rolFirma) =>
-        detalleRepositorio.agregarFirmante(db, actaId, funcionarioId, rolFirma),
-    },
-    auditor
-  );
-}
 
 export async function GET(request: NextRequest) {
   const sesion = await obtenerSesion();
@@ -56,12 +23,11 @@ export async function GET(request: NextRequest) {
     ? Number(searchParams.get("tomo"))
     : undefined;
 
-  const servicio = crearServicio();
-  const actas = await servicio.listarActas({
-    escuelaId,
-    tipoActaId,
-    tomo,
-  });
+  const servicio = crearServicioActasDesdeDb(clienteDb());
+  const actas = await servicio.listarActas(
+    { escuelaId, tipoActaId, tomo },
+    derivarAmbitoConsulta(sesion)
+  );
   return NextResponse.json(actas);
 }
 
@@ -92,7 +58,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const servicio = crearServicio();
+  const servicio = crearServicioActasDesdeDb(db);
   const acta = await servicio.crearActa(json, sesion);
   return NextResponse.json(acta, { status: 201 });
 }

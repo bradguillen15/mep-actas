@@ -8,14 +8,39 @@ import type {
   FilaActaFirmante,
 } from "@/server/repositorios/actas.detalle.repositorio";
 import type { SesionUsuario } from "@/server/auth/tipos";
+import {
+  derivarAmbitoConsulta,
+  type AmbitoConsulta,
+} from "@/server/auth/ambito";
+import { ErrorNoEncontrado } from "@/server/errores";
+
+export type FiltrosActas = {
+  escuelaId?: number;
+  tipoActaId?: number;
+  tomo?: number;
+};
+
+export type EstudianteDeActa = FilaActaEstudiante & {
+  identificacion: string;
+  nombres: string;
+  apellidos: string;
+};
+
+export type FirmanteDeActa = FilaActaFirmante & {
+  nombres: string;
+  apellidos: string;
+  puesto: string;
+};
 
 type RepositorioActas = {
-  listarActas: (filtros: {
-    escuelaId?: number;
-    tipoActaId?: number;
-    tomo?: number;
-  }) => Promise<FilaActa[]>;
-  obtenerActaPorId: (id: number) => Promise<FilaActa | undefined>;
+  listarActas: (
+    filtros: FiltrosActas,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaActa[]>;
+  obtenerActaPorId: (
+    id: number,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaActa | undefined>;
   crearActa: (datos: DatosNuevaActa) => Promise<FilaActa>;
   actualizarActa: (
     id: number,
@@ -24,29 +49,13 @@ type RepositorioActas = {
 };
 
 type RepositorioDetalle = {
-  listarEstudiantesDeActa: (
-    actaId: number
-  ) => Promise<
-    (FilaActaEstudiante & {
-      identificacion: string;
-      nombres: string;
-      apellidos: string;
-    })[]
-  >;
+  listarEstudiantesDeActa: (actaId: number) => Promise<EstudianteDeActa[]>;
   agregarEstudianteAActa: (
     actaId: number,
     personaId: number,
     numeroCertificado: number
   ) => Promise<FilaActaEstudiante>;
-  listarFirmantesDeActa: (
-    actaId: number
-  ) => Promise<
-    (FilaActaFirmante & {
-      nombres: string;
-      apellidos: string;
-      puesto: string;
-    })[]
-  >;
+  listarFirmantesDeActa: (actaId: number) => Promise<FirmanteDeActa[]>;
   agregarFirmante: (
     actaId: number,
     funcionarioId: number,
@@ -55,25 +64,17 @@ type RepositorioDetalle = {
 };
 
 export type ServicioActas = {
-  listarActas: (filtros: {
-    escuelaId?: number;
-    tipoActaId?: number;
-    tomo?: number;
-  }) => Promise<FilaActa[]>;
+  listarActas: (
+    filtros: FiltrosActas,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaActa[]>;
   obtenerActaPorId: (
-    id: number
+    id: number,
+    ambito: AmbitoConsulta
   ) => Promise<{
     acta: FilaActa;
-    estudiantes: (FilaActaEstudiante & {
-      identificacion: string;
-      nombres: string;
-      apellidos: string;
-    })[];
-    firmantes: (FilaActaFirmante & {
-      nombres: string;
-      apellidos: string;
-      puesto: string;
-    })[];
+    estudiantes: EstudianteDeActa[];
+    firmantes: FirmanteDeActa[];
   }>;
   crearActa: (
     datos: DatosNuevaActa,
@@ -97,23 +98,13 @@ export type ServicioActas = {
     sesion: SesionUsuario
   ) => Promise<FilaActaFirmante>;
   listarEstudiantesDeActa: (
-    actaId: number
-  ) => Promise<
-    (FilaActaEstudiante & {
-      identificacion: string;
-      nombres: string;
-      apellidos: string;
-    })[]
-  >;
+    actaId: number,
+    ambito: AmbitoConsulta
+  ) => Promise<EstudianteDeActa[]>;
   listarFirmantesDeActa: (
-    actaId: number
-  ) => Promise<
-    (FilaActaFirmante & {
-      nombres: string;
-      apellidos: string;
-      puesto: string;
-    })[]
-  >;
+    actaId: number,
+    ambito: AmbitoConsulta
+  ) => Promise<FirmanteDeActa[]>;
 };
 
 export function crearServicioActas(
@@ -121,18 +112,22 @@ export function crearServicioActas(
   repositorioDetalle: RepositorioDetalle,
   auditor: Auditor
 ): ServicioActas {
+  async function cargarActaEnAmbito(
+    id: number,
+    ambito: AmbitoConsulta
+  ): Promise<FilaActa> {
+    const acta = await repositorio.obtenerActaPorId(id, ambito);
+    if (!acta) throw new ErrorNoEncontrado("Acta no encontrada");
+    return acta;
+  }
+
   return {
-    async listarActas(filtros) {
-      return repositorio.listarActas(filtros);
+    async listarActas(filtros, ambito) {
+      return repositorio.listarActas(filtros, ambito);
     },
 
-    async obtenerActaPorId(id) {
-      const acta = await repositorio.obtenerActaPorId(id);
-      if (!acta) {
-        const error = new Error("Acta no encontrada");
-        error.name = "NotFoundError";
-        throw error;
-      }
+    async obtenerActaPorId(id, ambito) {
+      const acta = await cargarActaEnAmbito(id, ambito);
       const [estudiantes, firmantes] = await Promise.all([
         repositorioDetalle.listarEstudiantesDeActa(id),
         repositorioDetalle.listarFirmantesDeActa(id),
@@ -157,6 +152,7 @@ export function crearServicioActas(
     },
 
     async actualizarActa(id, datos, sesion) {
+      await cargarActaEnAmbito(id, derivarAmbitoConsulta(sesion));
       const acta = await repositorio.actualizarActa(id, datos);
       if (acta) {
         await auditor({
@@ -172,6 +168,7 @@ export function crearServicioActas(
     },
 
     async agregarEstudiante(actaId, personaId, numeroCertificado, sesion) {
+      await cargarActaEnAmbito(actaId, derivarAmbitoConsulta(sesion));
       const resultado = await repositorioDetalle.agregarEstudianteAActa(
         actaId,
         personaId,
@@ -189,6 +186,7 @@ export function crearServicioActas(
     },
 
     async agregarFirmante(actaId, funcionarioId, rolFirma, sesion) {
+      await cargarActaEnAmbito(actaId, derivarAmbitoConsulta(sesion));
       const resultado = await repositorioDetalle.agregarFirmante(
         actaId,
         funcionarioId,
@@ -205,11 +203,13 @@ export function crearServicioActas(
       return resultado;
     },
 
-    async listarEstudiantesDeActa(actaId) {
+    async listarEstudiantesDeActa(actaId, ambito) {
+      await cargarActaEnAmbito(actaId, ambito);
       return repositorioDetalle.listarEstudiantesDeActa(actaId);
     },
 
-    async listarFirmantesDeActa(actaId) {
+    async listarFirmantesDeActa(actaId, ambito) {
+      await cargarActaEnAmbito(actaId, ambito);
       return repositorioDetalle.listarFirmantesDeActa(actaId);
     },
   };
