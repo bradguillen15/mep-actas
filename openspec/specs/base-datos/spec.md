@@ -1,4 +1,9 @@
-## ADDED Requirements
+# base-datos Specification
+
+## Purpose
+Define el esquema de base de datos en Drizzle sobre Turso (libSQL) con nombres en español.
+
+## Requirements
 
 ### Requirement: Esquema Drizzle con 15 tablas en español
 La base de datos SHALL definirse con Drizzle ORM sobre SQLite/libSQL. Los nombres de tablas y columnas SHALL estar en español, según el modelo de datos del BRD §10.

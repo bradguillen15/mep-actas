@@ -1,4 +1,9 @@
-## ADDED Requirements
+# scaffold-proyecto Specification
+
+## Purpose
+Define la estructura base del proyecto Next.js, sus herramientas y convenciones.
+
+## Requirements
 
 ### Requirement: Proyecto Next.js con App Router y TypeScript
 El proyecto SHALL usar Next.js con App Router y TypeScript en modo estricto. El renderizado SHALL ser del lado del cliente (sin SSR). El layout raíz SHALL usar `"use client"`.

@@ -1,4 +1,9 @@
-## ADDED Requirements
+# auditoria Specification
+
+## Purpose
+Define el registro de auditoría de solo inserción para toda operación de escritura del sistema.
+
+## Requirements
 
 ### Requirement: Registro de auditoría para toda escritura
 Toda operación de escritura (crear, editar, desactivar) SHALL registrar en la tabla `auditoria`: `usuario_id`, `tabla`, `registro_id`, `accion`, `datos_anteriores` (JSON), `datos_nuevos` (JSON), `created_at`.

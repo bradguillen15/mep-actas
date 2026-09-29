@@ -1,4 +1,9 @@
-## ADDED Requirements
+# almacenamiento-r2 Specification
+
+## Purpose
+Define el almacenamiento de escaneos en Cloudflare R2 con acceso exclusivo desde el servidor y URLs firmadas.
+
+## Requirements
 
 ### Requirement: Cliente Cloudflare R2 solo-servidor
 El cliente de R2 SHALL inicializarse con credenciales desde variables de entorno (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`). SHALL vivir en `src/server/almacenamiento/r2.cliente.ts`. Nunca SHALL exponerse al navegador.
