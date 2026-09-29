@@ -2,6 +2,7 @@ import type { Auditor } from "./auditoria.servicio";
 import type {
   FilaPersona,
   DatosNuevaPersona,
+  PersonaMinima,
 } from "../repositorios/personas.repositorio";
 import type { SesionUsuario } from "@/server/auth/tipos";
 
@@ -11,6 +12,9 @@ export interface RepositorioPersonas {
   obtenerPersonaPorIdentificacion: (
     identificacion: string
   ) => Promise<FilaPersona | undefined>;
+  obtenerPersonaMinimaPorIdentificacion: (
+    identificacion: string
+  ) => Promise<PersonaMinima | undefined>;
   crearPersona: (datos: DatosNuevaPersona) => Promise<FilaPersona>;
   actualizarPersona: (
     id: number,
@@ -21,6 +25,9 @@ export interface RepositorioPersonas {
 export interface ServicioPersonas {
   listarPersonas: (busqueda?: string) => Promise<FilaPersona[]>;
   obtenerPersonaPorId: (id: number) => Promise<FilaPersona | undefined>;
+  buscarPersonaPorIdentificacionExacta: (
+    identificacion: string
+  ) => Promise<PersonaMinima[]>;
   crearPersona: (
     datos: DatosNuevaPersona,
     sesion: SesionUsuario
@@ -43,6 +50,12 @@ export function crearServicioPersonas(
 
     async obtenerPersonaPorId(id: number) {
       return repositorio.obtenerPersonaPorId(id);
+    },
+
+    async buscarPersonaPorIdentificacionExacta(identificacion) {
+      const persona =
+        await repositorio.obtenerPersonaMinimaPorIdentificacion(identificacion);
+      return persona ? [persona] : [];
     },
 
     async crearPersona(

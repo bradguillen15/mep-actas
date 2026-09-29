@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { clienteDb } from "@/db/cliente";
 import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioPersonas } from "@/server/servicios/personas.servicio";
+import { crearServicioPersonasDesdeDb } from "@/server/servicios/personas.fabrica";
 import { crearServicioFuncionarios } from "@/server/servicios/funcionarios.servicio";
 import { crearServicioRegiones } from "@/server/servicios/regiones.servicio";
-import * as repositorioPersonas from "@/server/repositorios/personas.repositorio";
 import * as repositorioFuncionarios from "@/server/repositorios/funcionarios.repositorio";
 import * as repositorioRegiones from "@/server/repositorios/regiones.repositorio";
 import { datosSesionAdminPais, obtenerRolPorNivel, obtenerUsuarioPorEmail } from "./helpers";
@@ -51,18 +50,7 @@ describe("Funcionarios e2e", () => {
   it("crea funcionario asociado a una persona", async () => {
     const db = clienteDb();
     const auditor = crearAuditor(db);
-    const servicioPersonas = crearServicioPersonas(
-      {
-        listarPersonas: (busqueda) => repositorioPersonas.listarPersonas(db, busqueda),
-        obtenerPersonaPorId: (id) => repositorioPersonas.obtenerPersonaPorId(db, id),
-        obtenerPersonaPorIdentificacion: (id) =>
-          repositorioPersonas.obtenerPersonaPorIdentificacion(db, id),
-        crearPersona: (datos) => repositorioPersonas.crearPersona(db, datos),
-        actualizarPersona: (id, datos) =>
-          repositorioPersonas.actualizarPersona(db, id, datos),
-      },
-      auditor
-    );
+    const servicioPersonas = crearServicioPersonasDesdeDb(db);
 
     const persona = await servicioPersonas.crearPersona(
       {

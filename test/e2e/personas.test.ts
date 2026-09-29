@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { clienteDb } from "@/db/cliente";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioPersonas } from "@/server/servicios/personas.servicio";
-import * as repositorio from "@/server/repositorios/personas.repositorio";
+import { crearServicioPersonasDesdeDb } from "@/server/servicios/personas.fabrica";
 import { datosSesionAdminPais, obtenerRolPorNivel, obtenerUsuarioPorEmail } from "./helpers";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
@@ -30,19 +28,7 @@ describe("Personas e2e", () => {
 
   it("crea una persona", async () => {
     const db = clienteDb();
-    const auditor = crearAuditor(db);
-    const servicio = crearServicioPersonas(
-      {
-        listarPersonas: (busqueda) => repositorio.listarPersonas(db, busqueda),
-        obtenerPersonaPorId: (id) => repositorio.obtenerPersonaPorId(db, id),
-        obtenerPersonaPorIdentificacion: (id) =>
-          repositorio.obtenerPersonaPorIdentificacion(db, id),
-        crearPersona: (datos) => repositorio.crearPersona(db, datos),
-        actualizarPersona: (id, datos) =>
-          repositorio.actualizarPersona(db, id, datos),
-      },
-      auditor
-    );
+    const servicio = crearServicioPersonasDesdeDb(db);
 
     const persona = await servicio.crearPersona(
       {
@@ -62,19 +48,7 @@ describe("Personas e2e", () => {
 
   it("rechaza identificacion duplicada", async () => {
     const db = clienteDb();
-    const auditor = crearAuditor(db);
-    const servicio = crearServicioPersonas(
-      {
-        listarPersonas: (busqueda) => repositorio.listarPersonas(db, busqueda),
-        obtenerPersonaPorId: (id) => repositorio.obtenerPersonaPorId(db, id),
-        obtenerPersonaPorIdentificacion: (id) =>
-          repositorio.obtenerPersonaPorIdentificacion(db, id),
-        crearPersona: (datos) => repositorio.crearPersona(db, datos),
-        actualizarPersona: (id, datos) =>
-          repositorio.actualizarPersona(db, id, datos),
-      },
-      auditor
-    );
+    const servicio = crearServicioPersonasDesdeDb(db);
 
     await expect(
       servicio.crearPersona(
@@ -90,19 +64,7 @@ describe("Personas e2e", () => {
 
   it("lista personas y encuentra la creada", async () => {
     const db = clienteDb();
-    const auditor = crearAuditor(db);
-    const servicio = crearServicioPersonas(
-      {
-        listarPersonas: (busqueda) => repositorio.listarPersonas(db, busqueda),
-        obtenerPersonaPorId: (id) => repositorio.obtenerPersonaPorId(db, id),
-        obtenerPersonaPorIdentificacion: (id) =>
-          repositorio.obtenerPersonaPorIdentificacion(db, id),
-        crearPersona: (datos) => repositorio.crearPersona(db, datos),
-        actualizarPersona: (id, datos) =>
-          repositorio.actualizarPersona(db, id, datos),
-      },
-      auditor
-    );
+    const servicio = crearServicioPersonasDesdeDb(db);
 
     const listado = await servicio.listarPersonas();
     expect(listado.some((p) => p.identificacion === identificacionUnica)).toBe(

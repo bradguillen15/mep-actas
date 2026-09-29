@@ -1,27 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioPersonas } from "@/server/servicios/personas.servicio";
-import * as repositorio from "@/server/repositorios/personas.repositorio";
+import { crearServicioPersonasDesdeDb } from "@/server/servicios/personas.fabrica";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
-
-async function crearServicio() {
-  const db = clienteDb();
-  const auditor = crearAuditor(db);
-  return crearServicioPersonas(
-    {
-      listarPersonas: (busqueda) => repositorio.listarPersonas(db, busqueda),
-      obtenerPersonaPorId: (id) => repositorio.obtenerPersonaPorId(db, id),
-      obtenerPersonaPorIdentificacion: (identificacion) =>
-        repositorio.obtenerPersonaPorIdentificacion(db, identificacion),
-      crearPersona: (datos) => repositorio.crearPersona(db, datos),
-      actualizarPersona: (id, datos) =>
-        repositorio.actualizarPersona(db, id, datos),
-    },
-    auditor
-  );
-}
 
 export async function GET(request: NextRequest) {
   const sesion = await obtenerSesion();
@@ -30,9 +11,16 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
+  const identificacion = searchParams.get("identificacion");
   const busqueda = searchParams.get("busqueda") ?? undefined;
+  const servicio = crearServicioPersonasDesdeDb(clienteDb());
 
-  const servicio = await crearServicio();
+  if (identificacion) {
+    const coincidencias =
+      await servicio.buscarPersonaPorIdentificacionExacta(identificacion);
+    return NextResponse.json(coincidencias);
+  }
+
   const personas = await servicio.listarPersonas(busqueda);
 
   return NextResponse.json(personas);
@@ -44,13 +32,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const verificacion = verificarRol(sesion, 2);
+  const verificacion = verificarRol(sesion, 4);
   if (!verificacion.autorizado) {
     return NextResponse.json({ error: verificacion.error }, { status: 403 });
   }
 
   const cuerpo = await request.json();
-  const servicio = await crearServicio();
+  const servicio = crearServicioPersonasDesdeDb(clienteDb());
 
   try {
     const persona = await servicio.crearPersona(cuerpo, sesion);

@@ -49,6 +49,29 @@ export async function obtenerPersonaPorIdentificacion(
   return resultado[0];
 }
 
+export type PersonaMinima = {
+  id: number;
+  nombres: string;
+  apellidos: string;
+  identificacion: string;
+};
+
+export async function obtenerPersonaMinimaPorIdentificacion(
+  db: LibSQLDatabase<typeof esquema>,
+  identificacion: string
+): Promise<PersonaMinima | undefined> {
+  const resultado = await db
+    .select({
+      id: esquema.personas.id,
+      nombres: esquema.personas.nombres,
+      apellidos: esquema.personas.apellidos,
+      identificacion: esquema.personas.identificacion,
+    })
+    .from(esquema.personas)
+    .where(eq(esquema.personas.identificacion, identificacion));
+  return resultado[0];
+}
+
 export async function crearPersona(
   db: LibSQLDatabase<typeof esquema>,
   datos: DatosNuevaPersona
