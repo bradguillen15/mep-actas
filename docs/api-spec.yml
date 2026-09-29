@@ -260,7 +260,10 @@ paths:
   /api/usuarios:
     get:
       summary: Listar usuarios
-      description: Requiere rol administrador (nivel <= 2).
+      description: >
+        Requiere rol administrador (nivel <= 3). El BRD §6 permite al Admin
+        Escuela crear usuarios staff de su escuela, por lo que también accede
+        a la gestión de usuarios.
       tags: [Usuarios]
       security:
         - cookieAuth: []

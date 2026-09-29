@@ -50,6 +50,21 @@ Los route handlers de gestión de usuarios SHALL propagar la sesión al servicio
 - **THEN** la respuesta tiene código `403`
 - **AND** no se crea el usuario
 
+### Requirement: Las rutas de usuarios permiten administradores hasta nivel 3
+Los route handlers de gestión de usuarios SHALL permitir el acceso a usuarios con `nivel <= 3` (BRD §6: el Admin Escuela crea usuarios staff de su escuela), delegando en el servicio las verificaciones de jerarquía y ámbito. Un usuario Staff (`nivel: 4`) NO SHALL acceder a ninguna operación de gestión de usuarios, y una petición sin sesión SHALL recibir `401` (sin auto-registro).
+
+#### Scenario: Admin Escuela crea un Staff de su escuela vía API
+- **WHEN** un Admin Escuela autenticado envía `POST /api/usuarios` con un rol de `nivel: 4` y un funcionario de su escuela
+- **THEN** la respuesta tiene código `201` y el usuario se crea
+
+#### Scenario: Staff recibe 403 en la API de usuarios
+- **WHEN** un usuario Staff (`nivel: 4`) autenticado envía cualquier petición a `/api/usuarios`
+- **THEN** la respuesta tiene código `403`
+
+#### Scenario: Sin sesión la API responde 401
+- **WHEN** una petición sin sesión llega a `/api/usuarios`
+- **THEN** la respuesta tiene código `401`
+
 ### Requirement: UI de gestión de usuarios para administradores
 El sistema SHALL ofrecer una pantalla de gestión de usuarios accesible solo para usuarios administradores (`nivel <= 3`), que permita listar usuarios, invitar/crear un usuario, restablecer su contraseña y activar/desactivarlo. La UI SHALL ofrecer únicamente las opciones de rol y ámbito permitidas por el rol del usuario en sesión y NO SHALL ofrecer auto-registro.
 
@@ -64,3 +79,20 @@ El sistema SHALL ofrecer una pantalla de gestión de usuarios accesible solo par
 #### Scenario: El selector de rol no ofrece niveles superiores al del actor
 - **WHEN** un Admin Regional (`nivel: 2`) abre el formulario de creación de usuario
 - **THEN** el selector de rol solo ofrece roles de `nivel >= 2` (su mismo nivel o inferiores)
+
+### Requirement: La pantalla de gestión de usuarios es responsiva
+La pantalla de gestión de usuarios SHALL adaptarse al tamaño del viewport sin desplazamiento horizontal de la página: en pantallas pequeñas (menores a `768px`) SHALL presentar los usuarios como tarjetas apiladas con las mismas acciones (restablecer contraseña, activar/desactivar) y el encabezado apilado en columna; en pantallas medianas o mayores SHALL presentar la tabla completa. La navegación lateral SHALL plegarse a un menú desplegable accesible en pantallas pequeñas.
+
+#### Scenario: Vista móvil presenta tarjetas con las mismas acciones
+- **WHEN** un administrador abre la gestión de usuarios en un viewport menor a `768px`
+- **THEN** los usuarios se presentan como tarjetas apiladas con correo, funcionario, rol y estado
+- **AND** cada tarjeta ofrece las acciones de restablecer contraseña y activar/desactivar
+- **AND** la tabla no es visible
+
+#### Scenario: Vista de escritorio presenta la tabla completa
+- **WHEN** un administrador abre la gestión de usuarios en un viewport de `768px` o mayor
+- **THEN** los usuarios se presentan en la tabla con paginación y las tarjetas móviles no son visibles
+
+#### Scenario: La navegación se pliega en pantallas pequeñas
+- **WHEN** un administrador usa la aplicación en un viewport menor a `768px`
+- **THEN** la barra lateral queda oculta y se ofrece un botón accesible que abre el menú de navegación

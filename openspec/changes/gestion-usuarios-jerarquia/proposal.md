@@ -9,6 +9,7 @@ El BRD §6 exige que las cuentas se creen **por invitación desde un nivel super
 - Extender la misma jerarquía + ámbito a **restablecer contraseña** y **activar/desactivar** usuarios.
 - Cerrar la brecha de pruebas: agregar pruebas unitarias/E2E **entre roles** (hoy `usuarios.test.ts` prepara `sesionAdminRegional` pero nunca la usa), cubriendo casos permitidos y denegados.
 - Agregar **UI de gestión de usuarios** para administradores (listar, invitar/crear, restablecer contraseña, activar/desactivar), respetando los permisos del rol en sesión. Sin auto-registro.
+- Hacer la pantalla de gestión de usuarios **responsiva** (tarjetas en móvil, tabla en escritorio, navegación plegable) y agregar una **prueba de conformidad con el BRD §6** que valide la matriz completa de permisos por nivel; corregir el acceso de las rutas de usuarios de `nivel <= 2` a `nivel <= 3` para que el Admin Escuela pueda crear staff de su escuela, como exige el BRD.
 
 ## Capabilities
 

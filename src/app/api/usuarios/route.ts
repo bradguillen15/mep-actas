@@ -16,7 +16,7 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const verificacion = verificarRol(sesion, 2);
+  const verificacion = verificarRol(sesion, 3);
   if (!verificacion.autorizado) {
     return NextResponse.json({ error: verificacion.error }, { status: 403 });
   }
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const verificacion = verificarRol(sesion, 2);
+  const verificacion = verificarRol(sesion, 3);
   if (!verificacion.autorizado) {
     return NextResponse.json({ error: verificacion.error }, { status: 403 });
   }

@@ -65,3 +65,18 @@ export function datosSesionAdminEscuela(
     escuelaId,
   };
 }
+
+export function datosSesionStaff(
+  usuarioId: number,
+  rolId: number,
+  escuelaId: number
+) {
+  return {
+    usuarioId,
+    email: "staff@e2e.test",
+    nivel: 4 as const,
+    rolId,
+    funcionarioId: 4,
+    escuelaId,
+  };
+}
