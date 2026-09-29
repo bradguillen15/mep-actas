@@ -45,7 +45,11 @@ const secciones: NavSeccion[] = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  onNavegar?: () => void;
+}
+
+export function Sidebar({ onNavegar }: SidebarProps) {
   const pathname = usePathname();
   const { usuario, cerrarSesion } = useSesion();
 
@@ -88,6 +92,7 @@ export function Sidebar() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={onNavegar}
                       className={`group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 ${
                         activo
                           ? "bg-acento text-primario shadow-md"

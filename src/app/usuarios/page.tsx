@@ -88,6 +88,7 @@ export default function Usuarios() {
   const [nuevaPassword, setNuevaPassword] = useState("");
   const [errorReset, setErrorReset] = useState("");
   const [reseteando, setReseteando] = useState(false);
+  const [errorEstado, setErrorEstado] = useState("");
 
   const nivelActor = sesion?.nivel ?? 4;
 
@@ -133,12 +134,25 @@ export default function Usuarios() {
   };
 
   const manejarCambioEstado = async (u: Usuario) => {
-    const res = await fetch(`/api/usuarios/${u.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ activo: !u.activo }),
-    });
-    if (res.ok) mutate();
+    setErrorEstado("");
+    try {
+      const res = await fetch(`/api/usuarios/${u.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activo: !u.activo }),
+      });
+      if (res.status === 403) {
+        setErrorEstado("No tiene permisos para cambiar el estado de este usuario.");
+        return;
+      }
+      if (!res.ok) {
+        setErrorEstado("No se pudo cambiar el estado del usuario.");
+        return;
+      }
+      mutate();
+    } catch {
+      setErrorEstado("Error de conexión.");
+    }
   };
 
   const manejarReset = async () => {
@@ -229,7 +243,7 @@ export default function Usuarios() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-texto">Usuarios</h1>
           <p className="mt-1 text-sm text-gray-500">
@@ -243,6 +257,12 @@ export default function Usuarios() {
         </Boton>
       </div>
 
+      {errorEstado && (
+        <div className="rounded-lg bg-error/10 px-3 py-2 text-sm text-error">
+          {errorEstado}
+        </div>
+      )}
+
       {isLoading && <Cargando />}
 
       {!isLoading && (usuarios?.length ?? 0) === 0 && (
@@ -250,7 +270,55 @@ export default function Usuarios() {
       )}
 
       {usuarios && usuarios.length > 0 && (
-        <Tabla columnas={columnas} datos={usuarios} />
+        <>
+          <ul aria-label="Lista de usuarios" className="flex flex-col gap-3 md:hidden">
+            {usuarios.map((u) => (
+              <li
+                key={u.id}
+                className="rounded-xl border border-borde bg-white p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-texto">
+                      {u.email}
+                    </p>
+                    <p className="truncate text-sm text-gray-500">
+                      {u.funcionarioNombres} {u.funcionarioApellidos}
+                    </p>
+                  </div>
+                  {u.activo ? (
+                    <Badge variante="exito">Activo</Badge>
+                  ) : (
+                    <Badge variante="error">Inactivo</Badge>
+                  )}
+                </div>
+                <div className="mt-2">
+                  <Badge variante="info">{nombreRol(u.nivel)}</Badge>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Boton
+                    variante="secundario"
+                    tamano="sm"
+                    onClick={() => setUsuarioReset(u)}
+                  >
+                    <KeyRound className="h-4 w-4" />
+                    Contraseña
+                  </Boton>
+                  <Boton
+                    variante={u.activo ? "peligro" : "secundario"}
+                    tamano="sm"
+                    onClick={() => manejarCambioEstado(u)}
+                  >
+                    {u.activo ? "Desactivar" : "Activar"}
+                  </Boton>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden md:block">
+            <Tabla columnas={columnas} datos={usuarios} />
+          </div>
+        </>
       )}
 
       <Modal
