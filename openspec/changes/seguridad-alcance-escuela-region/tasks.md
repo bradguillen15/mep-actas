@@ -50,8 +50,8 @@ Requisitos: spec `alcance-datos` (regla de ámbito por nivel) y `autenticacion-r
 
 - [x] 1.1 RED: crear `src/server/auth/__tests__/ambito.test.ts` con tabla de casos para `derivarAmbitoConsulta` (nivel 1 → `pais`; nivel 2 con `regionId` → `region`; nivel 2 sin `regionId` → `ninguno`; niveles 3 y 4 con `escuelaId` → `escuela`; niveles 3 y 4 sin `escuelaId` → `ninguno`) y para `escuelasDentroDeAmbito` (los cuatro tipos). Confirmar que falla.
 - [x] 1.2 GREEN: crear `src/server/auth/ambito.ts` con el tipo `AmbitoConsulta`, `derivarAmbitoConsulta(sesion)` y `escuelasDentroDeAmbito(ambito, escuelaIds, regionIds)` según las firmas del diseño.
-- [ ] 1.3 RED: crear `src/server/__tests__/errores.test.ts` que verifique que `ErrorNoEncontrado` tiene `name === "NotFoundError"` y `ErrorProhibido` tiene `name === "ForbiddenError"`, y que ambos son instancias de `Error`.
-- [ ] 1.4 GREEN: crear `src/server/errores.ts` con `ErrorNoEncontrado` y `ErrorProhibido`.
+- [x] 1.3 RED: crear `src/server/__tests__/errores.test.ts` que verifique que `ErrorNoEncontrado` tiene `name === "NotFoundError"` y `ErrorProhibido` tiene `name === "ForbiddenError"`, y que ambos son instancias de `Error`.
+- [x] 1.4 GREEN: crear `src/server/errores.ts` con `ErrorNoEncontrado` y `ErrorProhibido`.
 - [ ] 1.5 RED: agregar casos a `src/server/auth/__tests__/autorizacion.test.ts`: nivel 2 con `escuelaId` de otra región → `403`; nivel 2 con `escuelaId` de su región → autorizado; nivel 2 con `escuelaId` y sin `regionId` → `403` (falla cerrado); nivel 2 con solo `regionId` ajeno → `403`; niveles 3–4 con `escuelaId` distinto → `403`; nivel 1 autorizado; casos actuales intactos.
 - [ ] 1.6 GREEN: modificar `src/server/auth/autorizacion.servicio.ts` con la regla del nivel 2 + `escuelaId` (exige `regionId` de la escuela) y documentar en `src/server/auth/tipos.ts` la semántica de `AmbitoVerificacion.regionId` (región de la escuela objetivo) sin cambiar su forma.
 - [ ] 1.7 REFACTOR: revisar nombres y eliminar comentarios redundantes en los archivos tocados; ejecutar `pnpm vitest run src/server/auth src/server/__tests__` y luego `pnpm verify:fast`; dejar todo en verde.
