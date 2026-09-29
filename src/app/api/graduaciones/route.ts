@@ -1,10 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
-import { crearServicioGraduaciones } from "@/server/servicios/graduaciones.servicio";
-import * as repositorio from "@/server/repositorios/graduaciones.repositorio";
+import { crearServicioGraduacionesDesdeDb } from "@/server/servicios/graduaciones.fabrica";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
-
-const db = clienteDb();
+import { derivarAmbitoConsulta } from "@/server/auth/ambito";
 
 function parametroOpcional(
   searchParams: URLSearchParams,
@@ -27,12 +25,7 @@ export async function GET(request: NextRequest) {
   const paginaParam = searchParams.get("pagina");
   const limiteParam = searchParams.get("limite");
 
-  const servicio = crearServicioGraduaciones({
-    buscarGraduaciones: (params) =>
-      repositorio.buscarGraduaciones(db, params),
-    obtenerGraduacionPorId: (id) =>
-      repositorio.obtenerGraduacionPorId(db, id),
-  });
+  const servicio = crearServicioGraduacionesDesdeDb(clienteDb());
 
   const resultados = await servicio.buscar({
     identificacion: parametroOpcional(searchParams, "identificacion"),
@@ -45,7 +38,7 @@ export async function GET(request: NextRequest) {
     tituloActa: parametroOpcional(searchParams, "tituloActa"),
     pagina: paginaParam ? Number(paginaParam) : undefined,
     limite: limiteParam ? Number(limiteParam) : undefined,
-  });
+  }, derivarAmbitoConsulta(sesion));
 
   return NextResponse.json(resultados);
 }

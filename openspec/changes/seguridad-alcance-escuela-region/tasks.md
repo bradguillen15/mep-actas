@@ -89,11 +89,11 @@ Requisitos: spec `alcance-datos` (Actas limitadas al ámbito), `autenticacion-ro
 
 Requisitos: spec `alcance-datos` (Graduaciones y su búsqueda limitadas al ámbito). Diseño: paso 4.
 
-- [ ] 4.1 RED: crear `src/server/servicios/__tests__/graduaciones.servicio.test.ts` (repositorio simulado: el servicio propaga `ambito` en búsqueda y por id) y `src/app/api/graduaciones/__tests__/route.test.ts` y `src/app/api/graduaciones/[id]/__tests__/route.test.ts` con los escenarios: nivel 3 no ve otras escuelas al buscar por identificación; búsqueda sin coincidencias dentro del ámbito → 200 vacío sin indicar registros externos; `GET [id]` de otra escuela → 404; nivel 2 solo su región.
-- [ ] 4.2 GREEN: modificar `src/server/repositorios/graduaciones.repositorio.ts` (`construirCondiciones` y `obtenerGraduacionPorId` agregan `condicionEscuelaEnAmbito(ambito, actas.escuelaId)`; total y paginación calculados con la misma condición), `src/server/servicios/graduaciones.servicio.ts` (propaga `ambito`), `src/app/api/graduaciones/route.ts` y `src/app/api/graduaciones/[id]/route.ts` (derivan y pasan `ambito`; 404 con el cuerpo actual).
-- [ ] 4.3 Revisar y adaptar pruebas existentes de graduaciones afectadas por el parámetro nuevo (incluida `test/e2e/graduaciones.test.ts`).
-- [ ] 4.4 Ejecutar `pnpm vitest run graduaciones`, `pnpm verify:fast` y `pnpm test:e2e -- graduaciones`; restaurar el estado de la base.
-- [ ] 4.5 Commit sugerido: `feat: limitar la búsqueda y consulta de graduaciones al ámbito del actor`
+- [x] 4.1 RED: crear `src/server/servicios/__tests__/graduaciones.servicio.test.ts` (repositorio simulado: el servicio propaga `ambito` en búsqueda y por id) y `src/app/api/graduaciones/__tests__/route.test.ts` y `src/app/api/graduaciones/[id]/__tests__/route.test.ts` con los escenarios: nivel 3 no ve otras escuelas al buscar por identificación; búsqueda sin coincidencias dentro del ámbito → 200 vacío sin indicar registros externos; `GET [id]` de otra escuela → 404; nivel 2 solo su región.
+- [x] 4.2 GREEN: modificar `src/server/repositorios/graduaciones.repositorio.ts` (`construirCondiciones` y `obtenerGraduacionPorId` agregan `condicionEscuelaEnAmbito(ambito, actas.escuelaId)`; total y paginación calculados con la misma condición), `src/server/servicios/graduaciones.servicio.ts` (propaga `ambito`), `src/app/api/graduaciones/route.ts` y `src/app/api/graduaciones/[id]/route.ts` (derivan y pasan `ambito`; 404 con el cuerpo actual).
+- [x] 4.3 Revisar y adaptar pruebas existentes de graduaciones afectadas por el parámetro nuevo (incluida `test/e2e/graduaciones.test.ts`).
+- [x] 4.4 Ejecutar `pnpm vitest run graduaciones`, `pnpm verify:fast` y `pnpm test:e2e -- graduaciones`; restaurar el estado de la base.
+- [x] 4.5 Commit sugerido: `feat: limitar la búsqueda y consulta de graduaciones al ámbito del actor`
 
 ## 5. Escaneos con ámbito y DELETE 404 (TDD)
 

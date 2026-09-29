@@ -2,6 +2,8 @@ import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { eq, and, or, desc, gte, lte, sql, count, type SQL } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import { LIMITE_GRADUACIONES_POR_PAGINA } from "@/lib/graduaciones";
+import type { AmbitoConsulta } from "@/server/auth/ambito";
+import { condicionEscuelaEnAmbito } from "./ambito.condiciones";
 
 export type ResultadoGraduacion = {
   actaEstudianteId: number;
@@ -65,8 +67,13 @@ function patronLike(term: string): string {
   return `%${term.trim().toLowerCase()}%`;
 }
 
-function construirCondiciones(params: ParametrosBusquedaGraduaciones): SQL[] {
+function construirCondiciones(
+  params: ParametrosBusquedaGraduaciones,
+  ambito: AmbitoConsulta
+): SQL[] {
   const condiciones: SQL[] = [];
+  const condicionAmbito = condicionEscuelaEnAmbito(ambito, esquema.actas.escuelaId);
+  if (condicionAmbito) condiciones.push(condicionAmbito);
 
   if (params.identificacion) {
     const patron = patronLike(params.identificacion);
@@ -119,9 +126,10 @@ function construirCondiciones(params: ParametrosBusquedaGraduaciones): SQL[] {
 
 export async function buscarGraduaciones(
   db: LibSQLDatabase<typeof esquema>,
-  params: ParametrosBusquedaGraduaciones
+  params: ParametrosBusquedaGraduaciones,
+  ambito: AmbitoConsulta
 ): Promise<ResultadoBusquedaGraduaciones> {
-  const condiciones = construirCondiciones(params);
+  const condiciones = construirCondiciones(params, ambito);
   const limite = params.limite ?? LIMITE_GRADUACIONES_POR_PAGINA;
   const pagina = Math.max(1, params.pagina ?? 1);
   const offset = (pagina - 1) * limite;
@@ -189,7 +197,8 @@ export async function buscarGraduaciones(
 
 export async function obtenerGraduacionPorId(
   db: LibSQLDatabase<typeof esquema>,
-  id: number
+  id: number,
+  ambito: AmbitoConsulta
 ): Promise<ResultadoGraduacion[]> {
   return db
     .select(COLUMNAS)
@@ -214,5 +223,10 @@ export async function obtenerGraduacionPorId(
       esquema.personas,
       eq(esquema.estudiantes.personaId, esquema.personas.id)
     )
-    .where(eq(esquema.actas.id, id));
+    .where(
+      and(
+        eq(esquema.actas.id, id),
+        condicionEscuelaEnAmbito(ambito, esquema.actas.escuelaId)
+      )
+    );
 }

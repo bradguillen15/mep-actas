@@ -1,10 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
-import { crearServicioGraduaciones } from "@/server/servicios/graduaciones.servicio";
-import * as repositorio from "@/server/repositorios/graduaciones.repositorio";
+import { crearServicioGraduacionesDesdeDb } from "@/server/servicios/graduaciones.fabrica";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
-
-const db = clienteDb();
+import { derivarAmbitoConsulta } from "@/server/auth/ambito";
+import { responderErrorDeRecurso } from "@/server/http/respuestas";
 
 export async function GET(
   _request: NextRequest,
@@ -16,21 +15,15 @@ export async function GET(
   }
 
   const { id } = await params;
-  const servicio = crearServicioGraduaciones({
-    buscarGraduaciones: (p) => repositorio.buscarGraduaciones(db, p),
-    obtenerGraduacionPorId: (i) => repositorio.obtenerGraduacionPorId(db, i),
-  });
+  const servicio = crearServicioGraduacionesDesdeDb(clienteDb());
 
   try {
-    const resultado = await servicio.obtenerPorId(Number(id));
+    const resultado = await servicio.obtenerPorId(
+      Number(id),
+      derivarAmbitoConsulta(sesion)
+    );
     return NextResponse.json(resultado);
   } catch (error) {
-    if (error instanceof Error && error.name === "NotFoundError") {
-      return NextResponse.json(
-        { error: "Graduación no encontrada" },
-        { status: 404 }
-      );
-    }
-    throw error;
+    return responderErrorDeRecurso(error, "Graduación no encontrada");
   }
 }

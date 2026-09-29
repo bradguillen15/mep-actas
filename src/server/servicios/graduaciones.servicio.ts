@@ -3,6 +3,8 @@ import type {
   ResultadoBusquedaGraduaciones,
   ResultadoGraduacion,
 } from "@/server/repositorios/graduaciones.repositorio";
+import type { AmbitoConsulta } from "@/server/auth/ambito";
+import { ErrorNoEncontrado } from "@/server/errores";
 
 export type GraduacionDto = {
   id: number;
@@ -18,9 +20,13 @@ export type GraduacionDto = {
 
 type RepositorioGraduaciones = {
   buscarGraduaciones: (
-    params: ParametrosBusquedaGraduaciones
+    params: ParametrosBusquedaGraduaciones,
+    ambito: AmbitoConsulta
   ) => Promise<ResultadoBusquedaGraduaciones>;
-  obtenerGraduacionPorId: (id: number) => Promise<ResultadoGraduacion[]>;
+  obtenerGraduacionPorId: (
+    id: number,
+    ambito: AmbitoConsulta
+  ) => Promise<ResultadoGraduacion[]>;
 };
 
 export type RespuestaBusquedaGraduaciones = {
@@ -32,9 +38,13 @@ export type RespuestaBusquedaGraduaciones = {
 
 export type ServicioGraduaciones = {
   buscar: (
-    params: ParametrosBusquedaGraduaciones
+    params: ParametrosBusquedaGraduaciones,
+    ambito: AmbitoConsulta
   ) => Promise<RespuestaBusquedaGraduaciones>;
-  obtenerPorId: (id: number) => Promise<{
+  obtenerPorId: (
+    id: number,
+    ambito: AmbitoConsulta
+  ) => Promise<{
     acta: GraduacionDto[];
   }>;
 };
@@ -57,9 +67,9 @@ export function crearServicioGraduaciones(
   repositorio: RepositorioGraduaciones
 ): ServicioGraduaciones {
   return {
-    async buscar(params) {
+    async buscar(params, ambito) {
       const { datos, total, pagina, limite } =
-        await repositorio.buscarGraduaciones(params);
+        await repositorio.buscarGraduaciones(params, ambito);
       return {
         datos: datos.map(mapearGraduacion),
         total,
@@ -68,12 +78,10 @@ export function crearServicioGraduaciones(
       };
     },
 
-    async obtenerPorId(id) {
-      const resultados = await repositorio.obtenerGraduacionPorId(id);
+    async obtenerPorId(id, ambito) {
+      const resultados = await repositorio.obtenerGraduacionPorId(id, ambito);
       if (resultados.length === 0) {
-        const error = new Error("Graduación no encontrada");
-        error.name = "NotFoundError";
-        throw error;
+        throw new ErrorNoEncontrado("Graduación no encontrada");
       }
       return { acta: resultados.map(mapearGraduacion) };
     },

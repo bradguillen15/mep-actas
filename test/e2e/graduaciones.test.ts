@@ -5,8 +5,7 @@ import path from "path";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { crearServicioGraduaciones } from "@/server/servicios/graduaciones.servicio";
-import * as repositorio from "@/server/repositorios/graduaciones.repositorio";
+import { crearServicioGraduacionesDesdeDb } from "@/server/servicios/graduaciones.fabrica";
 import { LIMITE_GRADUACIONES_POR_PAGINA } from "@/lib/graduaciones";
 
 const DB_PATH = path.resolve(__dirname, "../../temp-e2e.db");
@@ -95,16 +94,11 @@ afterAll(async () => {
 
 describe("Consulta graduaciones e2e", () => {
   it("busca por identificacion exacta", async () => {
-    const servicio = crearServicioGraduaciones({
-      buscarGraduaciones: (params) =>
-        repositorio.buscarGraduaciones(db, params),
-      obtenerGraduacionPorId: (id) =>
-        repositorio.obtenerGraduacionPorId(db, id),
-    });
+    const servicio = crearServicioGraduacionesDesdeDb(db);
 
     const resultados = await servicio.buscar({
       identificacion: "999999999",
-    });
+    }, { tipo: "pais" });
 
     expect(resultados.datos.length).toBeGreaterThanOrEqual(1);
     expect(resultados.datos[0].identificacion).toBe("999999999");
@@ -113,61 +107,41 @@ describe("Consulta graduaciones e2e", () => {
   });
 
   it("busca por identificacion parcial", async () => {
-    const servicio = crearServicioGraduaciones({
-      buscarGraduaciones: (params) =>
-        repositorio.buscarGraduaciones(db, params),
-      obtenerGraduacionPorId: (id) =>
-        repositorio.obtenerGraduacionPorId(db, id),
-    });
+    const servicio = crearServicioGraduacionesDesdeDb(db);
 
     const resultados = await servicio.buscar({
       identificacion: "99999",
-    });
+    }, { tipo: "pais" });
 
     expect(resultados.datos.length).toBeGreaterThanOrEqual(1);
     expect(resultados.datos[0].identificacion).toBe("999999999");
   });
 
   it("busca por nombre parcial", async () => {
-    const servicio = crearServicioGraduaciones({
-      buscarGraduaciones: (params) =>
-        repositorio.buscarGraduaciones(db, params),
-      obtenerGraduacionPorId: (id) =>
-        repositorio.obtenerGraduacionPorId(db, id),
-    });
+    const servicio = crearServicioGraduacionesDesdeDb(db);
 
     const resultados = await servicio.buscar({
       nombre: "Graduado",
-    });
+    }, { tipo: "pais" });
 
     expect(resultados.datos.length).toBeGreaterThanOrEqual(1);
   });
 
   it("retorna vacio si no hay coincidencias", async () => {
-    const servicio = crearServicioGraduaciones({
-      buscarGraduaciones: (params) =>
-        repositorio.buscarGraduaciones(db, params),
-      obtenerGraduacionPorId: (id) =>
-        repositorio.obtenerGraduacionPorId(db, id),
-    });
+    const servicio = crearServicioGraduacionesDesdeDb(db);
 
     const resultados = await servicio.buscar({
       identificacion: "000000000",
-    });
+    }, { tipo: "pais" });
 
     expect(resultados.datos).toHaveLength(0);
     expect(resultados.total).toBe(0);
   });
 
   it("lista graduaciones recientes cuando no hay criterio de busqueda", async () => {
-    const servicio = crearServicioGraduaciones({
-      buscarGraduaciones: (params) =>
-        repositorio.buscarGraduaciones(db, params),
-      obtenerGraduacionPorId: (id) =>
-        repositorio.obtenerGraduacionPorId(db, id),
-    });
+    const servicio = crearServicioGraduacionesDesdeDb(db);
 
-    const resultados = await servicio.buscar({});
+    const resultados = await servicio.buscar({}, { tipo: "pais" });
     expect(resultados.datos.length).toBeGreaterThanOrEqual(1);
     expect(resultados.datos[0].nombreCompleto).toBeTruthy();
     expect(resultados.datos[0].fecha).toBeTruthy();
@@ -177,21 +151,16 @@ describe("Consulta graduaciones e2e", () => {
   });
 
   it("pagina resultados cuando hay mas registros que el limite", async () => {
-    const servicio = crearServicioGraduaciones({
-      buscarGraduaciones: (params) =>
-        repositorio.buscarGraduaciones(db, params),
-      obtenerGraduacionPorId: (id) =>
-        repositorio.obtenerGraduacionPorId(db, id),
-    });
+    const servicio = crearServicioGraduacionesDesdeDb(db);
 
     const primeraPagina = await servicio.buscar({
       pagina: 1,
       limite: 1,
-    });
+    }, { tipo: "pais" });
     const segundaPagina = await servicio.buscar({
       pagina: 2,
       limite: 1,
-    });
+    }, { tipo: "pais" });
 
     expect(primeraPagina.datos).toHaveLength(1);
     expect(primeraPagina.pagina).toBe(1);
@@ -205,27 +174,17 @@ describe("Consulta graduaciones e2e", () => {
   });
 
   it("obtiene detalle por id", async () => {
-    const servicio = crearServicioGraduaciones({
-      buscarGraduaciones: (params) =>
-        repositorio.buscarGraduaciones(db, params),
-      obtenerGraduacionPorId: (id) =>
-        repositorio.obtenerGraduacionPorId(db, id),
-    });
+    const servicio = crearServicioGraduacionesDesdeDb(db);
 
-    const detalle = await servicio.obtenerPorId(idsActa[0]);
+    const detalle = await servicio.obtenerPorId(idsActa[0], { tipo: "pais" });
     expect(detalle.acta.length).toBeGreaterThanOrEqual(1);
     expect(detalle.acta[0].tituloActa).toBe("Acta de Graduación 2026");
   });
 
   it("lanza NotFoundError si id no existe", async () => {
-    const servicio = crearServicioGraduaciones({
-      buscarGraduaciones: (params) =>
-        repositorio.buscarGraduaciones(db, params),
-      obtenerGraduacionPorId: (id) =>
-        repositorio.obtenerGraduacionPorId(db, id),
-    });
+    const servicio = crearServicioGraduacionesDesdeDb(db);
 
-    await expect(servicio.obtenerPorId(99999)).rejects.toThrow(
+    await expect(servicio.obtenerPorId(99999, { tipo: "pais" })).rejects.toThrow(
       "Graduación no encontrada"
     );
   });
