@@ -36,3 +36,27 @@ describe("Esquema de base de datos", () => {
     expect(esquema.usuarios.email).toBeDefined();
   });
 });
+
+describe("Índices de apoyo al ámbito", () => {
+  it.each([
+    "idx_escuelas_region_id",
+    "idx_funcionario_escuela_funcionario_id",
+    "idx_funcionario_escuela_escuela_id",
+    "idx_acta_estudiantes_acta_id",
+    "idx_acta_estudiantes_estudiante_id",
+    "idx_estudiantes_persona_id",
+    "idx_funcionarios_persona_id",
+    "idx_acta_firmantes_acta_id",
+    "idx_acta_firmantes_funcionario_id",
+  ])("la base migrada tiene el índice %s", async (nombreIndice) => {
+    const { crearDbEnMemoria } = await import(
+      "@/server/repositorios/__tests__/db-en-memoria"
+    );
+    const { sql } = await import("drizzle-orm");
+    const db = await crearDbEnMemoria();
+    const filas = await db.all<{ name: string }>(
+      sql`select name from sqlite_master where type = 'index' and name = ${nombreIndice}`
+    );
+    expect(filas).toHaveLength(1);
+  });
+});

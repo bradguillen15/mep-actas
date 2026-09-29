@@ -63,11 +63,11 @@ Diseño: Decisiones 1 y 6.
 
 - [x] 2.1 RED: crear `src/server/repositorios/__tests__/ambito.condiciones.test.ts` que, contra una base SQLite en memoria o de prueba, verifique que `condicionEscuelaEnAmbito` devuelve `undefined` para `pais`, filtra por igualdad para `escuela`, filtra por subconsulta de `escuelas.region_id` para `region` y no devuelve filas para `ninguno`.
 - [x] 2.2 GREEN: crear `src/server/repositorios/ambito.condiciones.ts` con `condicionEscuelaEnAmbito(ambito, columnaEscuelaId)` (`pais` → `undefined`; `region` → `IN (SELECT id FROM escuelas WHERE region_id = ?)`; `escuela` → `=`; `ninguno` → ``sql`0 = 1` ``).
-- [ ] 2.3 RED: agregar a `src/db/__tests__/esquema.test.ts` la verificación de los índices `idx_escuelas_region_id`, `idx_funcionario_escuela_funcionario_id`, `idx_funcionario_escuela_escuela_id`, `idx_acta_estudiantes_acta_id`, `idx_acta_estudiantes_estudiante_id`, `idx_estudiantes_persona_id`, `idx_funcionarios_persona_id`, `idx_acta_firmantes_acta_id` e `idx_acta_firmantes_funcionario_id`.
-- [ ] 2.4 GREEN: declarar los índices en la función de configuración de cada `sqliteTable` en `src/db/esquema.ts` (patrón de `actas`, `escaneos` y `personas`). No incluir aún los índices de auditoría.
-- [ ] 2.5 Generar la migración aditiva con `pnpm exec drizzle-kit generate` (no existe un script `db:generate` en `package.json`; no inventarlo) y revisar que `drizzle/0002_*.sql` solo contenga `CREATE INDEX`. Aplicarla con `pnpm db:init-local` y confirmar que no falla.
-- [ ] 2.6 REFACTOR y verificación: `pnpm vitest run src/server/repositorios src/db` y `pnpm verify:fast` en verde.
-- [ ] 2.7 Commit sugerido: `feat: agregar constructor de condiciones de ámbito e índices de apoyo`
+- [x] 2.3 RED: agregar a `src/db/__tests__/esquema.test.ts` la verificación de los índices `idx_escuelas_region_id`, `idx_funcionario_escuela_funcionario_id`, `idx_funcionario_escuela_escuela_id`, `idx_acta_estudiantes_acta_id`, `idx_acta_estudiantes_estudiante_id`, `idx_estudiantes_persona_id`, `idx_funcionarios_persona_id`, `idx_acta_firmantes_acta_id` e `idx_acta_firmantes_funcionario_id`.
+- [x] 2.4 GREEN: declarar los índices en la función de configuración de cada `sqliteTable` en `src/db/esquema.ts` (patrón de `actas`, `escaneos` y `personas`). No incluir aún los índices de auditoría.
+- [x] 2.5 Generar la migración aditiva con `pnpm exec drizzle-kit generate` (no existe un script `db:generate` en `package.json`; no inventarlo) y revisar que `drizzle/0002_*.sql` solo contenga `CREATE INDEX`. Aplicarla con `pnpm db:init-local` y confirmar que no falla.
+- [x] 2.6 REFACTOR y verificación: `pnpm vitest run src/server/repositorios src/db` y `pnpm verify:fast` en verde.
+- [x] 2.7 Commit sugerido: `feat: agregar constructor de condiciones de ámbito e índices de apoyo`
 
 ## 3. Actas: lectura con ámbito, IDOR, nivel 4 y resolución de región (TDD)
 
