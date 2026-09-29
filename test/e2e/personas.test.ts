@@ -66,7 +66,7 @@ describe("Personas e2e", () => {
     const db = clienteDb();
     const servicio = crearServicioPersonasDesdeDb(db);
 
-    const listado = await servicio.listarPersonas();
+    const listado = await servicio.listarPersonas(undefined, { tipo: "pais" });
     expect(listado.some((p) => p.identificacion === identificacionUnica)).toBe(
       true
     );

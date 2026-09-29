@@ -1,6 +1,8 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { eq, or, like } from "drizzle-orm";
+import { and, eq, or, like } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
+import type { AmbitoConsulta } from "@/server/auth/ambito";
+import { condicionPersonaEnAmbito } from "./ambito.condiciones";
 
 export type FilaPersona = typeof esquema.personas.$inferSelect;
 export type DatosNuevaPersona = Pick<
@@ -10,31 +12,42 @@ export type DatosNuevaPersona = Pick<
 
 export async function listarPersonas(
   db: LibSQLDatabase<typeof esquema>,
-  busqueda?: string
+  busqueda: string | undefined,
+  ambito: AmbitoConsulta
 ): Promise<FilaPersona[]> {
-  if (busqueda) {
-    return db
-      .select()
-      .from(esquema.personas)
-      .where(
-        or(
-          like(esquema.personas.identificacion, `%${busqueda}%`),
-          like(esquema.personas.nombres, `%${busqueda}%`),
-          like(esquema.personas.apellidos, `%${busqueda}%`)
-        )
-      );
-  }
-  return db.select().from(esquema.personas);
+  const coincidenciaBusqueda = busqueda
+    ? or(
+        like(esquema.personas.identificacion, `%${busqueda}%`),
+        like(esquema.personas.nombres, `%${busqueda}%`),
+        like(esquema.personas.apellidos, `%${busqueda}%`)
+      )
+    : undefined;
+
+  return db
+    .select()
+    .from(esquema.personas)
+    .where(
+      and(
+        condicionPersonaEnAmbito(ambito, esquema.personas.id),
+        coincidenciaBusqueda
+      )
+    );
 }
 
 export async function obtenerPersonaPorId(
   db: LibSQLDatabase<typeof esquema>,
-  id: number
+  id: number,
+  ambito: AmbitoConsulta
 ): Promise<FilaPersona | undefined> {
   const resultado = await db
     .select()
     .from(esquema.personas)
-    .where(eq(esquema.personas.id, id));
+    .where(
+      and(
+        eq(esquema.personas.id, id),
+        condicionPersonaEnAmbito(ambito, esquema.personas.id)
+      )
+    );
   return resultado[0];
 }
 

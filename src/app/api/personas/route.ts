@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crearServicioPersonasDesdeDb } from "@/server/servicios/personas.fabrica";
+import { derivarAmbitoConsulta } from "@/server/auth/ambito";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
@@ -21,7 +22,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(coincidencias);
   }
 
-  const personas = await servicio.listarPersonas(busqueda);
+  const personas = await servicio.listarPersonas(
+    busqueda,
+    derivarAmbitoConsulta(sesion)
+  );
 
   return NextResponse.json(personas);
 }

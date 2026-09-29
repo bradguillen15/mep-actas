@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crearServicioPersonasDesdeDb } from "@/server/servicios/personas.fabrica";
+import { derivarAmbitoConsulta } from "@/server/auth/ambito";
+import { responderErrorDeRecurso } from "@/server/http/respuestas";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
@@ -15,7 +17,10 @@ export async function GET(
 
   const { id } = await params;
   const servicio = crearServicioPersonasDesdeDb(clienteDb());
-  const persona = await servicio.obtenerPersonaPorId(Number(id));
+  const persona = await servicio.obtenerPersonaPorId(
+    Number(id),
+    derivarAmbitoConsulta(sesion)
+  );
 
   if (!persona) {
     return NextResponse.json(
@@ -55,6 +60,9 @@ export async function PATCH(
     }
     return NextResponse.json(persona);
   } catch (e) {
+    if (e instanceof Error && e.name === "NotFoundError") {
+      return responderErrorDeRecurso(e, "Persona no encontrada");
+    }
     const mensaje =
       e instanceof Error ? e.message : "Error al actualizar persona";
     return NextResponse.json({ error: mensaje }, { status: 400 });

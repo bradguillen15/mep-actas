@@ -1,6 +1,8 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { eq, and } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
+import type { AmbitoConsulta } from "@/server/auth/ambito";
+import { condicionFuncionarioEnAmbito } from "./ambito.condiciones";
 
 export type FilaFuncionarioConPersona = {
   id: number;
@@ -24,31 +26,35 @@ const seleccionFuncionario = {
 
 export async function listarFuncionarios(
   db: LibSQLDatabase<typeof esquema>,
-  filtros?: { escuelaId?: number }
+  filtros: { escuelaId?: number } | undefined,
+  ambito: AmbitoConsulta
 ): Promise<FilaFuncionarioConPersona[]> {
-  const base = db
+  const asignadoALaEscuelaFiltrada = filtros?.escuelaId
+    ? condicionFuncionarioEnAmbito(
+        { tipo: "escuela", escuelaId: filtros.escuelaId },
+        esquema.funcionarios.id
+      )
+    : undefined;
+
+  return db
     .select(seleccionFuncionario)
     .from(esquema.funcionarios)
     .innerJoin(
       esquema.personas,
       eq(esquema.funcionarios.personaId, esquema.personas.id)
-    );
-
-  if (filtros?.escuelaId) {
-    return base
-      .innerJoin(
-        esquema.funcionarioEscuela,
-        eq(esquema.funcionarios.id, esquema.funcionarioEscuela.funcionarioId)
+    )
+    .where(
+      and(
+        condicionFuncionarioEnAmbito(ambito, esquema.funcionarios.id),
+        asignadoALaEscuelaFiltrada
       )
-      .where(eq(esquema.funcionarioEscuela.escuelaId, filtros.escuelaId));
-  }
-
-  return base;
+    );
 }
 
 export async function obtenerFuncionarioPorId(
   db: LibSQLDatabase<typeof esquema>,
-  id: number
+  id: number,
+  ambito: AmbitoConsulta
 ): Promise<FilaFuncionarioConPersona | undefined> {
   const resultado = await db
     .select(seleccionFuncionario)
@@ -57,7 +63,12 @@ export async function obtenerFuncionarioPorId(
       esquema.personas,
       eq(esquema.funcionarios.personaId, esquema.personas.id)
     )
-    .where(eq(esquema.funcionarios.id, id));
+    .where(
+      and(
+        eq(esquema.funcionarios.id, id),
+        condicionFuncionarioEnAmbito(ambito, esquema.funcionarios.id)
+      )
+    );
 
   return resultado[0];
 }
@@ -102,7 +113,7 @@ export async function actualizarFuncionario(
 
   if (!funcionario) return undefined;
 
-  return obtenerFuncionarioPorId(db, id);
+  return obtenerFuncionarioPorId(db, id, { tipo: "pais" });
 }
 
 export async function asignarFuncionarioAEscuela(

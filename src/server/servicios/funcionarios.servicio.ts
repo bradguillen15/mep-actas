@@ -1,13 +1,19 @@
 import type { Auditor } from "./auditoria.servicio";
 import type { FilaFuncionarioConPersona } from "../repositorios/funcionarios.repositorio";
 import type { SesionUsuario } from "@/server/auth/tipos";
+import { derivarAmbitoConsulta, type AmbitoConsulta } from "@/server/auth/ambito";
+import { ErrorNoEncontrado } from "@/server/errores";
+
+export type FiltrosFuncionarios = { escuelaId?: number };
 
 export interface RepositorioFuncionarios {
-  listarFuncionarios: (filtros?: {
-    escuelaId?: number;
-  }) => Promise<FilaFuncionarioConPersona[]>;
+  listarFuncionarios: (
+    filtros: FiltrosFuncionarios | undefined,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaFuncionarioConPersona[]>;
   obtenerFuncionarioPorId: (
-    id: number
+    id: number,
+    ambito: AmbitoConsulta
   ) => Promise<FilaFuncionarioConPersona | undefined>;
   crearFuncionario: (datos: {
     personaId: number;
@@ -31,11 +37,13 @@ export interface RepositorioFuncionarios {
 }
 
 export interface ServicioFuncionarios {
-  listarFuncionarios: (filtros?: {
-    escuelaId?: number;
-  }) => Promise<FilaFuncionarioConPersona[]>;
+  listarFuncionarios: (
+    filtros: FiltrosFuncionarios | undefined,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaFuncionarioConPersona[]>;
   obtenerFuncionarioPorId: (
-    id: number
+    id: number,
+    ambito: AmbitoConsulta
   ) => Promise<FilaFuncionarioConPersona | undefined>;
   crearFuncionario: (
     datos: { personaId: number; puesto: string },
@@ -63,16 +71,12 @@ export function crearServicioFuncionarios(
   auditor: Auditor
 ): ServicioFuncionarios {
   return {
-    async listarFuncionarios(
-      filtros?: { escuelaId?: number }
-    ): Promise<FilaFuncionarioConPersona[]> {
-      return repositorio.listarFuncionarios(filtros);
+    async listarFuncionarios(filtros, ambito) {
+      return repositorio.listarFuncionarios(filtros, ambito);
     },
 
-    async obtenerFuncionarioPorId(
-      id: number
-    ): Promise<FilaFuncionarioConPersona | undefined> {
-      return repositorio.obtenerFuncionarioPorId(id);
+    async obtenerFuncionarioPorId(id, ambito) {
+      return repositorio.obtenerFuncionarioPorId(id, ambito);
     },
 
     async crearFuncionario(
@@ -102,9 +106,12 @@ export function crearServicioFuncionarios(
       datos: { puesto?: string },
       sesion: SesionUsuario
     ): Promise<FilaFuncionarioConPersona | undefined> {
-      const anterior = await repositorio.obtenerFuncionarioPorId(id);
+      const anterior = await repositorio.obtenerFuncionarioPorId(
+        id,
+        derivarAmbitoConsulta(sesion)
+      );
       if (!anterior) {
-        throw new Error("Funcionario no encontrado");
+        throw new ErrorNoEncontrado("Funcionario no encontrado");
       }
 
       const funcionario = await repositorio.actualizarFuncionario(id, datos);

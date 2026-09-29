@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { clienteDb } from "@/db/cliente";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
 import { crearServicioPersonasDesdeDb } from "@/server/servicios/personas.fabrica";
-import { crearServicioFuncionarios } from "@/server/servicios/funcionarios.servicio";
+import { crearAuditor } from "@/server/servicios/auditoria.servicio";
+import { crearServicioFuncionariosDesdeDb } from "@/server/servicios/funcionarios.fabrica";
 import { crearServicioRegiones } from "@/server/servicios/regiones.servicio";
-import * as repositorioFuncionarios from "@/server/repositorios/funcionarios.repositorio";
 import * as repositorioRegiones from "@/server/repositorios/regiones.repositorio";
 import { datosSesionAdminPais, obtenerRolPorNivel, obtenerUsuarioPorEmail } from "./helpers";
 import { eq } from "drizzle-orm";
@@ -49,7 +48,6 @@ describe("Funcionarios e2e", () => {
 
   it("crea funcionario asociado a una persona", async () => {
     const db = clienteDb();
-    const auditor = crearAuditor(db);
     const servicioPersonas = crearServicioPersonasDesdeDb(db);
 
     const persona = await servicioPersonas.crearPersona(
@@ -63,36 +61,7 @@ describe("Funcionarios e2e", () => {
     idsPersona.push(persona.id);
     personaId = persona.id;
 
-    const servicio = crearServicioFuncionarios(
-      {
-        listarFuncionarios: (filtros) =>
-          repositorioFuncionarios.listarFuncionarios(db, filtros),
-        obtenerFuncionarioPorId: (id) =>
-          repositorioFuncionarios.obtenerFuncionarioPorId(db, id),
-        crearFuncionario: (datos) =>
-          repositorioFuncionarios.crearFuncionario(db, datos),
-        actualizarFuncionario: (id, datos) =>
-          repositorioFuncionarios.actualizarFuncionario(db, id, datos),
-        asignarFuncionarioAEscuela: (funcionarioId, escuelaId) =>
-          repositorioFuncionarios.asignarFuncionarioAEscuela(
-            db,
-            funcionarioId,
-            escuelaId
-          ),
-        removerFuncionarioDeEscuela: (funcionarioId, escuelaId) =>
-          repositorioFuncionarios.removerFuncionarioDeEscuela(
-            db,
-            funcionarioId,
-            escuelaId
-          ),
-        listarEscuelasDeFuncionario: (funcionarioId) =>
-          repositorioFuncionarios.listarEscuelasDeFuncionario(
-            db,
-            funcionarioId
-          ),
-      },
-      auditor
-    );
+    const servicio = crearServicioFuncionariosDesdeDb(db);
 
     const funcionario = await servicio.crearFuncionario(
       { personaId: persona.id, puesto: "Director" },
@@ -105,7 +74,7 @@ describe("Funcionarios e2e", () => {
     expect(funcionario.apellidos).toBe("E2E Func Apellido");
     idsFuncionario.push(funcionario.id);
 
-    const listado = await servicio.listarFuncionarios();
+    const listado = await servicio.listarFuncionarios(undefined, { tipo: "pais" });
     expect(listado.some((f) => f.id === funcionario.id)).toBe(true);
   });
 
@@ -144,36 +113,7 @@ describe("Funcionarios e2e", () => {
       .all();
     idsEscuela.push(escuela.id);
 
-    const servicio = crearServicioFuncionarios(
-      {
-        listarFuncionarios: (filtros) =>
-          repositorioFuncionarios.listarFuncionarios(db, filtros),
-        obtenerFuncionarioPorId: (id) =>
-          repositorioFuncionarios.obtenerFuncionarioPorId(db, id),
-        crearFuncionario: (datos) =>
-          repositorioFuncionarios.crearFuncionario(db, datos),
-        actualizarFuncionario: (id, datos) =>
-          repositorioFuncionarios.actualizarFuncionario(db, id, datos),
-        asignarFuncionarioAEscuela: (funcionarioId, escuelaId) =>
-          repositorioFuncionarios.asignarFuncionarioAEscuela(
-            db,
-            funcionarioId,
-            escuelaId
-          ),
-        removerFuncionarioDeEscuela: (funcionarioId, escuelaId) =>
-          repositorioFuncionarios.removerFuncionarioDeEscuela(
-            db,
-            funcionarioId,
-            escuelaId
-          ),
-        listarEscuelasDeFuncionario: (funcionarioId) =>
-          repositorioFuncionarios.listarEscuelasDeFuncionario(
-            db,
-            funcionarioId
-          ),
-      },
-      auditor
-    );
+    const servicio = crearServicioFuncionariosDesdeDb(db);
 
     const funcionario = await servicio.crearFuncionario(
       { personaId: personaId || 1, puesto: "Profesor" },
@@ -188,9 +128,10 @@ describe("Funcionarios e2e", () => {
     );
     expect(asignacion).toBeDefined();
 
-    const filtrados = await servicio.listarFuncionarios({
-      escuelaId: escuela.id,
-    });
+    const filtrados = await servicio.listarFuncionarios(
+      { escuelaId: escuela.id },
+      { tipo: "pais" }
+    );
     expect(filtrados.some((f) => f.id === funcionario.id)).toBe(true);
   });
 });

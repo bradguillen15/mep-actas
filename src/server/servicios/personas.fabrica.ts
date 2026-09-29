@@ -9,8 +9,10 @@ export function crearServicioPersonasDesdeDb(
 ): ServicioPersonas {
   return crearServicioPersonas(
     {
-      listarPersonas: (busqueda) => repositorio.listarPersonas(db, busqueda),
-      obtenerPersonaPorId: (id) => repositorio.obtenerPersonaPorId(db, id),
+      listarPersonas: (busqueda, ambito) =>
+        repositorio.listarPersonas(db, busqueda, ambito),
+      obtenerPersonaPorId: (id, ambito) =>
+        repositorio.obtenerPersonaPorId(db, id, ambito),
       obtenerPersonaPorIdentificacion: (identificacion) =>
         repositorio.obtenerPersonaPorIdentificacion(db, identificacion),
       obtenerPersonaMinimaPorIdentificacion: (identificacion) =>

@@ -5,10 +5,18 @@ import type {
   PersonaMinima,
 } from "../repositorios/personas.repositorio";
 import type { SesionUsuario } from "@/server/auth/tipos";
+import { derivarAmbitoConsulta, type AmbitoConsulta } from "@/server/auth/ambito";
+import { ErrorNoEncontrado } from "@/server/errores";
 
 export interface RepositorioPersonas {
-  listarPersonas: (busqueda?: string) => Promise<FilaPersona[]>;
-  obtenerPersonaPorId: (id: number) => Promise<FilaPersona | undefined>;
+  listarPersonas: (
+    busqueda: string | undefined,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaPersona[]>;
+  obtenerPersonaPorId: (
+    id: number,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaPersona | undefined>;
   obtenerPersonaPorIdentificacion: (
     identificacion: string
   ) => Promise<FilaPersona | undefined>;
@@ -23,8 +31,14 @@ export interface RepositorioPersonas {
 }
 
 export interface ServicioPersonas {
-  listarPersonas: (busqueda?: string) => Promise<FilaPersona[]>;
-  obtenerPersonaPorId: (id: number) => Promise<FilaPersona | undefined>;
+  listarPersonas: (
+    busqueda: string | undefined,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaPersona[]>;
+  obtenerPersonaPorId: (
+    id: number,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaPersona | undefined>;
   buscarPersonaPorIdentificacionExacta: (
     identificacion: string
   ) => Promise<PersonaMinima[]>;
@@ -44,12 +58,12 @@ export function crearServicioPersonas(
   auditor: Auditor
 ): ServicioPersonas {
   return {
-    async listarPersonas(busqueda?: string) {
-      return repositorio.listarPersonas(busqueda);
+    async listarPersonas(busqueda, ambito) {
+      return repositorio.listarPersonas(busqueda, ambito);
     },
 
-    async obtenerPersonaPorId(id: number) {
-      return repositorio.obtenerPersonaPorId(id);
+    async obtenerPersonaPorId(id, ambito) {
+      return repositorio.obtenerPersonaPorId(id, ambito);
     },
 
     async buscarPersonaPorIdentificacionExacta(identificacion) {
@@ -100,6 +114,14 @@ export function crearServicioPersonas(
       datos: Partial<DatosNuevaPersona>,
       sesion: SesionUsuario
     ): Promise<FilaPersona | undefined> {
+      const anterior = await repositorio.obtenerPersonaPorId(
+        id,
+        derivarAmbitoConsulta(sesion)
+      );
+      if (!anterior) {
+        throw new ErrorNoEncontrado("Persona no encontrada");
+      }
+
       if (datos.identificacion !== undefined) {
         if (!datos.identificacion.trim()) {
           throw new Error("La identificación no puede estar vacía");
@@ -112,11 +134,6 @@ export function crearServicioPersonas(
             `Ya existe otra persona con la identificación ${datos.identificacion}`
           );
         }
-      }
-
-      const anterior = await repositorio.obtenerPersonaPorId(id);
-      if (!anterior) {
-        throw new Error("Persona no encontrada");
       }
 
       const persona = await repositorio.actualizarPersona(id, datos);

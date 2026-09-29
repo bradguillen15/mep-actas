@@ -66,3 +66,27 @@ describe("crearPersona", () => {
     expect(auditor).not.toHaveBeenCalled();
   });
 });
+
+describe("personas con ámbito", () => {
+  const ambito = { tipo: "escuela" as const, escuelaId: 5 };
+
+  it("propaga el ámbito al listar y al obtener", async () => {
+    const { repositorio, servicio } = crearDobles();
+    await servicio.listarPersonas("Mora", ambito);
+    await servicio.obtenerPersonaPorId(3, ambito);
+    expect(repositorio.listarPersonas).toHaveBeenCalledWith("Mora", ambito);
+    expect(repositorio.obtenerPersonaPorId).toHaveBeenCalledWith(3, ambito);
+  });
+
+  it("actualizar una persona fuera del ámbito lanza NotFoundError sin escribir ni auditar", async () => {
+    const { repositorio, auditor, servicio } = crearDobles();
+    repositorio.obtenerPersonaPorId.mockResolvedValue(undefined);
+    await expect(
+      servicio.actualizarPersona(3, { identificacion: "101230002" }, staff)
+    ).rejects.toMatchObject({ name: "NotFoundError" });
+    expect(repositorio.obtenerPersonaPorId).toHaveBeenCalledWith(3, ambito);
+    expect(repositorio.obtenerPersonaPorIdentificacion).not.toHaveBeenCalled();
+    expect(repositorio.actualizarPersona).not.toHaveBeenCalled();
+    expect(auditor).not.toHaveBeenCalled();
+  });
+});
