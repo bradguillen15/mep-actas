@@ -15,6 +15,8 @@ CREATE TABLE `acta_estudiantes` (
 	FOREIGN KEY (`estudiante_id`) REFERENCES `estudiantes`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE INDEX `idx_acta_estudiantes_acta_id` ON `acta_estudiantes` (`acta_id`);--> statement-breakpoint
+CREATE INDEX `idx_acta_estudiantes_estudiante_id` ON `acta_estudiantes` (`estudiante_id`);--> statement-breakpoint
 CREATE TABLE `acta_firmantes` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`acta_id` integer NOT NULL,
@@ -24,6 +26,8 @@ CREATE TABLE `acta_firmantes` (
 	FOREIGN KEY (`funcionario_id`) REFERENCES `funcionarios`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE INDEX `idx_acta_firmantes_acta_id` ON `acta_firmantes` (`acta_id`);--> statement-breakpoint
+CREATE INDEX `idx_acta_firmantes_funcionario_id` ON `acta_firmantes` (`funcionario_id`);--> statement-breakpoint
 CREATE TABLE `actas` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`escuela_id` integer NOT NULL,
@@ -36,8 +40,7 @@ CREATE TABLE `actas` (
 	`fecha` text NOT NULL,
 	`created_at` text NOT NULL,
 	FOREIGN KEY (`escuela_id`) REFERENCES `escuelas`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`tipo_acta_id`) REFERENCES `tipos_acta`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`acta_referencia_id`) REFERENCES `actas`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`tipo_acta_id`) REFERENCES `tipos_acta`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE INDEX `idx_actas_escuela_id` ON `actas` (`escuela_id`);--> statement-breakpoint
@@ -72,15 +75,18 @@ CREATE TABLE `escuelas` (
 	`region_id` integer NOT NULL,
 	`codigo_mep` text NOT NULL,
 	`nombre` text NOT NULL,
+	`activo` integer DEFAULT true NOT NULL,
 	FOREIGN KEY (`region_id`) REFERENCES `regiones`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE INDEX `idx_escuelas_region_id` ON `escuelas` (`region_id`);--> statement-breakpoint
 CREATE TABLE `estudiantes` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`persona_id` integer NOT NULL,
 	FOREIGN KEY (`persona_id`) REFERENCES `personas`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE INDEX `idx_estudiantes_persona_id` ON `estudiantes` (`persona_id`);--> statement-breakpoint
 CREATE TABLE `funcionario_escuela` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`funcionario_id` integer NOT NULL,
@@ -89,6 +95,8 @@ CREATE TABLE `funcionario_escuela` (
 	FOREIGN KEY (`escuela_id`) REFERENCES `escuelas`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE INDEX `idx_funcionario_escuela_funcionario_id` ON `funcionario_escuela` (`funcionario_id`);--> statement-breakpoint
+CREATE INDEX `idx_funcionario_escuela_escuela_id` ON `funcionario_escuela` (`escuela_id`);--> statement-breakpoint
 CREATE TABLE `funcionarios` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`persona_id` integer NOT NULL,
@@ -96,6 +104,7 @@ CREATE TABLE `funcionarios` (
 	FOREIGN KEY (`persona_id`) REFERENCES `personas`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE INDEX `idx_funcionarios_persona_id` ON `funcionarios` (`persona_id`);--> statement-breakpoint
 CREATE TABLE `personas` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`identificacion` text NOT NULL,
@@ -107,7 +116,8 @@ CREATE UNIQUE INDEX `personas_identificacion_unique` ON `personas` (`identificac
 CREATE INDEX `idx_personas_identificacion` ON `personas` (`identificacion`);--> statement-breakpoint
 CREATE TABLE `regiones` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`nombre` text NOT NULL
+	`nombre` text NOT NULL,
+	`activo` integer DEFAULT true NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `roles` (

@@ -32,11 +32,11 @@ Configuración de pruebas: TDD estricto activo. Ejecutor unitario/ruta: `pnpm te
 | 6 | Consulta exacta de persona, `POST /api/personas` nivel 4 y corrección de la interfaz | PR único | `pnpm vitest run personas` | `pnpm test:e2e -- personas`; flujo de alta de estudiante en `pnpm dev:local:demo` | Personas (ruta, servicio, repositorio) y las dos páginas de actas |
 | 7 | Personas y funcionarios con ámbito y PATCH con ámbito | PR único | `pnpm vitest run personas funcionarios` | `pnpm test:e2e -- funcionarios personas` | Repositorios, servicios y rutas de personas y funcionarios |
 | 8 | Usuarios con ámbito y unificación de la regla | PR único | `pnpm vitest run usuarios` | `pnpm test:e2e -- usuarios` | Repositorio, servicio y rutas de usuarios |
-| 9 | Auditoría con `escuela_id`/`region_id`, relleno histórico y lectura por ámbito | PR único | `pnpm vitest run auditoria regiones escuelas` | `pnpm db:init-local` aplica la migración 0003; `pnpm test:e2e -- auditoria` | Migración 0003, columnas de `esquema.ts`, auditoría y `Auditor` |
+| 9 | Auditoría con `escuela_id`/`region_id` y lectura por ámbito | PR único | `pnpm vitest run auditoria regiones escuelas` | `pnpm db:init-local` aplica la migración 0003; `pnpm test:e2e -- auditoria` | Migración 0003, columnas de `esquema.ts`, auditoría y `Auditor` |
 | 10 | Prueba e2e de conformidad de ámbito | PR único | `pnpm test:e2e -- alcance-datos` | Es el propio arnés contra SQLite real (`temp-e2e.db`) | `test/e2e/alcance-datos.test.ts` |
 | 11 | Documentación técnica, BRD y diagrama | PR único | N/A: solo documentación | N/A: sin comportamiento de ejecución | `docs/**` y `openspec/changes/seguridad-alcance-escuela-region/tasks.md` |
 
-Orden: las unidades siguen el orden de implementación del diseño (10 pasos), con la sección 0 de preparación y la sección 12 de verificación final. La migración se divide en dos archivos aditivos (`0002` de índices en la unidad 2 y `0003` de columnas de auditoría más relleno en la unidad 9) para que cada unidad sea independiente; el diseño menciona un único `0002_*`, la división solo cambia el nombre del archivo.
+Orden: las unidades siguen el orden de implementación del diseño (10 pasos), con la sección 0 de preparación y la sección 12 de verificación final. Decisión (2026-09-29): la base no se ha publicado, así que todo el esquema vive en una sola migración inicial `drizzle/0000_*.sql` que se regenera en cada cambio del esquema; no hay relleno histórico.
 
 ## 0. Preparación: rama de feature (OBLIGATORIO, PRIMER PASO)
 
@@ -57,7 +57,7 @@ Requisitos: spec `alcance-datos` (regla de ámbito por nivel) y `autenticacion-r
 - [x] 1.7 REFACTOR: revisar nombres y eliminar comentarios redundantes en los archivos tocados; ejecutar `pnpm vitest run src/server/auth src/server/__tests__` y luego `pnpm verify:fast`; dejar todo en verde.
 - [x] 1.8 Commit sugerido: `feat: agregar ámbito de consulta, errores tipados y regla de región en verificarRol`
 
-## 2. Condiciones SQL de ámbito e índices (TDD + migración parte 1)
+## 2. Condiciones SQL de ámbito e índices (TDD)
 
 Diseño: Decisiones 1 y 6.
 
@@ -67,6 +67,7 @@ Diseño: Decisiones 1 y 6.
 - [x] 2.4 GREEN: declarar los índices en la función de configuración de cada `sqliteTable` en `src/db/esquema.ts` (patrón de `actas`, `escaneos` y `personas`). No incluir aún los índices de auditoría.
 - [x] 2.5 Generar la migración aditiva con `pnpm exec drizzle-kit generate` (no existe un script `db:generate` en `package.json`; no inventarlo) y revisar que `drizzle/0002_*.sql` solo contenga `CREATE INDEX`. Aplicarla con `pnpm db:init-local` y confirmar que no falla.
 - [x] 2.6 REFACTOR y verificación: `pnpm vitest run src/server/repositorios src/db` y `pnpm verify:fast` en verde.
+- [x] 2.8 Consolidar `drizzle/0000_*`, `0001_*` y `0002_*` en una sola migración inicial regenerada con `pnpm exec drizzle-kit generate`; recrear la base local (`mep-actas-local.db`) y de prueba (`temp-e2e.db`) y confirmar `pnpm db:init-local`, `pnpm verify:fast` y `pnpm test:e2e`.
 - [x] 2.7 Commit sugerido: `feat: agregar constructor de condiciones de ámbito e índices de apoyo`
 
 ## 3. Actas: lectura con ámbito, IDOR, nivel 4 y resolución de región (TDD)
@@ -139,14 +140,14 @@ Requisitos: spec `gestion-usuarios` (ámbito en lectura, restablecer y cambiar e
 - [ ] 8.4 Ejecutar `pnpm vitest run usuarios`, `pnpm verify:fast` y `pnpm test:e2e -- usuarios conformidad-brd-usuarios`; restaurar el estado de la base.
 - [ ] 8.5 Commit sugerido: `feat: limitar usuarios al ámbito y distinguir 404 de 403 en operaciones por id`
 
-## 9. Auditoría con ámbito: columnas, relleno histórico y lectura (TDD + migración parte 2)
+## 9. Auditoría con ámbito: columnas y lectura (TDD)
 
 Requisitos: spec `auditoria` (registro con `escuela_id`/`region_id`, lectura por ámbito niveles 1–4). Diseño: Decisión 4, D3; paso 9.
 
 - [ ] 9.1 RED: ampliar `src/db/__tests__/esquema.test.ts` con `auditoria.escuela_id` y `auditoria.region_id` (nullable, con referencias) y con los índices `idx_auditoria_escuela_id` e `idx_auditoria_region_id`.
-- [ ] 9.2 GREEN: modificar `src/db/esquema.ts` agregando ambas columnas nullable con sus referencias y los dos índices; generar la migración con `pnpm exec drizzle-kit generate` (produce `drizzle/0003_*.sql`, aditiva).
-- [ ] 9.3 RED: agregar a `test/e2e/auditoria.test.ts` (o crear `test/e2e/migracion-auditoria-relleno.test.ts`) la prueba del relleno histórico contra SQLite real: filas de `actas`, `escuelas`, `acta_estudiantes`, `acta_firmantes`, `escaneos` (existente y eliminado vía `json_extract(datos_anteriores, '$.escuelaId')`), `funcionario_escuela` (`registro_id = 0` con `json_extract(coalesce(datos_nuevos, datos_anteriores), '$.escuelaId')`) y `usuarios` reciben `escuela_id`; `region_id` derivada de la escuela y, para `regiones` con `accion` distinta de `crear`, del `registro_id`; lo no resoluble queda `NULL`; el relleno es idempotente al ejecutarse dos veces.
-- [ ] 9.4 GREEN: agregar al final de `drizzle/0003_*.sql` el SQL de relleno idempotente (`WHERE escuela_id IS NULL` / `WHERE region_id IS NULL`), con `escuela_id` antes que `region_id`, según el orden de la Decisión 4.
+- [ ] 9.2 GREEN: modificar `src/db/esquema.ts` agregando ambas columnas nullable con sus referencias y los dos índices; regenerar la migración inicial única (`drizzle/0000_*.sql`) y recrear las bases locales y de prueba.
+- [x] 9.3 ~~Prueba del relleno histórico~~ — eliminada: la base no se ha publicado y no hay filas previas (decisión 2026-09-29).
+- [x] 9.4 ~~SQL de relleno idempotente~~ — eliminada por la misma decisión.
 - [ ] 9.5 RED: ampliar `src/server/repositorios/__tests__/auditoria.repositorio.test.ts` y `src/server/servicios/__tests__/auditoria.servicio.test.ts`: la inserción guarda `escuelaId` y `regionId`; el `Auditor` deriva `regionId` desde `escuelaId` con `resolverAmbitoDeEscuela` cuando falta; recurso regional sin escuela (`regiones` actualizar/desactivar) → `escuelaId` `NULL` y `regionId` de la región; recursos nacionales (creación de región, `tipos_acta`, `personas`, `funcionarios`) → ambos `NULL`; `listarAuditoria(ambito)` (`pais` sin filtro, `region` por `region_id`, `escuela` por `escuela_id`, `ninguno` vacío).
 - [ ] 9.6 RED: crear `src/app/api/auditoria/__tests__/route.test.ts` con los escenarios de la spec: nivel 4 → 200 filtrado por su escuela; nivel 3 no ve registros regionales sin escuela; nivel 2 ve su región incluidos los registros regionales sin escuela; nivel 1 ve todo; registros nacionales solo nivel 1; sin sesión → 401.
 - [ ] 9.7 GREEN: modificar `src/server/repositorios/auditoria.repositorio.ts` (inserta `escuelaId`/`regionId`; `listarAuditoria` recibe `ambito`), `src/server/servicios/auditoria.servicio.ts` (`Auditor` con `escuelaId?`/`regionId?` y derivación de la región), `src/server/servicios/auditoria.vistas.servicio.ts` (propaga `ambito`) y `src/app/api/auditoria/route.ts` (`verificarRol(sesion, 4)` y pasa `ambito`).
@@ -156,7 +157,7 @@ Requisitos: spec `auditoria` (registro con `escuela_id`/`region_id`, lectura por
 
 ## 10. E2E de conformidad de ámbito contra SQLite real (TDD)
 
-Requisitos: todas las specs del cambio. Diseño: estrategia de pruebas (capa E2E). Esta es la verificación de referencia de las condiciones SQL y del relleno.
+Requisitos: todas las specs del cambio. Diseño: estrategia de pruebas (capa E2E). Esta es la verificación de referencia de las condiciones SQL.
 
 - [ ] 10.1 RED: crear `test/e2e/alcance-datos.test.ts` (patrón de `test/e2e/conformidad-brd-usuarios.test.ts` y `test/e2e/helpers.ts`) con el escenario base: dos regiones y tres escuelas (dos en la región propia), con datos en cada una (actas, escaneos, graduaciones, personas por vínculo de acta y de asignación, funcionarios multi-escuela, usuarios, filas de auditoría).
 - [ ] 10.2 Cubrir por cada nivel (1 a 4): listados y `[id]` de actas, escaneos, graduaciones (con total y paginación), personas, funcionarios y usuarios; identificación exacta fuera de ámbito con solo campos mínimos; funcionarios multi-escuela sin duplicados; filtro `escuelaId` ajeno → resultado vacío; sesiones inconsistentes (`ninguno`) → vacío y 404.

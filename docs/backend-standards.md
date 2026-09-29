@@ -50,6 +50,7 @@ src/server/almacenamiento/        # firma de URLs de Cloudflare R2
   - Booleanos como `integer` (0/1).
   - Declara claves foráneas y **índices** para las columnas de búsqueda (p. ej. `personas.identificacion`).
 - Migraciones con `drizzle-kit` (generar + aplicar). El esquema es la fuente de verdad junto a `docs/data-model.md`; actualiza ambos al cambiar datos.
+- **Mientras la base no esté publicada** hay una sola migración inicial (`drizzle/0000_*.sql`): al cambiar el esquema se borra la carpeta `drizzle/`, se regenera con `pnpm exec drizzle-kit generate` y se recrean las bases locales y de prueba. A partir del primer despliegue a producción, cada cambio es una migración nueva y aditiva.
 - Transforma errores de la base (p. ej. violación de unicidad) en errores de dominio con significado.
 
 ## 4. API (route handlers)

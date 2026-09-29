@@ -13,7 +13,7 @@ La autorización contra una `escuelaId` enviada en el cuerpo (`POST /api/actas`,
 
 La única excepción deliberada al ámbito es la consulta de persona por **identificación exacta**, que devuelve solo datos mínimos (Decisión 8).
 
-Para la auditoría se agregan las columnas `escuela_id` y `region_id` (nullable) pobladas al escribir, con migración y relleno de filas históricas resolubles (Decisión 4).
+Para la auditoría se agregan las columnas `escuela_id` y `region_id` (nullable) pobladas al escribir, dentro de la migración inicial única (Decisión 4).
 
 ## Decisiones de producto tomadas
 
@@ -88,10 +88,10 @@ La variante `ninguno` cubre sesiones inconsistentes (nivel 2 sin `regionId`, niv
 
 **Justificación**: factible con el esquema actual (`acta_estudiantes → estudiantes → personas`, `acta_firmantes → funcionarios → personas` y `funcionario_escuela → funcionarios → personas`).
 
-### Decisión 4: Auditoría con columnas `escuela_id` y `region_id` pobladas al escribir, con relleno histórico
+### Decisión 4: Auditoría con columnas `escuela_id` y `region_id` pobladas al escribir
 
 **Elección** (decisión de producto D3):
-- Migración: `ALTER TABLE auditoria ADD COLUMN escuela_id integer REFERENCES escuelas(id)` y `ALTER TABLE auditoria ADD COLUMN region_id integer REFERENCES regiones(id)` (ambas nullable) + índices `idx_auditoria_escuela_id` e `idx_auditoria_region_id`.
+- Esquema: columnas nullable `auditoria.escuela_id` (referencia a `escuelas`) y `auditoria.region_id` (referencia a `regiones`) + índices `idx_auditoria_escuela_id` e `idx_auditoria_region_id`, incluidas en la migración inicial única regenerada.
 - `Auditor` acepta `escuelaId?: number | null` y `regionId?: number | null`. Cuando se informa `escuelaId` sin `regionId`, el servicio de auditoría resuelve la región de esa escuela (`resolverAmbitoDeEscuela`) antes de insertar, de modo que ambos valores siempre son coherentes; cada servicio no necesita conocer la región. Origen por tabla:
 
 | `tabla` auditada | `escuela_id` | `region_id` |
@@ -105,17 +105,7 @@ La variante `ninguno` cubre sesiones inconsistentes (nivel 2 sin `regionId`, niv
 | `regiones` (actualizar, desactivar) | `null` | id de la región |
 | `regiones` (crear), `tipos_acta`, `personas`, `funcionarios` | `null` | `null` (nacional; solo nivel 1) |
 
-- Relleno de filas históricas en la misma migración, con SQL idempotente (`WHERE escuela_id IS NULL` / `WHERE region_id IS NULL`), en este orden:
-  1. `escuela_id`:
-     - `actas`, `escuelas`: por `registro_id` directo.
-     - `acta_estudiantes`, `acta_firmantes`: unión con su tabla y `actas`.
-     - `escaneos`: unión con `escaneos` si la fila existe; si fue eliminada, `json_extract(datos_anteriores, '$.escuelaId')`.
-     - `funcionario_escuela`: `json_extract(coalesce(datos_nuevos, datos_anteriores), '$.escuelaId')` (las remociones se auditan con `registro_id = 0`).
-     - `usuarios`: primera escuela del funcionario del usuario.
-  2. `region_id`:
-     - filas con `escuela_id` no nulo: región actual de esa escuela (`SELECT region_id FROM escuelas WHERE id = auditoria.escuela_id`).
-     - `regiones` con `accion` distinta de `crear`: `registro_id`.
-  - Lo demás queda `NULL` (nacional o no resoluble → solo nivel 1).
+- Sin relleno histórico (decisión 2026-09-29): la base no se ha publicado y no hay filas previas.
 - Lectura, en `listarAuditoria(ambito)`:
   - `pais` → sin filtro.
   - `region` → `auditoria.region_id = ?` (incluye filas regionales sin escuela).
@@ -265,7 +255,7 @@ Consulta exacta de persona:
 | `src/app/api/usuarios/route.ts`, `[id]/route.ts` | Modificar | GET con ámbito; escrituras `[id]` mapean `NotFoundError` → 404 |
 | `src/app/actas/nueva/page.tsx`, `src/app/actas/[id]/page.tsx` | Modificar | Usan la persona solo si su `identificacion` coincide exactamente; lista vacía → crear persona |
 | `src/db/esquema.ts` | Modificar | `auditoria.escuelaId` y `auditoria.regionId` nullable; índices de la Decisión 6 |
-| `drizzle/0002_*.sql` | Crear | Migración generada (columnas + índices) + SQL de relleno histórico agregado a mano |
+| `drizzle/0000_*.sql` | Regenerar | Migración inicial única con todo el esquema (columnas de auditoría + índices) |
 | `src/server/repositorios/auditoria.repositorio.ts` | Modificar | Inserta `escuelaId` y `regionId`; `listarAuditoria` recibe `ambito` |
 | `src/server/servicios/auditoria.servicio.ts` | Modificar | `Auditor` acepta `escuelaId?` y `regionId?`; deriva la región de la escuela cuando falta |
 | `src/server/servicios/auditoria.vistas.servicio.ts` | Modificar | Propaga `ambito` |
@@ -383,10 +373,8 @@ N/A — sin enrutamiento de procesos, comandos de shell, subprocesos, automatiza
 
 ## Migración y despliegue
 
-- Migración `drizzle/0002_*` generada con `drizzle-kit generate` (columnas nullable `auditoria.escuela_id` y `auditoria.region_id` + índices), con el SQL de relleno histórico agregado al final del archivo. Todo aditivo; ninguna fila existente se invalida.
-- El relleno usa `json_extract`, disponible en libSQL. Debe ejecutarse una vez; es idempotente (`WHERE escuela_id IS NULL` / `WHERE region_id IS NULL`). El relleno de `region_id` se ejecuta después del de `escuela_id`.
-- Orden de despliegue: aplicar migración → desplegar código. El código nuevo tolera columnas `NULL`, y el código anterior las ignora, por lo que ambos órdenes son seguros.
-- Reversión: revertir el PR restaura el comportamiento anterior (las columnas y los índices extra no afectan al código previo). Si se requiere revertir el esquema: `DROP INDEX` de cada índice nuevo y `ALTER TABLE auditoria DROP COLUMN region_id` / `DROP COLUMN escuela_id` (compatible con SQLite ≥ 3.35 / libSQL), previa eliminación de sus índices.
+- La base de datos aún no se ha publicado: hasta el primer despliegue a producción el esquema vive en **una sola migración inicial** (`drizzle/0000_*.sql`), que se regenera con `drizzle-kit generate` cada vez que cambia `src/db/esquema.ts` (y se recrean las bases locales y de prueba). Por eso no hay relleno histórico: no existen filas de auditoría previas que rellenar.
+- Reversión: revertir el PR y regenerar la migración inicial desde el esquema anterior.
 - Cambio de comportamiento visible (BREAKING): usuarios de nivel 2–4 ven menos datos; auditoría se abre a niveles 2–4; escrituras `[id]` fuera de ámbito pasan de `403` a `404`.
 
 ### Orden de implementación sugerido (un solo PR; ~400 líneas es solo orientativo)
@@ -399,19 +387,18 @@ N/A — sin enrutamiento de procesos, comandos de shell, subprocesos, automatiza
 6. Personas: consulta exacta por identificación con datos mínimos, `POST /api/personas` a nivel 4 + corrección de la interfaz de alta de estudiantes.
 7. Personas y funcionarios: listados y `[id]` con ámbito (actas + asignación); `PATCH` con ámbito.
 8. Usuarios (listado y `[id]`; escrituras `[id]` fuera de ámbito → 404; unificación de la regla).
-9. Auditoría: columnas `escuela_id` y `region_id`, relleno, `Auditor` en todos los servicios (incluido regiones), lectura por ámbito, nivel mínimo 4.
+9. Auditoría: columnas `escuela_id` y `region_id`, `Auditor` en todos los servicios (incluido regiones), lectura por ámbito, nivel mínimo 4.
 10. Prueba e2e de conformidad y documentación (`api-spec.yml`, `data-model.md`, `brd.md` §7.5).
 
 ## Riesgos
 
 - **Alta de personas por niveles 3–4 (D7)**: cualquier Staff puede crear personas; una persona recién creada sin vínculo no le será visible en listados hasta vincularla a un acta, pero sí por identificación exacta.
-- **Región congelada o actual en auditoría (limitación conocida)**: el auditor deriva `region_id` de la escuela al escribir; el relleno histórico usa la región actual de la escuela, no la del momento del evento.
+- **Región congelada o actual en auditoría (limitación conocida)**: el auditor deriva `region_id` de la escuela al escribir.
 - **Regresión funcional para creadores**: personas y funcionarios recién creados por un Admin Regional (sin vínculo aún) dejan de ser visibles para él en listados y `[id]`, aunque sigue pudiendo encontrarlos por identificación exacta. Un funcionario creado por API no entra en el ámbito de niveles 2–4 hasta que exista la ruta de asignación (fuera de alcance).
 - **Multi-escuela**: la sesión usa solo la primera escuela/región del funcionario (limitación conocida, fuera de alcance); un funcionario con varias escuelas verá solo la primera. Lo mismo aplica a la atribución de auditoría de `usuarios`.
 - **Enumeración por identificación exacta**: cualquier usuario autenticado puede confirmar si una cédula existe y obtener nombre y apellidos. Aceptado por D1; la respuesta no incluye otros datos.
 - **Tamaño del PR**: probablemente supera 400 líneas por la cantidad de endpoints; se asumió la estrategia `single-pr`.
 - **Rendimiento**: `EXISTS` sobre personas con tres subconsultas depende de los índices nuevos; sin ellos, las búsquedas de personas harían escaneos completos.
-- **Relleno histórico incompleto**: filas antiguas sin escuela ni región resolubles quedan visibles solo para el nivel 1.
 
 ## Preguntas abiertas
 
@@ -419,7 +406,7 @@ Ninguna. Todas las decisiones de producto están registradas en "Decisiones de p
 
 ## Contradicciones detectadas entre código, propuesta y specs (resueltas)
 
-- Esquema: la propuesta ahora declara el cambio aditivo (`auditoria.escuela_id`, `auditoria.region_id`, índices, relleno).
+- Esquema: la propuesta ahora declara el cambio aditivo (`auditoria.escuela_id`, `auditoria.region_id`, índices) en la migración inicial única.
 - `idx_actas_escuela_id`, `idx_escaneos_escuela_id` e `idx_personas_identificacion` ya existen; la Decisión 6 solo agrega los faltantes.
 - `GET /api/actas/[id]/estudiantes` y `GET /api/actas/[id]/firmantes` se agregaron a la propuesta y a la spec `alcance-datos`.
 - `DELETE /api/escaneos/[id]` fuera de ámbito responde `404`; la prueba actual que espera `403` cambia (Decisión 5).

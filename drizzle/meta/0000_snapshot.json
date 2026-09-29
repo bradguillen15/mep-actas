@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "f0e064b7-bd38-4c0f-aec8-1614344b7d17",
+  "id": "3e6919e9-c012-4003-be6e-3f1e7325b804",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "acta_escaneos": {
@@ -94,7 +94,22 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_acta_estudiantes_acta_id": {
+          "name": "idx_acta_estudiantes_acta_id",
+          "columns": [
+            "acta_id"
+          ],
+          "isUnique": false
+        },
+        "idx_acta_estudiantes_estudiante_id": {
+          "name": "idx_acta_estudiantes_estudiante_id",
+          "columns": [
+            "estudiante_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "acta_estudiantes_acta_id_actas_id_fk": {
           "name": "acta_estudiantes_acta_id_actas_id_fk",
@@ -159,7 +174,22 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_acta_firmantes_acta_id": {
+          "name": "idx_acta_firmantes_acta_id",
+          "columns": [
+            "acta_id"
+          ],
+          "isUnique": false
+        },
+        "idx_acta_firmantes_funcionario_id": {
+          "name": "idx_acta_firmantes_funcionario_id",
+          "columns": [
+            "funcionario_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "acta_firmantes_acta_id_actas_id_fk": {
           "name": "acta_firmantes_acta_id_actas_id_fk",
@@ -295,19 +325,6 @@
           "tableTo": "tipos_acta",
           "columnsFrom": [
             "tipo_acta_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "actas_acta_referencia_id_actas_id_fk": {
-          "name": "actas_acta_referencia_id_actas_id_fk",
-          "tableFrom": "actas",
-          "tableTo": "actas",
-          "columnsFrom": [
-            "acta_referencia_id"
           ],
           "columnsTo": [
             "id"
@@ -531,9 +548,25 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_escuelas_region_id": {
+          "name": "idx_escuelas_region_id",
+          "columns": [
+            "region_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "escuelas_region_id_regiones_id_fk": {
           "name": "escuelas_region_id_regiones_id_fk",
@@ -571,7 +604,15 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_estudiantes_persona_id": {
+          "name": "idx_estudiantes_persona_id",
+          "columns": [
+            "persona_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "estudiantes_persona_id_personas_id_fk": {
           "name": "estudiantes_persona_id_personas_id_fk",
@@ -616,7 +657,22 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_funcionario_escuela_funcionario_id": {
+          "name": "idx_funcionario_escuela_funcionario_id",
+          "columns": [
+            "funcionario_id"
+          ],
+          "isUnique": false
+        },
+        "idx_funcionario_escuela_escuela_id": {
+          "name": "idx_funcionario_escuela_escuela_id",
+          "columns": [
+            "escuela_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "funcionario_escuela_funcionario_id_funcionarios_id_fk": {
           "name": "funcionario_escuela_funcionario_id_funcionarios_id_fk",
@@ -674,7 +730,15 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_funcionarios_persona_id": {
+          "name": "idx_funcionarios_persona_id",
+          "columns": [
+            "persona_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "funcionarios_persona_id_personas_id_fk": {
           "name": "funcionarios_persona_id_personas_id_fk",
@@ -763,6 +827,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
         }
       },
       "indexes": {},

@@ -36,7 +36,7 @@ Fuera de alcance (cambios posteriores): inmutabilidad de actas (eliminar `PATCH 
 ## Impact
 
 - **Código**: `src/server/auth/autorizacion.servicio.ts`, servicios y repositorios de actas, escaneos, graduaciones, personas, funcionarios, usuarios y auditoría (nuevos filtros por `escuelaId`/`regionId`), los route handlers listados arriba y las páginas `src/app/actas/nueva/page.tsx` y `src/app/actas/[id]/page.tsx` (consulta por identificación exacta).
-- **Base de datos**: **sí cambia el esquema**, de forma aditiva: columnas nullable `auditoria.escuela_id` y `auditoria.region_id` con sus índices, más índices de apoyo a los filtros de ámbito; migración con relleno histórico de ambas columnas.
+- **Base de datos**: **sí cambia el esquema**, de forma aditiva: columnas nullable `auditoria.escuela_id` y `auditoria.region_id` con sus índices, más índices de apoyo a los filtros de ámbito; como la base no se ha publicado, el esquema completo se consolida en una sola migración inicial regenerada, sin relleno histórico.
 - **Frontend**: los listados devuelven menos datos para niveles 2–4; el alta de estudiantes usa la consulta exacta por identificación.
 - **Pruebas**: nuevas pruebas unitarias de servicio y de ruta que intentan cruzar escuela y región por cada endpoint, y una prueba e2e de conformidad de ámbito. La prueba existente que espera `403` al eliminar un escaneo de otra escuela cambia a `404`.
 - **Documentación** (tareas de este cambio):
