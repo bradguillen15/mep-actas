@@ -11,6 +11,7 @@ import { Selector } from "@/components/ui/Selector";
 import { Tarjeta } from "@/components/ui/Tarjeta";
 
 import { useEscuelaActual } from "../../../../src/hooks/useEscuelaActual";
+import { resolverPersonaPorIdentificacion } from "@/lib/personas";
 
 interface TipoActa {
   id: number;
@@ -110,32 +111,7 @@ export default function NuevaActa() {
       const acta = await resActa.json();
 
       for (const est of datos.estudiantes) {
-        const resPersonas = await fetch(
-          `/api/personas?identificacion=${encodeURIComponent(est.identificacion)}`
-        );
-        let personaId: number;
-
-        if (resPersonas.ok) {
-          const personas = await resPersonas.json();
-          if (personas.length > 0) {
-            personaId = personas[0].id;
-          } else {
-            const resNueva = await fetch("/api/personas", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                identificacion: est.identificacion,
-                nombres: est.nombres,
-                apellidos: est.apellidos,
-              }),
-            });
-            if (!resNueva.ok) throw new Error("Error al crear persona");
-            const nueva = await resNueva.json();
-            personaId = nueva.id;
-          }
-        } else {
-          throw new Error("Error al buscar persona");
-        }
+        const personaId = await resolverPersonaPorIdentificacion(est);
 
         const resEst = await fetch(`/api/actas/${acta.id}/estudiantes`, {
           method: "POST",
