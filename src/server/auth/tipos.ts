@@ -12,6 +12,7 @@ export interface SesionUsuario {
 
 export interface AmbitoVerificacion {
   escuelaId?: number;
+  // Con `escuelaId`, es la región de esa escuela resuelta en el servidor; nunca la envía el cliente.
   regionId?: number;
 }
 

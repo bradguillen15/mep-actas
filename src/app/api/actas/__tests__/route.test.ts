@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockObtenerSesion = vi.fn();
+const mockResolverAmbitoDeEscuela = vi.fn();
 const mockCrearActa = vi.fn();
 
 vi.mock("@/server/auth/sesion.servicio", () => ({
@@ -18,6 +19,10 @@ vi.mock("next-auth", () => ({
 
 vi.mock("@/db/cliente", () => ({
   clienteDb: () => ({}),
+}));
+
+vi.mock("@/server/repositorios/escuelas.repositorio", () => ({
+  resolverAmbitoDeEscuela: mockResolverAmbitoDeEscuela,
 }));
 
 vi.mock("@/server/servicios/auditoria.servicio", () => ({
@@ -131,8 +136,43 @@ describe("POST /api/actas", () => {
     expect(respuesta.status).toBe(201);
   });
 
-  it("Admin Regional (nivel 2) sigue sin restricción de escuela (regresión)", async () => {
+  it("Admin Regional (nivel 2) registra en una escuela de su región", async () => {
     mockObtenerSesion.mockResolvedValue(sesionAdminRegional());
+    mockResolverAmbitoDeEscuela.mockResolvedValue({ escuelaId: 7, regionId: 1 });
+
+    const { POST } = await import("../route");
+    const req = new Request("http://localhost/api/actas", {
+      method: "POST",
+      body: JSON.stringify({ escuelaId: 7, titulo: "Acta" }),
+    });
+
+    const respuesta = await POST(req as never);
+
+    expect(respuesta.status).toBe(201);
+    expect(mockResolverAmbitoDeEscuela).toHaveBeenCalledWith(expect.anything(), 7);
+    expect(mockCrearActa).toHaveBeenCalled();
+  });
+
+  it("Admin Regional (nivel 2) no registra en una escuela de otra región", async () => {
+    mockObtenerSesion.mockResolvedValue(sesionAdminRegional());
+    mockResolverAmbitoDeEscuela.mockResolvedValue({ escuelaId: 8, regionId: 2 });
+
+    const { POST } = await import("../route");
+    const req = new Request("http://localhost/api/actas", {
+      method: "POST",
+      body: JSON.stringify({ escuelaId: 8, titulo: "Acta" }),
+    });
+
+    const respuesta = await POST(req as never);
+
+    expect(respuesta.status).toBe(403);
+    expect(mockResolverAmbitoDeEscuela).toHaveBeenCalledWith(expect.anything(), 8);
+    expect(mockCrearActa).not.toHaveBeenCalled();
+  });
+
+  it("Admin Regional (nivel 2) recibe 403 si la escuela no existe", async () => {
+    mockObtenerSesion.mockResolvedValue(sesionAdminRegional());
+    mockResolverAmbitoDeEscuela.mockResolvedValue(undefined);
 
     const { POST } = await import("../route");
     const req = new Request("http://localhost/api/actas", {
@@ -142,7 +182,9 @@ describe("POST /api/actas", () => {
 
     const respuesta = await POST(req as never);
 
-    expect(respuesta.status).toBe(201);
+    expect(respuesta.status).toBe(403);
+    expect(mockResolverAmbitoDeEscuela).toHaveBeenCalledWith(expect.anything(), 999);
+    expect(mockCrearActa).not.toHaveBeenCalled();
   });
 
   it("Admin País (nivel 1) sigue sin restricción de escuela (regresión)", async () => {

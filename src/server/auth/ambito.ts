@@ -1,4 +1,4 @@
-import type { SesionUsuario } from "./tipos";
+import type { AmbitoVerificacion, SesionUsuario } from "./tipos";
 
 export type AmbitoConsulta =
   | { tipo: "pais" }
@@ -33,4 +33,18 @@ export function escuelasDentroDeAmbito(
     case "ninguno":
       return false;
   }
+}
+
+export type ResolverAmbitoDeEscuela = (
+  escuelaId: number
+) => Promise<{ escuelaId: number; regionId: number } | undefined>;
+
+export async function ambitoDeEscuelaObjetivo(
+  sesion: SesionUsuario,
+  escuelaId: number,
+  resolver: ResolverAmbitoDeEscuela
+): Promise<AmbitoVerificacion> {
+  if (sesion.nivel !== 2) return { escuelaId };
+  const escuela = await resolver(escuelaId);
+  return escuela ? { escuelaId, regionId: escuela.regionId } : { escuelaId };
 }

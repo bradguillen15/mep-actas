@@ -41,6 +41,16 @@ export async function obtenerEscuelaPorId(
   return resultado[0];
 }
 
+export type AmbitoDeEscuela = { escuelaId: number; regionId: number };
+
+export async function resolverAmbitoDeEscuela(
+  db: LibSQLDatabase<typeof esquema>,
+  escuelaId: number
+): Promise<AmbitoDeEscuela | undefined> {
+  const escuela = await obtenerEscuelaPorId(db, escuelaId);
+  return escuela ? { escuelaId: escuela.id, regionId: escuela.regionId } : undefined;
+}
+
 export async function crearEscuela(
   db: LibSQLDatabase<typeof esquema>,
   datos: Pick<DatosNuevaEscuela, "regionId" | "codigoMep" | "nombre">

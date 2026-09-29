@@ -106,4 +106,51 @@ describe("verificarRol", () => {
     expect(resultado.autorizado).toBe(false);
     expect(resultado.error).toBe(403);
   });
+
+  describe("Admin Regional con escuela objetivo", () => {
+    it("rechaza una escuela de otra región", async () => {
+      const { verificarRol } = await import("../autorizacion.servicio");
+      const resultado = verificarRol(sesionAdminRegional, 4, {
+        escuelaId: 20,
+        regionId: 6,
+      });
+      expect(resultado.autorizado).toBe(false);
+      expect(resultado.error).toBe(403);
+    });
+
+    it("autoriza una escuela de su región", async () => {
+      const { verificarRol } = await import("../autorizacion.servicio");
+      const resultado = verificarRol(sesionAdminRegional, 4, {
+        escuelaId: 20,
+        regionId: 5,
+      });
+      expect(resultado.autorizado).toBe(true);
+    });
+
+    it("falla cerrado si no se resolvió la región de la escuela", async () => {
+      const { verificarRol } = await import("../autorizacion.servicio");
+      const resultado = verificarRol(sesionAdminRegional, 4, { escuelaId: 20 });
+      expect(resultado.autorizado).toBe(false);
+      expect(resultado.error).toBe(403);
+    });
+  });
+
+  it("rechaza a Staff con una escuela distinta", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionStaff, 4, {
+      escuelaId: 11,
+      regionId: 5,
+    });
+    expect(resultado.autorizado).toBe(false);
+    expect(resultado.error).toBe(403);
+  });
+
+  it("autoriza a Staff en su escuela aunque se informe la región", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    const resultado = verificarRol(sesionStaff, 4, {
+      escuelaId: 10,
+      regionId: 5,
+    });
+    expect(resultado.autorizado).toBe(true);
+  });
 });

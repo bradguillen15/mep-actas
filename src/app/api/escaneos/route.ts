@@ -5,6 +5,8 @@ import * as repositorio from "@/server/repositorios/escaneos.repositorio";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
+import { ambitoDeEscuelaObjetivo } from "@/server/auth/ambito";
+import { resolverAmbitoDeEscuela } from "@/server/repositorios/escuelas.repositorio";
 
 async function crearServicio() {
   const db = clienteDb();
@@ -60,9 +62,13 @@ export async function POST(request: NextRequest) {
 
   const cuerpo = await request.json();
 
-  const verificacionAmbito = verificarRol(sesion, 4, {
-    escuelaId: cuerpo.escuelaId,
-  });
+  const db = clienteDb();
+  const ambitoObjetivo = await ambitoDeEscuelaObjetivo(
+    sesion,
+    Number(cuerpo.escuelaId),
+    (escuelaId) => resolverAmbitoDeEscuela(db, escuelaId)
+  );
+  const verificacionAmbito = verificarRol(sesion, 4, ambitoObjetivo);
   if (!verificacionAmbito.autorizado) {
     return NextResponse.json(
       { error: verificacionAmbito.error },

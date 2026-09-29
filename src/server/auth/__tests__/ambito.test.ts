@@ -3,6 +3,7 @@ import type { SesionUsuario } from "../tipos";
 import {
   derivarAmbitoConsulta,
   escuelasDentroDeAmbito,
+  ambitoDeEscuelaObjetivo,
   type AmbitoConsulta,
 } from "../ambito";
 
@@ -84,5 +85,43 @@ describe("escuelasDentroDeAmbito", () => {
     expect(escuelasDentroDeAmbito({ tipo: "ninguno" }, escuelaIds, regionIds)).toBe(
       false
     );
+  });
+});
+
+describe("ambitoDeEscuelaObjetivo", () => {
+  it("para nivel 2 incluye la región resuelta de la escuela", async () => {
+    const resolver = async () => ({ escuelaId: 7, regionId: 5 });
+    const ambito = await ambitoDeEscuelaObjetivo(
+      crearSesion({ nivel: 2, regionId: 5 }),
+      7,
+      resolver
+    );
+    expect(ambito).toEqual({ escuelaId: 7, regionId: 5 });
+  });
+
+  it("para nivel 2 omite la región si la escuela no existe", async () => {
+    const ambito = await ambitoDeEscuelaObjetivo(
+      crearSesion({ nivel: 2, regionId: 5 }),
+      999,
+      async () => undefined
+    );
+    expect(ambito).toEqual({ escuelaId: 999 });
+  });
+
+  it("para niveles 1, 3 y 4 no consulta la región", async () => {
+    let consultas = 0;
+    const resolver = async () => {
+      consultas += 1;
+      return { escuelaId: 7, regionId: 5 };
+    };
+    for (const nivel of [1, 3, 4] as const) {
+      const ambito = await ambitoDeEscuelaObjetivo(
+        crearSesion({ nivel, escuelaId: 7 }),
+        7,
+        resolver
+      );
+      expect(ambito).toEqual({ escuelaId: 7 });
+    }
+    expect(consultas).toBe(0);
   });
 });

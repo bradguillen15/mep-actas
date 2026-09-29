@@ -196,4 +196,28 @@ describe("escuelasRepositorio", () => {
       expect(resultado).toBe(3);
     });
   });
+
+  describe("resolverAmbitoDeEscuela", () => {
+    it("devuelve la escuela con su región", async () => {
+      const { db, mocks } = crearMockDb();
+      mocks.mockAll.mockResolvedValue([
+        { id: 7, regionId: 2, codigoMep: "MEP-007", nombre: "Escuela", activo: 1 },
+      ]);
+
+      const { resolverAmbitoDeEscuela } = await import("../escuelas.repositorio");
+      const resultado = await resolverAmbitoDeEscuela(db, 7);
+
+      expect(resultado).toEqual({ escuelaId: 7, regionId: 2 });
+    });
+
+    it("devuelve undefined si la escuela no existe", async () => {
+      const { db, mocks } = crearMockDb();
+      mocks.mockAll.mockResolvedValue([]);
+
+      const { resolverAmbitoDeEscuela } = await import("../escuelas.repositorio");
+      const resultado = await resolverAmbitoDeEscuela(db, 999);
+
+      expect(resultado).toBeUndefined();
+    });
+  });
 });
