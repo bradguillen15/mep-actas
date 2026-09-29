@@ -63,10 +63,9 @@ Antes de finalizar un `tasks.md`, verifica:
 
 ## 5. Cuándo aplica
 
-- Al crear `tasks.md` con `/opsx:ff` o la skill `openspec-ff-change`.
-- Al crear `tasks.md` con `/opsx:continue` o la skill `openspec-continue-change`.
+- Al crear `tasks.md` con `/gentle-sdd-ff` o `/gentle-sdd-continue` (fase de tareas de Gentle AI).
 - Al actualizar archivos `tasks.md` existentes.
-- Al implementar tareas con `/opsx:apply` o la skill `openspec-apply-change` — el agente ejecuta las pruebas.
+- Al implementar tareas con `/gentle-sdd-apply` — el agente ejecuta las pruebas.
 
 ## 6. Estructura de ejemplo
 
@@ -98,7 +97,7 @@ Antes de finalizar un `tasks.md`, verifica:
 
 ## 7. Requisitos de ejecución del agente
 
-Al implementar tareas (skill `openspec-apply-change` o `/opsx:apply`), el agente DEBE:
+Al implementar tareas (`/gentle-sdd-apply`), el agente DEBE:
 1. **Ejecutar todas las pruebas él mismo** (Vitest y, si aplica, Playwright); levantar la app si hace falta; verificar resultados; restaurar el estado de la base.
 2. **Marcar tareas como completadas (`[x]`)** solo después de que las pruebas pasen, se verifiquen los resultados y se restaure el estado.
 3. **Nunca delegar las pruebas** al usuario ni marcar tareas sin ejecutarlas.

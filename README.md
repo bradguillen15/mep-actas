@@ -46,15 +46,15 @@ Por capas pragmática: `app/api` (route handlers) → servicios → repositorios
 - **[docs/frontend-standards.md](docs/frontend-standards.md)** — Next.js/React, estado, identidad MEP.
 - **[docs/documentation-standards.md](docs/documentation-standards.md)** — estándares de documentación.
 
-### Harness de desarrollo con IA
+### Desarrollo guiado por specs con IA
 
-Este proyecto usa un harness de desarrollo guiado por specs (OpenSpec) con Cursor y Claude Code:
+Este proyecto usa [Gentle AI](https://github.com/Gentleman-Programming/gentle-ai) (SDD) con persistencia `openspec`; los artefactos viven en `openspec/`:
 
 ```
-enrich-us → /opsx:new → /opsx:ff → /opsx:apply → /opsx:verify → /opsx:archive
+/gentle-sdd-new → /gentle-sdd-ff → /gentle-sdd-apply → /gentle-sdd-verify → /gentle-sdd-archive
 ```
 
-Requiere el [OpenSpec CLI](https://github.com/Fission-AI/OpenSpec): `npm install -g @fission-ai/openspec`. Ejecuta `/opsx:onboard` para un primer ciclo guiado.
+Requiere Gentle AI instalado globalmente (`gentle-ai install`). Ver la sección 4 de [CLAUDE.md](CLAUDE.md).
 
 ---
 
