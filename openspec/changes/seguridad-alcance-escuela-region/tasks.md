@@ -7,16 +7,16 @@
 | Líneas cambiadas estimadas | 2.200 – 3.000 (código, pruebas, migración, documentación; el diseño no da una cifra) |
 | Riesgo frente al presupuesto de 400 líneas | Alto |
 | PR encadenados recomendados | No (decisión del usuario: PR único; las ~400 líneas por unidad son solo orientativas) |
-| División sugerida | Un solo PR con 11 unidades de trabajo, cada una cerrada con un commit convencional |
+| División sugerida | Un solo PR con 11 unidades de trabajo y un commit convencional descriptivo por tarea |
 | Estrategia de entrega | single-pr |
 | Estrategia de cadena | size-exception |
 
-Decision needed before apply: Yes
+Decision needed before apply: No
 Chained PRs recommended: No
 Chain strategy: size-exception
 400-line budget risk: High
 
-Nota: la estrategia `single-pr` exige aprobación de `size:exception` del mantenedor antes de aplicar. El usuario eligió PR único de forma explícita; el orquestador debe confirmar la excepción antes de `sdd-apply`.
+Decisión (2026-09-29): el usuario confirmó un PR único con `size:exception`. Para que la revisión siga siendo legible, cada tarea que cambie código, pruebas o documentación se cierra con su propio commit convencional descriptivo (prefijo en inglés, descripción en español); los mensajes sugeridos al final de cada sección sirven de guía. Todo el trabajo vive en la rama `feat/gestion-usuarios-jerarquia`.
 
 Configuración de pruebas: TDD estricto activo. Ejecutor unitario/ruta: `pnpm test` (Vitest). E2E: `pnpm test:e2e` (Vitest contra SQLite real en `test/e2e/**`; no es Playwright aunque `openspec/config.yaml` lo mencione). Verificación rápida por unidad: `pnpm verify:fast`. Verificación completa final: `pnpm verify`.
 
@@ -40,7 +40,7 @@ Orden: las unidades siguen el orden de implementación del diseño (10 pasos), c
 
 ## 0. Preparación: rama de feature (OBLIGATORIO, PRIMER PASO)
 
-- [ ] 0.1 Verificar la rama actual con `git branch --show-current`. La rama de trabajo ya creada es `feat/seguridad-alcance-escuela-region`, desde `main`; no crear otra. Si el agente estuviera en `main`, crear y cambiarse a la rama antes de tocar código.
+- [ ] 0.1 Verificar la rama actual con `git branch --show-current`. La rama de trabajo es `feat/gestion-usuarios-jerarquia` (rama única del trabajo en curso, ya publicada); no crear otra.
 - [ ] 0.2 Confirmar que el árbol de trabajo está limpio (`git status`) y ejecutar `pnpm verify:fast` como línea base; registrar cualquier falla previa antes de continuar.
 - [ ] 0.3 Releer `docs/brd.md` §6/§7.5, `docs/backend-standards.md` y `docs/frontend-standards.md`, y las specs `alcance-datos`, `autenticacion-roles`, `gestion-usuarios` y `auditoria` del cambio.
 
