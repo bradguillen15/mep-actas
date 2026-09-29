@@ -1,57 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioEscaneos } from "@/server/servicios/escaneos.servicio";
-import * as repositorio from "@/server/repositorios/escaneos.repositorio";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
+import { derivarAmbitoConsulta } from "@/server/auth/ambito";
+import { crearServicioEscaneosDesdeDb } from "@/server/servicios/escaneos.fabrica";
+import { responderErrorDeRecurso } from "@/server/http/respuestas";
 
-async function crearServicio() {
-  const db = clienteDb();
-  const auditor = crearAuditor(db);
-  return crearServicioEscaneos(
-    {
-      listarEscaneos: (filtros) =>
-        repositorio.listarEscaneos(db, filtros),
-      obtenerEscaneoPorId: (id) =>
-        repositorio.obtenerEscaneoPorId(db, id),
-      crearEscaneo: (datos) =>
-        repositorio.crearEscaneo(db, datos),
-      eliminarEscaneo: (id) =>
-        repositorio.eliminarEscaneo(db, id),
-    },
-    auditor
-  );
-}
+type Parametros = { params: Promise<{ id: string }> };
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+const NO_ENCONTRADO = "Escaneo no encontrado";
+
+export async function GET(_request: NextRequest, { params }: Parametros) {
   const sesion = await obtenerSesion();
   if (!sesion) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   const { id } = await params;
-  const servicio = await crearServicio();
-  const escaneo = await servicio.obtenerEscaneoPorId(Number(id));
+  const ambito = derivarAmbitoConsulta(sesion);
+  const servicio = crearServicioEscaneosDesdeDb(clienteDb());
+  const escaneo = await servicio.obtenerEscaneoPorId(Number(id), ambito);
 
   if (!escaneo) {
-    return NextResponse.json(
-      { error: "Escaneo no encontrado" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: NO_ENCONTRADO }, { status: 404 });
   }
 
-  const url = await servicio.generarUrlLectura(Number(id));
+  const url = await servicio.generarUrlLectura(Number(id), ambito);
   return NextResponse.json({ ...escaneo, urlLectura: url });
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_request: NextRequest, { params }: Parametros) {
   const sesion = await obtenerSesion();
   if (!sesion) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -66,34 +44,15 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const servicio = await crearServicio();
-  const existente = await servicio.obtenerEscaneoPorId(Number(id));
+  const servicio = crearServicioEscaneosDesdeDb(clienteDb());
 
-  if (!existente) {
-    return NextResponse.json(
-      { error: "Escaneo no encontrado" },
-      { status: 404 }
-    );
+  try {
+    const escaneo = await servicio.eliminarEscaneo(Number(id), sesion);
+    if (!escaneo) {
+      return NextResponse.json({ error: NO_ENCONTRADO }, { status: 404 });
+    }
+    return NextResponse.json(escaneo);
+  } catch (error) {
+    return responderErrorDeRecurso(error, NO_ENCONTRADO);
   }
-
-  const verificacionAmbito = verificarRol(sesion, 3, {
-    escuelaId: existente.escuelaId,
-  });
-  if (!verificacionAmbito.autorizado) {
-    return NextResponse.json(
-      { error: "No tiene permisos para eliminar escaneos de esta escuela" },
-      { status: verificacionAmbito.error }
-    );
-  }
-
-  const escaneo = await servicio.eliminarEscaneo(Number(id), sesion);
-
-  if (!escaneo) {
-    return NextResponse.json(
-      { error: "Escaneo no encontrado" },
-      { status: 404 }
-    );
-  }
-
-  return NextResponse.json(escaneo);
 }

@@ -2,13 +2,20 @@ import type { Auditor } from "./auditoria.servicio";
 import type { FilaEscaneo } from "../repositorios/escaneos.repositorio";
 import { construirClave, generarUrlSubida, generarUrlLectura } from "../almacenamiento/r2.util";
 import type { SesionUsuario } from "@/server/auth/tipos";
+import { derivarAmbitoConsulta, type AmbitoConsulta } from "@/server/auth/ambito";
+import { ErrorNoEncontrado } from "@/server/errores";
+
+export type FiltrosEscaneos = { escuelaId?: number; tomo?: number };
 
 export interface RepositorioEscaneos {
-  listarEscaneos: (filtros: {
-    escuelaId?: number;
-    tomo?: number;
-  }) => Promise<FilaEscaneo[]>;
-  obtenerEscaneoPorId: (id: number) => Promise<FilaEscaneo | undefined>;
+  listarEscaneos: (
+    filtros: FiltrosEscaneos,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaEscaneo[]>;
+  obtenerEscaneoPorId: (
+    id: number,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaEscaneo | undefined>;
   crearEscaneo: (datos: {
     escuelaId: number;
     numeroTomo: number;
@@ -21,20 +28,26 @@ export interface RepositorioEscaneos {
 }
 
 export interface ServicioEscaneos {
-  listarEscaneos: (filtros: {
-    escuelaId?: number;
-    tomo?: number;
-  }) => Promise<FilaEscaneo[]>;
-  listarConUrlLectura: (filtros: {
-    escuelaId?: number;
-    tomo?: number;
-  }) => Promise<(FilaEscaneo & { urlLectura: string })[]>;
-  obtenerEscaneoPorId: (id: number) => Promise<FilaEscaneo | undefined>;
+  listarEscaneos: (
+    filtros: FiltrosEscaneos,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaEscaneo[]>;
+  listarConUrlLectura: (
+    filtros: FiltrosEscaneos,
+    ambito: AmbitoConsulta
+  ) => Promise<(FilaEscaneo & { urlLectura: string })[]>;
+  obtenerEscaneoPorId: (
+    id: number,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaEscaneo | undefined>;
   prepararSubida: (
     datos: { escuelaId: number; numeroTomo: number; numeroFolio: number; formato: string },
     sesion: SesionUsuario
   ) => Promise<{ urlSubida: string; clave: string; escaneo: FilaEscaneo }>;
-  generarUrlLectura: (id: number) => Promise<string | undefined>;
+  generarUrlLectura: (
+    id: number,
+    ambito: AmbitoConsulta
+  ) => Promise<string | undefined>;
   eliminarEscaneo: (
     id: number,
     sesion: SesionUsuario
@@ -48,12 +61,12 @@ export function crearServicioEscaneos(
   auditor: Auditor
 ): ServicioEscaneos {
   return {
-    async listarEscaneos(filtros) {
-      return repositorio.listarEscaneos(filtros);
+    async listarEscaneos(filtros, ambito) {
+      return repositorio.listarEscaneos(filtros, ambito);
     },
 
-    async listarConUrlLectura(filtros) {
-      const escaneos = await repositorio.listarEscaneos(filtros);
+    async listarConUrlLectura(filtros, ambito) {
+      const escaneos = await repositorio.listarEscaneos(filtros, ambito);
       return Promise.all(
         escaneos.map(async (escaneo) => ({
           ...escaneo,
@@ -62,8 +75,8 @@ export function crearServicioEscaneos(
       );
     },
 
-    async obtenerEscaneoPorId(id) {
-      return repositorio.obtenerEscaneoPorId(id);
+    async obtenerEscaneoPorId(id, ambito) {
+      return repositorio.obtenerEscaneoPorId(id, ambito);
     },
 
     async prepararSubida(
@@ -112,14 +125,20 @@ export function crearServicioEscaneos(
       return { urlSubida, clave, escaneo };
     },
 
-    async generarUrlLectura(id: number) {
-      const escaneo = await repositorio.obtenerEscaneoPorId(id);
+    async generarUrlLectura(id, ambito) {
+      const escaneo = await repositorio.obtenerEscaneoPorId(id, ambito);
       if (!escaneo) return undefined;
 
       return generarUrlLectura(escaneo.url);
     },
 
     async eliminarEscaneo(id, sesion) {
+      const existente = await repositorio.obtenerEscaneoPorId(
+        id,
+        derivarAmbitoConsulta(sesion)
+      );
+      if (!existente) throw new ErrorNoEncontrado("Escaneo no encontrado");
+
       const escaneo = await repositorio.eliminarEscaneo(id);
 
       if (escaneo) {

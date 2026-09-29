@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockObtenerSesion = vi.fn();
 const mockResolverAmbitoDeEscuela = vi.fn();
 const mockCrearEscaneo = vi.fn();
+const mockListarEscaneos = vi.fn();
 
 vi.mock("@/server/auth/sesion.servicio", () => ({
   obtenerSesion: mockObtenerSesion,
@@ -36,7 +37,7 @@ vi.mock("@/server/almacenamiento/r2.util", () => ({
 }));
 
 vi.mock("@/server/repositorios/escaneos.repositorio", () => ({
-  listarEscaneos: vi.fn(),
+  listarEscaneos: mockListarEscaneos,
   obtenerEscaneoPorId: vi.fn(),
   crearEscaneo: mockCrearEscaneo,
   eliminarEscaneo: vi.fn(),
@@ -241,5 +242,21 @@ describe("POST /api/escaneos", () => {
     const respuesta = await POST(req as never);
 
     expect(respuesta.status).toBe(201);
+  });
+});
+
+describe("GET /api/escaneos con ámbito", () => {
+  it("Staff lista solo su escuela", async () => {
+    vi.clearAllMocks();
+    mockListarEscaneos.mockResolvedValue([]);
+    mockObtenerSesion.mockResolvedValue(sesionStaff());
+    const { GET } = await import("../route");
+    const respuesta = await GET(new Request("http://localhost/api/escaneos") as never);
+    expect(respuesta.status).toBe(200);
+    expect(mockListarEscaneos).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(Object),
+      { tipo: "escuela", escuelaId: 5 }
+    );
   });
 });

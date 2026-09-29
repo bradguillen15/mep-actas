@@ -1,30 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioEscaneos } from "@/server/servicios/escaneos.servicio";
-import * as repositorio from "@/server/repositorios/escaneos.repositorio";
+import { crearServicioEscaneosDesdeDb } from "@/server/servicios/escaneos.fabrica";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
-import { ambitoDeEscuelaObjetivo } from "@/server/auth/ambito";
+import { ambitoDeEscuelaObjetivo, derivarAmbitoConsulta } from "@/server/auth/ambito";
 import { resolverAmbitoDeEscuela } from "@/server/repositorios/escuelas.repositorio";
-
-async function crearServicio() {
-  const db = clienteDb();
-  const auditor = crearAuditor(db);
-  return crearServicioEscaneos(
-    {
-      listarEscaneos: (filtros) =>
-        repositorio.listarEscaneos(db, filtros),
-      obtenerEscaneoPorId: (id) =>
-        repositorio.obtenerEscaneoPorId(db, id),
-      crearEscaneo: (datos) =>
-        repositorio.crearEscaneo(db, datos),
-      eliminarEscaneo: (id) =>
-        repositorio.eliminarEscaneo(db, id),
-    },
-    auditor
-  );
-}
 
 export async function GET(request: NextRequest) {
   const sesion = await obtenerSesion();
@@ -40,11 +20,11 @@ export async function GET(request: NextRequest) {
     ? Number(searchParams.get("tomo"))
     : undefined;
 
-  const servicio = await crearServicio();
-  const escaneos = await servicio.listarConUrlLectura({
-    escuelaId,
-    tomo,
-  });
+  const servicio = crearServicioEscaneosDesdeDb(clienteDb());
+  const escaneos = await servicio.listarConUrlLectura(
+    { escuelaId, tomo },
+    derivarAmbitoConsulta(sesion)
+  );
 
   return NextResponse.json(escaneos);
 }
@@ -76,7 +56,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const servicio = await crearServicio();
+  const servicio = crearServicioEscaneosDesdeDb(db);
 
   try {
     const resultado = await servicio.prepararSubida(cuerpo, sesion);

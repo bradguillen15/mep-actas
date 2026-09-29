@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { clienteDb } from "@/db/cliente";
 import * as repositorio from "@/server/repositorios/escaneos.repositorio";
 import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioEscaneos } from "@/server/servicios/escaneos.servicio";
+import { crearServicioEscaneosDesdeDb } from "@/server/servicios/escaneos.fabrica";
 import { crearServicioRegiones } from "@/server/servicios/regiones.servicio";
 import * as repositorioRegiones from "@/server/repositorios/regiones.repositorio";
 import { datosSesionAdminPais, obtenerRolPorNivel, obtenerUsuarioPorEmail } from "./helpers";
@@ -92,9 +92,11 @@ describe("Escaneos e2e", () => {
 
   it("lista escaneos por escuela", async () => {
     const db = clienteDb();
-    const listado = await repositorio.listarEscaneos(db, {
-      escuelaId,
-    });
+    const listado = await repositorio.listarEscaneos(
+      db,
+      { escuelaId },
+      { tipo: "pais" }
+    );
 
     expect(listado.length).toBeGreaterThanOrEqual(1);
     expect(listado.every((e) => e.escuelaId === escuelaId)).toBe(true);
@@ -102,7 +104,9 @@ describe("Escaneos e2e", () => {
 
   it("obtiene escaneo por id", async () => {
     const db = clienteDb();
-    const escaneo = await repositorio.obtenerEscaneoPorId(db, idsEscaneo[0]);
+    const escaneo = await repositorio.obtenerEscaneoPorId(db, idsEscaneo[0], {
+      tipo: "pais",
+    });
 
     expect(escaneo).toBeDefined();
     expect(escaneo!.url).toContain("test-key.pdf");
@@ -110,16 +114,7 @@ describe("Escaneos e2e", () => {
 
   it("servicio prepararSubida falla si faltan env vars de R2", async () => {
     const db = clienteDb();
-    const auditor = crearAuditor(db);
-    const servicio = crearServicioEscaneos(
-      {
-        listarEscaneos: (filtros) => repositorio.listarEscaneos(db, filtros),
-        obtenerEscaneoPorId: (id) => repositorio.obtenerEscaneoPorId(db, id),
-        crearEscaneo: (datos) => repositorio.crearEscaneo(db, datos),
-        eliminarEscaneo: (id) => repositorio.eliminarEscaneo(db, id),
-      },
-      auditor
-    );
+    const servicio = crearServicioEscaneosDesdeDb(db);
 
     const promesa = servicio.prepararSubida(
       {
