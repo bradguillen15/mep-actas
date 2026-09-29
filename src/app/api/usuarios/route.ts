@@ -1,8 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { hashSync } from "bcryptjs";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioUsuarios } from "@/server/servicios/usuarios.servicio";
-import * as repositorio from "@/server/repositorios/usuarios.repositorio";
+import { crearServicioUsuariosDesdeDb } from "@/server/servicios/usuarios.fabrica";
+import { derivarAmbitoConsulta } from "@/server/auth/ambito";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
@@ -21,26 +20,9 @@ export async function GET() {
     return NextResponse.json({ error: verificacion.error }, { status: 403 });
   }
 
-  const auditor = crearAuditor(db);
-  const servicio = crearServicioUsuarios(
-    {
-      listarUsuarios: () => repositorio.listarUsuarios(db),
-      obtenerUsuarioPorId: (id) => repositorio.obtenerUsuarioPorId(db, id),
-      obtenerUsuarioPorEmail: (email) =>
-        repositorio.obtenerUsuarioPorEmail(db, email),
-      crearUsuario: (datos) => repositorio.crearUsuario(db, datos),
-      actualizarPassword: (id, passwordHash) =>
-        repositorio.actualizarPassword(db, id, passwordHash),
-      cambiarEstadoUsuario: (id, activo) =>
-        repositorio.cambiarEstadoUsuario(db, id, activo),
-      obtenerNivelDeRol: (rolId) => repositorio.obtenerNivelDeRol(db, rolId),
-      obtenerAmbitoDeFuncionario: (funcId) =>
-        repositorio.obtenerAmbitoDeFuncionario(db, funcId),
-    },
-    auditor
-  );
+  const servicio = crearServicioUsuariosDesdeDb(db);
 
-  const usuarios = await servicio.listar();
+  const usuarios = await servicio.listar(derivarAmbitoConsulta(sesion));
   return NextResponse.json(usuarios);
 }
 
@@ -64,24 +46,7 @@ export async function POST(request: NextRequest) {
 
   const passwordHash = hashSync(json.password, 10);
 
-  const auditor = crearAuditor(db);
-  const servicio = crearServicioUsuarios(
-    {
-      listarUsuarios: () => repositorio.listarUsuarios(db),
-      obtenerUsuarioPorId: (id) => repositorio.obtenerUsuarioPorId(db, id),
-      obtenerUsuarioPorEmail: (email) =>
-        repositorio.obtenerUsuarioPorEmail(db, email),
-      crearUsuario: (datos) => repositorio.crearUsuario(db, datos),
-      actualizarPassword: (id, pwHash) =>
-        repositorio.actualizarPassword(db, id, pwHash),
-      cambiarEstadoUsuario: (id, activo) =>
-        repositorio.cambiarEstadoUsuario(db, id, activo),
-      obtenerNivelDeRol: (rolId) => repositorio.obtenerNivelDeRol(db, rolId),
-      obtenerAmbitoDeFuncionario: (funcId) =>
-        repositorio.obtenerAmbitoDeFuncionario(db, funcId),
-    },
-    auditor
-  );
+  const servicio = crearServicioUsuariosDesdeDb(db);
 
   try {
     const usuario = await servicio.crear(

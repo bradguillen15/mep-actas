@@ -6,10 +6,19 @@ import type {
   AmbitoFuncionario,
 } from "@/server/repositorios/usuarios.repositorio";
 import type { SesionUsuario } from "@/server/auth/tipos";
+import {
+  derivarAmbitoConsulta,
+  escuelasDentroDeAmbito,
+  type AmbitoConsulta,
+} from "@/server/auth/ambito";
+import { ErrorNoEncontrado, ErrorProhibido } from "@/server/errores";
 
 type RepositorioUsuarios = {
-  listarUsuarios: () => Promise<FilaUsuarioLista[]>;
-  obtenerUsuarioPorId: (id: number) => Promise<FilaUsuarioLista | undefined>;
+  listarUsuarios: (ambito: AmbitoConsulta) => Promise<FilaUsuarioLista[]>;
+  obtenerUsuarioPorId: (
+    id: number,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaUsuarioLista | undefined>;
   obtenerUsuarioPorEmail: (email: string) => Promise<
     | (Pick<
         FilaUsuario,
@@ -31,49 +40,62 @@ type RepositorioUsuarios = {
   ) => Promise<AmbitoFuncionario>;
 };
 
-function errorAutorizacion(): Error {
-  const error = new Error("No tiene permisos para gestionar este usuario");
-  error.name = "ForbiddenError";
-  return error;
+const MENSAJE_SIN_PERMISOS = "No tiene permisos para gestionar este usuario";
+const NIVEL_MAXIMO_GESTOR = 3;
+
+function exigirGestorDeUsuarios(sesion: SesionUsuario): void {
+  if (sesion.nivel > NIVEL_MAXIMO_GESTOR) {
+    throw new ErrorProhibido(MENSAJE_SIN_PERMISOS);
+  }
 }
 
-function dentroDeAmbito(sesion: SesionUsuario, ambito: AmbitoFuncionario): boolean {
-  if (sesion.nivel === 1) return true;
-  if (sesion.nivel === 2) {
-    return (
-      sesion.regionId !== undefined && ambito.regionIds.includes(sesion.regionId)
-    );
-  }
-  if (sesion.nivel === 3) {
-    return (
-      sesion.escuelaId !== undefined &&
-      ambito.escuelaIds.includes(sesion.escuelaId)
-    );
-  }
-  return false;
-}
-
-async function verificarJerarquiaYAmbito(
+async function verificarCreacionPermitida(
   repositorio: RepositorioUsuarios,
   sesion: SesionUsuario,
   nivelObjetivo: number,
   funcionarioObjetivoId: number
 ): Promise<void> {
+  exigirGestorDeUsuarios(sesion);
   if (nivelObjetivo < sesion.nivel) {
-    throw errorAutorizacion();
+    throw new ErrorProhibido(MENSAJE_SIN_PERMISOS);
   }
   if (sesion.nivel === 1) return;
-  const ambito = await repositorio.obtenerAmbitoDeFuncionario(
+  const ambitoFuncionario = await repositorio.obtenerAmbitoDeFuncionario(
     funcionarioObjetivoId
   );
-  if (!dentroDeAmbito(sesion, ambito)) {
-    throw errorAutorizacion();
+  const permitido = escuelasDentroDeAmbito(
+    derivarAmbitoConsulta(sesion),
+    ambitoFuncionario.escuelaIds,
+    ambitoFuncionario.regionIds
+  );
+  if (!permitido) {
+    throw new ErrorProhibido(MENSAJE_SIN_PERMISOS);
   }
 }
 
+async function cargarDestinoGestionable(
+  repositorio: RepositorioUsuarios,
+  id: number,
+  sesion: SesionUsuario
+): Promise<FilaUsuarioLista> {
+  exigirGestorDeUsuarios(sesion);
+  const objetivo = await repositorio.obtenerUsuarioPorId(
+    id,
+    derivarAmbitoConsulta(sesion)
+  );
+  if (!objetivo) throw new ErrorNoEncontrado("Usuario no encontrado");
+  if (objetivo.nivel < sesion.nivel) {
+    throw new ErrorProhibido(MENSAJE_SIN_PERMISOS);
+  }
+  return objetivo;
+}
+
 export type ServicioUsuarios = {
-  listar: () => Promise<FilaUsuarioLista[]>;
-  obtenerPorId: (id: number) => Promise<FilaUsuarioLista>;
+  listar: (ambito: AmbitoConsulta) => Promise<FilaUsuarioLista[]>;
+  obtenerPorId: (
+    id: number,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaUsuarioLista>;
   crear: (
     datos: DatosNuevoUsuario,
     sesion: SesionUsuario
@@ -95,17 +117,13 @@ export function crearServicioUsuarios(
   auditor: Auditor
 ): ServicioUsuarios {
   return {
-    async listar() {
-      return repositorio.listarUsuarios();
+    async listar(ambito) {
+      return repositorio.listarUsuarios(ambito);
     },
 
-    async obtenerPorId(id) {
-      const usuario = await repositorio.obtenerUsuarioPorId(id);
-      if (!usuario) {
-        const error = new Error("Usuario no encontrado");
-        error.name = "NotFoundError";
-        throw error;
-      }
+    async obtenerPorId(id, ambito) {
+      const usuario = await repositorio.obtenerUsuarioPorId(id, ambito);
+      if (!usuario) throw new ErrorNoEncontrado("Usuario no encontrado");
       return usuario;
     },
 
@@ -116,7 +134,7 @@ export function crearServicioUsuarios(
         error.name = "NotFoundError";
         throw error;
       }
-      await verificarJerarquiaYAmbito(
+      await verificarCreacionPermitida(
         repositorio,
         sesion,
         nivelObjetivo,
@@ -146,18 +164,7 @@ export function crearServicioUsuarios(
     },
 
     async actualizarPassword(id, passwordHash, sesion) {
-      const objetivo = await repositorio.obtenerUsuarioPorId(id);
-      if (!objetivo) {
-        const error = new Error("Usuario no encontrado");
-        error.name = "NotFoundError";
-        throw error;
-      }
-      await verificarJerarquiaYAmbito(
-        repositorio,
-        sesion,
-        objetivo.nivel,
-        objetivo.funcionarioId
-      );
+      await cargarDestinoGestionable(repositorio, id, sesion);
 
       await repositorio.actualizarPassword(id, passwordHash);
       await auditor({
@@ -171,18 +178,7 @@ export function crearServicioUsuarios(
     },
 
     async cambiarEstado(id, activo, sesion) {
-      const objetivo = await repositorio.obtenerUsuarioPorId(id);
-      if (!objetivo) {
-        const error = new Error("Usuario no encontrado");
-        error.name = "NotFoundError";
-        throw error;
-      }
-      await verificarJerarquiaYAmbito(
-        repositorio,
-        sesion,
-        objetivo.nivel,
-        objetivo.funcionarioId
-      );
+      await cargarDestinoGestionable(repositorio, id, sesion);
 
       const usuario = await repositorio.cambiarEstadoUsuario(id, activo);
       if (!usuario) {

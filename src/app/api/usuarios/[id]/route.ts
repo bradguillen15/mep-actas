@@ -1,8 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { hashSync } from "bcryptjs";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioUsuarios } from "@/server/servicios/usuarios.servicio";
-import * as repositorio from "@/server/repositorios/usuarios.repositorio";
+import { crearServicioUsuariosDesdeDb } from "@/server/servicios/usuarios.fabrica";
+import { derivarAmbitoConsulta } from "@/server/auth/ambito";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
@@ -25,27 +24,13 @@ export async function GET(
   }
 
   const { id } = await params;
-  const auditor = crearAuditor(db);
-  const servicio = crearServicioUsuarios(
-    {
-      listarUsuarios: () => repositorio.listarUsuarios(db),
-      obtenerUsuarioPorId: (i) => repositorio.obtenerUsuarioPorId(db, i),
-      obtenerUsuarioPorEmail: (email) =>
-        repositorio.obtenerUsuarioPorEmail(db, email),
-      crearUsuario: (datos) => repositorio.crearUsuario(db, datos),
-      actualizarPassword: (i, pwHash) =>
-        repositorio.actualizarPassword(db, i, pwHash),
-      cambiarEstadoUsuario: (i, activo) =>
-        repositorio.cambiarEstadoUsuario(db, i, activo),
-      obtenerNivelDeRol: (rolId) => repositorio.obtenerNivelDeRol(db, rolId),
-      obtenerAmbitoDeFuncionario: (funcId) =>
-        repositorio.obtenerAmbitoDeFuncionario(db, funcId),
-    },
-    auditor
-  );
+  const servicio = crearServicioUsuariosDesdeDb(db);
 
   try {
-    const usuario = await servicio.obtenerPorId(Number(id));
+    const usuario = await servicio.obtenerPorId(
+      Number(id),
+      derivarAmbitoConsulta(sesion)
+    );
     return NextResponse.json(usuario);
   } catch (error) {
     if (error instanceof Error && error.name === "NotFoundError") {
@@ -74,24 +59,7 @@ export async function PATCH(
 
   const { id } = await params;
   const json = await request.json();
-  const auditor = crearAuditor(db);
-  const servicio = crearServicioUsuarios(
-    {
-      listarUsuarios: () => repositorio.listarUsuarios(db),
-      obtenerUsuarioPorId: (i) => repositorio.obtenerUsuarioPorId(db, i),
-      obtenerUsuarioPorEmail: (email) =>
-        repositorio.obtenerUsuarioPorEmail(db, email),
-      crearUsuario: (datos) => repositorio.crearUsuario(db, datos),
-      actualizarPassword: (i, pwHash) =>
-        repositorio.actualizarPassword(db, i, pwHash),
-      cambiarEstadoUsuario: (i, activo) =>
-        repositorio.cambiarEstadoUsuario(db, i, activo),
-      obtenerNivelDeRol: (rolId) => repositorio.obtenerNivelDeRol(db, rolId),
-      obtenerAmbitoDeFuncionario: (funcId) =>
-        repositorio.obtenerAmbitoDeFuncionario(db, funcId),
-    },
-    auditor
-  );
+  const servicio = crearServicioUsuariosDesdeDb(db);
 
   try {
     if (json.password) {

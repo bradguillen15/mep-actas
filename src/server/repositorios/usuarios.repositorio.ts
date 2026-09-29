@@ -1,6 +1,8 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
+import type { AmbitoConsulta } from "@/server/auth/ambito";
+import { condicionFuncionarioEnAmbito } from "./ambito.condiciones";
 
 export type FilaUsuario = typeof esquema.usuarios.$inferSelect;
 
@@ -28,9 +30,7 @@ export type DatosNuevoUsuario = {
   passwordHash: string;
 };
 
-export async function listarUsuarios(
-  db: LibSQLDatabase<typeof esquema>
-): Promise<FilaUsuarioLista[]> {
+function consultarUsuariosLista(db: LibSQLDatabase<typeof esquema>) {
   return db
     .select({
       id: esquema.usuarios.id,
@@ -55,34 +55,26 @@ export async function listarUsuarios(
     );
 }
 
+export async function listarUsuarios(
+  db: LibSQLDatabase<typeof esquema>,
+  ambito: AmbitoConsulta
+): Promise<FilaUsuarioLista[]> {
+  return consultarUsuariosLista(db).where(
+    condicionFuncionarioEnAmbito(ambito, esquema.usuarios.funcionarioId)
+  );
+}
+
 export async function obtenerUsuarioPorId(
   db: LibSQLDatabase<typeof esquema>,
-  id: number
+  id: number,
+  ambito: AmbitoConsulta
 ): Promise<FilaUsuarioLista | undefined> {
-  const resultado = await db
-    .select({
-      id: esquema.usuarios.id,
-      email: esquema.usuarios.email,
-      activo: esquema.usuarios.activo,
-      funcionarioId: esquema.usuarios.funcionarioId,
-      rolId: esquema.usuarios.rolId,
-      nivel: esquema.roles.nivel,
-      funcionarioNombres: esquema.personas.nombres,
-      funcionarioApellidos: esquema.personas.apellidos,
-      funcionarioPuesto: esquema.funcionarios.puesto,
-    })
-    .from(esquema.usuarios)
-    .innerJoin(esquema.roles, eq(esquema.usuarios.rolId, esquema.roles.id))
-    .innerJoin(
-      esquema.funcionarios,
-      eq(esquema.usuarios.funcionarioId, esquema.funcionarios.id)
+  const resultado = await consultarUsuariosLista(db).where(
+    and(
+      eq(esquema.usuarios.id, id),
+      condicionFuncionarioEnAmbito(ambito, esquema.usuarios.funcionarioId)
     )
-    .innerJoin(
-      esquema.personas,
-      eq(esquema.funcionarios.personaId, esquema.personas.id)
-    )
-    .where(eq(esquema.usuarios.id, id));
-
+  );
   return resultado[0];
 }
 

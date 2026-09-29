@@ -5,9 +5,7 @@ import path from "path";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioUsuarios } from "@/server/servicios/usuarios.servicio";
-import * as repositorio from "@/server/repositorios/usuarios.repositorio";
+import { crearServicioUsuariosDesdeDb } from "@/server/servicios/usuarios.fabrica";
 import {
   obtenerRolPorNivel,
   obtenerUsuarioPorEmail,
@@ -28,23 +26,7 @@ const idsRegionCrear: number[] = [];
 const idsFuncionarioEscuelaCrear: number[] = [];
 
 function crearServicio() {
-  return crearServicioUsuarios(
-    {
-      listarUsuarios: () => repositorio.listarUsuarios(db),
-      obtenerUsuarioPorId: (id) => repositorio.obtenerUsuarioPorId(db, id),
-      obtenerUsuarioPorEmail: (email) =>
-        repositorio.obtenerUsuarioPorEmail(db, email),
-      crearUsuario: (datos) => repositorio.crearUsuario(db, datos),
-      actualizarPassword: (id, pwHash) =>
-        repositorio.actualizarPassword(db, id, pwHash),
-      cambiarEstadoUsuario: (id, activo) =>
-        repositorio.cambiarEstadoUsuario(db, id, activo),
-      obtenerNivelDeRol: (rolId) => repositorio.obtenerNivelDeRol(db, rolId),
-      obtenerAmbitoDeFuncionario: (funcId) =>
-        repositorio.obtenerAmbitoDeFuncionario(db, funcId),
-    },
-    crearAuditor(db)
-  );
+  return crearServicioUsuariosDesdeDb(db);
 }
 
 let contadorAmbito = 0;
@@ -131,7 +113,7 @@ afterAll(async () => {
 
 describe("Usuarios e2e", () => {
   it("lista usuarios", async () => {
-    const usuarios = await crearServicio().listar();
+    const usuarios = await crearServicio().listar({ tipo: "pais" });
     expect(usuarios.length).toBeGreaterThanOrEqual(3);
   });
 
@@ -167,7 +149,7 @@ describe("Usuarios e2e", () => {
     expect(usuario.email).toBe("nuevo-staff@e2e.test");
     idsUsuarioCrear.push(usuario.id);
 
-    const obtenido = await servicio.obtenerPorId(usuario.id);
+    const obtenido = await servicio.obtenerPorId(usuario.id, { tipo: "pais" });
     expect(obtenido.email).toBe("nuevo-staff@e2e.test");
     expect(obtenido.funcionarioNombres).toBe("Nuevo");
   });
@@ -197,7 +179,7 @@ describe("Usuarios e2e", () => {
   });
 
   it("lanza NotFoundError si usuario no existe", async () => {
-    await expect(crearServicio().obtenerPorId(99999)).rejects.toThrow(
+    await expect(crearServicio().obtenerPorId(99999, { tipo: "pais" })).rejects.toThrow(
       "Usuario no encontrado"
     );
   });

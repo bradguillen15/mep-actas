@@ -163,7 +163,7 @@ describe("GET /api/usuarios", () => {
     vi.clearAllMocks();
   });
 
-  it("retorna 200 para un Admin Escuela (BRD §6)", async () => {
+  it("retorna 200 para un Admin Escuela y lista solo su escuela (BRD §6)", async () => {
     mockObtenerSesion.mockResolvedValue(sesionAdminEscuela);
     mockListarUsuarios.mockResolvedValue([]);
     const { GET } = await import("../route");
@@ -171,6 +171,20 @@ describe("GET /api/usuarios", () => {
     const respuesta = await GET();
 
     expect(respuesta.status).toBe(200);
+    expect(mockListarUsuarios).toHaveBeenCalledWith(expect.anything(), {
+      tipo: "escuela",
+      escuelaId: 5,
+    });
+  });
+
+  it("el Admin País lista todo el país", async () => {
+    mockObtenerSesion.mockResolvedValue(sesionAdminPais);
+    mockListarUsuarios.mockResolvedValue([]);
+    const { GET } = await import("../route");
+
+    await GET();
+
+    expect(mockListarUsuarios).toHaveBeenCalledWith(expect.anything(), { tipo: "pais" });
   });
 
   it("retorna 403 para un Staff (BRD §6)", async () => {

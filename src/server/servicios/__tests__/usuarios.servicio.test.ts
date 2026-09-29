@@ -154,22 +154,50 @@ describe("usuarios.servicio — jerarquía/ámbito en actualizarPassword y cambi
     expect(repo.actualizarPassword).not.toHaveBeenCalled();
   });
 
-  it("deniega desactivar un usuario fuera del ámbito del actor", async () => {
-    const repo = crearRepoFalso({
-      obtenerUsuarioPorId: vi.fn().mockResolvedValue({
-        ...usuarioObjetivoAdminPais,
-        rolId: 4,
-        nivel: 4,
-      }),
-      obtenerAmbitoDeFuncionario: vi
-        .fn()
-        .mockResolvedValue({ escuelaIds: [10], regionIds: [3] }),
-    });
-    const servicio = crearServicioUsuarios(repo, auditorNoop);
+  it("un destino fuera del ámbito responde NotFoundError sin escribir ni auditar", async () => {
+    const auditor = vi.fn();
+    const repo = crearRepoFalso({ obtenerUsuarioPorId: vi.fn().mockResolvedValue(undefined) });
+    const servicio = crearServicioUsuarios(repo, auditor);
 
     await expect(
       servicio.cambiarEstado(10, false, sesion({ nivel: 2, regionId: 2 }))
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({ name: "NotFoundError" });
+    await expect(
+      servicio.actualizarPassword(10, "h", sesion({ nivel: 2, regionId: 2 }))
+    ).rejects.toMatchObject({ name: "NotFoundError" });
+    expect(repo.obtenerUsuarioPorId).toHaveBeenCalledWith(10, { tipo: "region", regionId: 2 });
     expect(repo.cambiarEstadoUsuario).not.toHaveBeenCalled();
+    expect(repo.actualizarPassword).not.toHaveBeenCalled();
+    expect(auditor).not.toHaveBeenCalled();
+  });
+
+  it("un destino dentro del ámbito con rol más privilegiado responde ForbiddenError", async () => {
+    const repo = crearRepoFalso({
+      obtenerUsuarioPorId: vi.fn().mockResolvedValue(usuarioObjetivoAdminPais),
+    });
+    const servicio = crearServicioUsuarios(repo, auditorNoop);
+    await expect(
+      servicio.cambiarEstado(10, false, sesion({ nivel: 2, regionId: 2 }))
+    ).rejects.toMatchObject({ name: "ForbiddenError" });
+  });
+});
+
+describe("usuarios.servicio — lecturas con ámbito", () => {
+  it("propaga el ámbito al listar y al obtener", async () => {
+    const repo = crearRepoFalso({ obtenerUsuarioPorId: vi.fn().mockResolvedValue({ id: 1 }) });
+    const servicio = crearServicioUsuarios(repo, auditorNoop);
+    const ambito = { tipo: "escuela" as const, escuelaId: 5 };
+    await servicio.listar(ambito);
+    await servicio.obtenerPorId(1, ambito);
+    expect(repo.listarUsuarios).toHaveBeenCalledWith(ambito);
+    expect(repo.obtenerUsuarioPorId).toHaveBeenCalledWith(1, ambito);
+  });
+
+  it("obtener un usuario fuera del ámbito lanza NotFoundError", async () => {
+    const repo = crearRepoFalso({ obtenerUsuarioPorId: vi.fn().mockResolvedValue(undefined) });
+    const servicio = crearServicioUsuarios(repo, auditorNoop);
+    await expect(
+      servicio.obtenerPorId(1, { tipo: "escuela", escuelaId: 5 })
+    ).rejects.toMatchObject({ name: "NotFoundError" });
   });
 });

@@ -6,9 +6,7 @@ import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import type { SesionUsuario } from "@/server/auth/tipos";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioUsuarios } from "@/server/servicios/usuarios.servicio";
-import * as repositorio from "@/server/repositorios/usuarios.repositorio";
+import { crearServicioUsuariosDesdeDb } from "@/server/servicios/usuarios.fabrica";
 import {
   obtenerRolPorNivel,
   obtenerUsuarioPorEmail,
@@ -41,23 +39,7 @@ const idsRegionCrear: number[] = [];
 const idsFuncionarioEscuelaCrear: number[] = [];
 
 function crearServicio() {
-  return crearServicioUsuarios(
-    {
-      listarUsuarios: () => repositorio.listarUsuarios(db),
-      obtenerUsuarioPorId: (id) => repositorio.obtenerUsuarioPorId(db, id),
-      obtenerUsuarioPorEmail: (email) =>
-        repositorio.obtenerUsuarioPorEmail(db, email),
-      crearUsuario: (datos) => repositorio.crearUsuario(db, datos),
-      actualizarPassword: (id, pwHash) =>
-        repositorio.actualizarPassword(db, id, pwHash),
-      cambiarEstadoUsuario: (id, activo) =>
-        repositorio.cambiarEstadoUsuario(db, id, activo),
-      obtenerNivelDeRol: (rolId) => repositorio.obtenerNivelDeRol(db, rolId),
-      obtenerAmbitoDeFuncionario: (funcId) =>
-        repositorio.obtenerAmbitoDeFuncionario(db, funcId),
-    },
-    crearAuditor(db)
-  );
+  return crearServicioUsuariosDesdeDb(db);
 }
 
 let contadorBrd = 0;
