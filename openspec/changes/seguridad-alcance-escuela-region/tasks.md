@@ -159,12 +159,12 @@ Requisitos: spec `auditoria` (registro con `escuela_id`/`region_id`, lectura por
 
 Requisitos: todas las specs del cambio. Diseño: estrategia de pruebas (capa E2E). Esta es la verificación de referencia de las condiciones SQL.
 
-- [ ] 10.1 RED: crear `test/e2e/alcance-datos.test.ts` (patrón de `test/e2e/conformidad-brd-usuarios.test.ts` y `test/e2e/helpers.ts`) con el escenario base: dos regiones y tres escuelas (dos en la región propia), con datos en cada una (actas, escaneos, graduaciones, personas por vínculo de acta y de asignación, funcionarios multi-escuela, usuarios, filas de auditoría).
-- [ ] 10.2 Cubrir por cada nivel (1 a 4): listados y `[id]` de actas, escaneos, graduaciones (con total y paginación), personas, funcionarios y usuarios; identificación exacta fuera de ámbito con solo campos mínimos; funcionarios multi-escuela sin duplicados; filtro `escuelaId` ajeno → resultado vacío; sesiones inconsistentes (`ninguno`) → vacío y 404.
-- [ ] 10.3 Cubrir auditoría: fila regional visible para nivel 2 y no para nivel 3; filas nacionales solo nivel 1; `escuela_id` y `region_id` poblados al escribir.
-- [ ] 10.4 GREEN: corregir cualquier condición de ámbito que la prueba exponga (subconsulta regional, `EXISTS`); no debilitar las aserciones.
-- [ ] 10.5 Restaurar el estado de la base al terminar (limpieza de `temp-e2e.db`/datos creados) y ejecutar `pnpm test:e2e` completo en verde.
-- [ ] 10.6 Commit sugerido: `test: agregar prueba e2e de conformidad de ámbito por escuela y región`
+- [x] 10.1 RED: crear `test/e2e/alcance-datos.test.ts` (patrón de `test/e2e/conformidad-brd-usuarios.test.ts` y `test/e2e/helpers.ts`) con el escenario base: dos regiones y tres escuelas (dos en la región propia), con datos en cada una (actas, escaneos, graduaciones, personas por vínculo de acta y de asignación, funcionarios multi-escuela, usuarios, filas de auditoría).
+- [x] 10.2 Cubrir por cada nivel (1 a 4): listados y `[id]` de actas, escaneos, graduaciones (con total y paginación), personas, funcionarios y usuarios; identificación exacta fuera de ámbito con solo campos mínimos; funcionarios multi-escuela sin duplicados; filtro `escuelaId` ajeno → resultado vacío; sesiones inconsistentes (`ninguno`) → vacío y 404.
+- [x] 10.3 Cubrir auditoría: fila regional visible para nivel 2 y no para nivel 3; filas nacionales solo nivel 1; `escuela_id` y `region_id` poblados al escribir.
+- [x] 10.4 (La prueba de conformidad pasó en su primera ejecución: el comportamiento ya estaba implementado y probado con SQL real en los repositorios; no hubo condiciones que corregir.) GREEN: corregir cualquier condición de ámbito que la prueba exponga (subconsulta regional, `EXISTS`); no debilitar las aserciones.
+- [x] 10.5 Restaurar el estado de la base al terminar (limpieza de `temp-e2e.db`/datos creados) y ejecutar `pnpm test:e2e` completo en verde.
+- [x] 10.6 Commit sugerido: `test: agregar prueba e2e de conformidad de ámbito por escuela y región`
 
 ## 11. Documentación técnica (OBLIGATORIO)
 
