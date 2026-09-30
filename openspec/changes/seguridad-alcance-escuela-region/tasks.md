@@ -178,9 +178,9 @@ Requisitos: todas las specs del cambio. Diseño: estrategia de pruebas (capa E2E
 
 ## 12. Verificación final (OBLIGATORIO)
 
-- [ ] 12.1 Ejecutar `pnpm verify` (lint + typecheck + `pnpm test` + `pnpm test:e2e`) y dejar todo en verde; el agente lo ejecuta, no el usuario.
-- [ ] 12.2 Ejecutar `pnpm build` para confirmar que las rutas y páginas compilan (equivale a `verify:ci` sin el modo detallado).
-- [ ] 12.3 Verificación manual acotada del flujo de alta de estudiante con `pnpm dev:local:demo`: buscar por identificación exacta, vincular a persona existente de otra escuela (datos mínimos) y crear persona nueva; limpiar la base local y restaurar el estado.
-- [ ] 12.4 Verificar la matriz de escenarios de las cuatro specs (`alcance-datos`, `autenticacion-roles`, `gestion-usuarios`, `auditoria`) contra las pruebas escritas y anotar cualquier escenario sin cobertura.
-- [ ] 12.5 Confirmar que la prueba "retorna 403 si Admin Escuela intenta eliminar un escaneo de otra escuela" ahora espera `404` y que no quedan referencias al `403` por ámbito en `DELETE /api/escaneos/[id]`.
-- [ ] 12.6 Preparar la transición a `/gentle-sdd-verify` y, después, `/gentle-sdd-archive`; ante cambios posteriores a apply, actualizar primero specs y este `tasks.md` (CLAUDE.md §5).
+- [x] 12.1 (Resultado: lint y typecheck OK; Vitest 49 archivos / 311 pruebas; E2E 13 archivos / 78 pruebas.) Ejecutar `pnpm verify` (lint + typecheck + `pnpm test` + `pnpm test:e2e`) y dejar todo en verde; el agente lo ejecuta, no el usuario.
+- [x] 12.2 Ejecutar `pnpm build` para confirmar que las rutas y páginas compilan (equivale a `verify:ci` sin el modo detallado).
+- [x] 12.3 (Hecho como Staff en `pnpm dev:local`: acta creada, persona existente 101230002 vinculada por identificación exacta sin duplicarse, persona nueva creada por Staff, ambos estudiantes agregados con 201; auditoría 200 para Staff; base local recreada después.) Verificación manual acotada del flujo de alta de estudiante con `pnpm dev:local:demo`: buscar por identificación exacta, vincular a persona existente de otra escuela (datos mínimos) y crear persona nueva; limpiar la base local y restaurar el estado.
+- [x] 12.4 (Matriz revisada: alcance-datos 50/50, autenticacion-roles 10/10, auditoria 13/13, gestion-usuarios 13/13 tras agregar 4 pruebas de cobertura.) Verificar la matriz de escenarios de las cuatro specs (`alcance-datos`, `autenticacion-roles`, `gestion-usuarios`, `auditoria`) contra las pruebas escritas y anotar cualquier escenario sin cobertura.
+- [x] 12.5 Confirmar que la prueba "retorna 403 si Admin Escuela intenta eliminar un escaneo de otra escuela" ahora espera `404` y que no quedan referencias al `403` por ámbito en `DELETE /api/escaneos/[id]`.
+- [x] 12.6 Preparar la transición a `/gentle-sdd-verify` y, después, `/gentle-sdd-archive`; ante cambios posteriores a apply, actualizar primero specs y este `tasks.md` (CLAUDE.md §5).

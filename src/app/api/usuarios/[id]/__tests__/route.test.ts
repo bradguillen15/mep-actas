@@ -74,6 +74,15 @@ describe("/api/usuarios/[id] con ámbito", () => {
     mockObtenerSesion.mockResolvedValue(adminRegional);
   });
 
+  it("el Admin País consulta cualquier usuario", async () => {
+    mockObtenerSesion.mockResolvedValue({ usuarioId: 1, email: "p@mep.go.cr", nivel: 1, rolId: 1, funcionarioId: 1 });
+    mockObtenerUsuarioPorId.mockResolvedValue({ id: 9, funcionarioId: 9, rolId: 4, nivel: 4 });
+    const { GET } = await import("../route");
+    const respuesta = await GET(new Request("http://localhost/api/usuarios/9") as never, params);
+    expect(respuesta.status).toBe(200);
+    expect(mockObtenerUsuarioPorId).toHaveBeenCalledWith(expect.anything(), 9, { tipo: "pais" });
+  });
+
   it("GET fuera del ámbito responde 404", async () => {
     mockObtenerUsuarioPorId.mockResolvedValue(undefined);
     const { GET } = await import("../route");

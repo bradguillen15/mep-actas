@@ -42,3 +42,13 @@ describe("GET /api/auditoria", () => {
     expect(respuesta.status).toBe(401);
   });
 });
+
+describe("la auditoría es de solo lectura", () => {
+  it("no expone métodos para modificar o eliminar registros", async () => {
+    const ruta: Record<string, unknown> = await import("../route");
+    expect(ruta.POST).toBeUndefined();
+    expect(ruta.PATCH).toBeUndefined();
+    expect(ruta.PUT).toBeUndefined();
+    expect(ruta.DELETE).toBeUndefined();
+  });
+});

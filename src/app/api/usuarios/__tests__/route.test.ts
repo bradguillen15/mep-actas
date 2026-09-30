@@ -156,6 +156,32 @@ describe("POST /api/usuarios", () => {
     expect(respuesta.status).toBe(201);
     expect(mockCrearUsuario).toHaveBeenCalledOnce();
   });
+
+  it("retorna 403 sin crear cuando un Admin Regional intenta crear un Admin País", async () => {
+    mockObtenerSesion.mockResolvedValue({
+      usuarioId: 2,
+      email: "regional@mep.go.cr",
+      nivel: 2,
+      rolId: 2,
+      funcionarioId: 2,
+      regionId: 2,
+    });
+    mockObtenerNivelDeRol.mockResolvedValue(1);
+    mockObtenerAmbitoDeFuncionario.mockResolvedValue({ escuelaIds: [5], regionIds: [2] });
+    const { POST } = await import("../route");
+
+    const respuesta = await POST(
+      peticionCrear({
+        funcionarioId: 9,
+        rolId: 1,
+        email: "pais-nuevo@mep.go.cr",
+        password: "ContrasenaLarga123",
+      }) as never
+    );
+
+    expect(respuesta.status).toBe(403);
+    expect(mockCrearUsuario).not.toHaveBeenCalled();
+  });
 });
 
 describe("GET /api/usuarios", () => {

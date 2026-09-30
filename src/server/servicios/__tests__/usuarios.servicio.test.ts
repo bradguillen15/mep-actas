@@ -201,3 +201,24 @@ describe("usuarios.servicio — lecturas con ámbito", () => {
     ).rejects.toMatchObject({ name: "NotFoundError" });
   });
 });
+
+describe("usuarios.servicio — Admin País", () => {
+  it("gestiona usuarios de cualquier escuela o región", async () => {
+    const destino = {
+      id: 10, email: "x@e2e.test", activo: true, funcionarioId: 5, rolId: 4, nivel: 4,
+      funcionarioNombres: "X", funcionarioApellidos: "Y", funcionarioPuesto: "Z",
+    };
+    const repo = crearRepoFalso({
+      obtenerUsuarioPorId: vi.fn().mockResolvedValue(destino),
+      obtenerAmbitoDeFuncionario: vi.fn().mockResolvedValue({ escuelaIds: [77], regionIds: [9] }),
+    });
+    const servicio = crearServicioUsuarios(repo, auditorNoop);
+
+    await servicio.cambiarEstado(10, false, sesion({ nivel: 1 }));
+    await servicio.actualizarPassword(10, "h", sesion({ nivel: 1 }));
+
+    expect(repo.obtenerUsuarioPorId).toHaveBeenCalledWith(10, { tipo: "pais" });
+    expect(repo.cambiarEstadoUsuario).toHaveBeenCalledWith(10, false);
+    expect(repo.actualizarPassword).toHaveBeenCalledWith(10, "h");
+  });
+});
