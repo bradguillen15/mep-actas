@@ -142,6 +142,7 @@ export function crearServicioActas(
         tabla: "actas",
         registroId: acta.id,
         accion: "crear",
+        escuelaId: acta.escuelaId,
         datosAnteriores: null,
         datosNuevos: JSON.stringify({
           titulo: datos.titulo,
@@ -152,7 +153,10 @@ export function crearServicioActas(
     },
 
     async actualizarActa(id, datos, sesion) {
-      await cargarActaEnAmbito(id, derivarAmbitoConsulta(sesion));
+      const existente = await cargarActaEnAmbito(
+        id,
+        derivarAmbitoConsulta(sesion)
+      );
       const acta = await repositorio.actualizarActa(id, datos);
       if (acta) {
         await auditor({
@@ -160,6 +164,7 @@ export function crearServicioActas(
           tabla: "actas",
           registroId: id,
           accion: "actualizar",
+          escuelaId: existente.escuelaId,
           datosAnteriores: null,
           datosNuevos: JSON.stringify(datos),
         });
@@ -168,7 +173,10 @@ export function crearServicioActas(
     },
 
     async agregarEstudiante(actaId, personaId, numeroCertificado, sesion) {
-      await cargarActaEnAmbito(actaId, derivarAmbitoConsulta(sesion));
+      const acta = await cargarActaEnAmbito(
+        actaId,
+        derivarAmbitoConsulta(sesion)
+      );
       const resultado = await repositorioDetalle.agregarEstudianteAActa(
         actaId,
         personaId,
@@ -179,6 +187,7 @@ export function crearServicioActas(
         tabla: "acta_estudiantes",
         registroId: resultado.id,
         accion: "agregar_estudiante",
+        escuelaId: acta.escuelaId,
         datosAnteriores: null,
         datosNuevos: JSON.stringify({ personaId, numeroCertificado }),
       });
@@ -186,7 +195,10 @@ export function crearServicioActas(
     },
 
     async agregarFirmante(actaId, funcionarioId, rolFirma, sesion) {
-      await cargarActaEnAmbito(actaId, derivarAmbitoConsulta(sesion));
+      const acta = await cargarActaEnAmbito(
+        actaId,
+        derivarAmbitoConsulta(sesion)
+      );
       const resultado = await repositorioDetalle.agregarFirmante(
         actaId,
         funcionarioId,
@@ -197,6 +209,7 @@ export function crearServicioActas(
         tabla: "acta_firmantes",
         registroId: resultado.id,
         accion: "agregar_firmante",
+        escuelaId: acta.escuelaId,
         datosAnteriores: null,
         datosNuevos: JSON.stringify({ funcionarioId, rolFirma }),
       });

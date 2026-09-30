@@ -1,5 +1,5 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { eq } from "drizzle-orm";
+import { eq, inArray, or } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 
 export async function obtenerRolPorNivel(
@@ -79,4 +79,25 @@ export function datosSesionStaff(
     funcionarioId: 4,
     escuelaId,
   };
+}
+
+// La auditoría referencia escuelas y regiones; solo en pruebas se borran sus filas antes de limpiar esos datos.
+export async function limpiarAuditoriaDeAmbito(
+  db: LibSQLDatabase<typeof esquema>,
+  escuelaIds: number[],
+  regionIds: number[]
+) {
+  if (escuelaIds.length === 0 && regionIds.length === 0) return;
+  await db
+    .delete(esquema.auditoria)
+    .where(
+      or(
+        escuelaIds.length > 0
+          ? inArray(esquema.auditoria.escuelaId, escuelaIds)
+          : undefined,
+        regionIds.length > 0
+          ? inArray(esquema.auditoria.regionId, regionIds)
+          : undefined
+      )
+    );
 }

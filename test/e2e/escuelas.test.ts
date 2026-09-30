@@ -10,6 +10,7 @@ import {
   datosSesionAdminRegional,
   obtenerRolPorNivel,
   obtenerUsuarioPorEmail,
+  limpiarAuditoriaDeAmbito,
 } from "./helpers";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
@@ -40,6 +41,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   const db = clienteDb();
+  await limpiarAuditoriaDeAmbito(db, idsEscuela, idsRegion);
   for (const id of idsEscuela) {
     await db.delete(esquema.escuelas).where(eq(esquema.escuelas.id, id));
   }

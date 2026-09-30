@@ -73,6 +73,14 @@ async function verificarCreacionPermitida(
   }
 }
 
+async function primeraEscuelaDe(
+  repositorio: RepositorioUsuarios,
+  funcionarioId: number
+): Promise<number | null> {
+  const { escuelaIds } = await repositorio.obtenerAmbitoDeFuncionario(funcionarioId);
+  return escuelaIds[0] ?? null;
+}
+
 async function cargarDestinoGestionable(
   repositorio: RepositorioUsuarios,
   id: number,
@@ -149,6 +157,7 @@ export function crearServicioUsuarios(
       }
       const usuario = await repositorio.crearUsuario(datos);
       await auditor({
+        escuelaId: await primeraEscuelaDe(repositorio, datos.funcionarioId),
         usuarioId: sesion.usuarioId,
         tabla: "usuarios",
         registroId: usuario.id,
@@ -164,7 +173,7 @@ export function crearServicioUsuarios(
     },
 
     async actualizarPassword(id, passwordHash, sesion) {
-      await cargarDestinoGestionable(repositorio, id, sesion);
+      const objetivo = await cargarDestinoGestionable(repositorio, id, sesion);
 
       await repositorio.actualizarPassword(id, passwordHash);
       await auditor({
@@ -172,13 +181,14 @@ export function crearServicioUsuarios(
         tabla: "usuarios",
         registroId: id,
         accion: "cambiar_password",
+        escuelaId: await primeraEscuelaDe(repositorio, objetivo.funcionarioId),
         datosAnteriores: null,
         datosNuevos: null,
       });
     },
 
     async cambiarEstado(id, activo, sesion) {
-      await cargarDestinoGestionable(repositorio, id, sesion);
+      const objetivo = await cargarDestinoGestionable(repositorio, id, sesion);
 
       const usuario = await repositorio.cambiarEstadoUsuario(id, activo);
       if (!usuario) {
@@ -191,6 +201,7 @@ export function crearServicioUsuarios(
         tabla: "usuarios",
         registroId: id,
         accion: activo ? "activar" : "desactivar",
+        escuelaId: await primeraEscuelaDe(repositorio, objetivo.funcionarioId),
         datosAnteriores: null,
         datosNuevos: JSON.stringify({ activo }),
       });

@@ -5,7 +5,7 @@ import { crearAuditor } from "@/server/servicios/auditoria.servicio";
 import { crearServicioFuncionariosDesdeDb } from "@/server/servicios/funcionarios.fabrica";
 import { crearServicioRegiones } from "@/server/servicios/regiones.servicio";
 import * as repositorioRegiones from "@/server/repositorios/regiones.repositorio";
-import { datosSesionAdminPais, obtenerRolPorNivel, obtenerUsuarioPorEmail } from "./helpers";
+import { datosSesionAdminPais, obtenerRolPorNivel, obtenerUsuarioPorEmail, limpiarAuditoriaDeAmbito } from "./helpers";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { SesionUsuario } from "@/server/auth/tipos";
@@ -34,6 +34,7 @@ afterAll(async () => {
   for (const id of idsPersona) {
     await db.delete(esquema.personas).where(eq(esquema.personas.id, id));
   }
+  await limpiarAuditoriaDeAmbito(db, idsEscuela, idsRegion);
   for (const id of idsEscuela) {
     await db.delete(esquema.escuelas).where(eq(esquema.escuelas.id, id));
   }

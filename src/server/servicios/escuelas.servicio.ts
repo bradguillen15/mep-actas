@@ -75,6 +75,8 @@ export function crearServicioEscuelas(
         tabla: "escuelas",
         registroId: escuela.id,
         accion: "crear",
+        escuelaId: escuela.id,
+        regionId: datos.regionId,
         datosAnteriores: null,
         datosNuevos: JSON.stringify({
           regionId: datos.regionId,
@@ -116,6 +118,8 @@ export function crearServicioEscuelas(
         tabla: "escuelas",
         registroId: id,
         accion: "actualizar",
+        escuelaId: id,
+        regionId: existente.regionId,
         datosAnteriores,
         datosNuevos: JSON.stringify({
           ...(datos.nombre !== undefined && { nombre: datos.nombre }),
@@ -153,6 +157,8 @@ export function crearServicioEscuelas(
         tabla: "escuelas",
         registroId: id,
         accion: "desactivar",
+        escuelaId: id,
+        regionId: existente.regionId,
         datosAnteriores: JSON.stringify({ activo: existente.activo }),
         datosNuevos: JSON.stringify({ activo: false }),
       });

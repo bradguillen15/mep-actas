@@ -10,6 +10,7 @@ import {
   obtenerRolPorNivel,
   obtenerUsuarioPorEmail,
   datosSesionAdminEscuela,
+  limpiarAuditoriaDeAmbito,
 } from "./helpers";
 
 const DB_PATH = path.resolve(__dirname, "../../temp-e2e.db");
@@ -79,6 +80,7 @@ afterAll(async () => {
       .where(eq(esquema.actaFirmantes.actaId, id));
     await db.delete(esquema.actas).where(eq(esquema.actas.id, id));
   }
+  await limpiarAuditoriaDeAmbito(db, idsEscuela, idsRegion);
   for (const id of idsEscuela) {
     await db.delete(esquema.escuelas).where(eq(esquema.escuelas.id, id));
   }

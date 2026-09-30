@@ -87,6 +87,7 @@ export function crearServicioRegiones(
         tabla: "regiones",
         registroId: id,
         accion: "actualizar",
+        regionId: id,
         datosAnteriores,
         datosNuevos: JSON.stringify({ nombre: datos.nombre }),
       });
@@ -114,6 +115,7 @@ export function crearServicioRegiones(
         tabla: "regiones",
         registroId: id,
         accion: "desactivar",
+        regionId: id,
         datosAnteriores: JSON.stringify({ activo: existente.activo }),
         datosNuevos: JSON.stringify({ activo: false }),
       });

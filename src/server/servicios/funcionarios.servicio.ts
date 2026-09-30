@@ -145,6 +145,7 @@ export function crearServicioFuncionarios(
         tabla: "funcionario_escuela",
         registroId: resultado.id,
         accion: "asignar_escuela",
+        escuelaId,
         datosAnteriores: null,
         datosNuevos: JSON.stringify({
           funcionarioId,
@@ -170,6 +171,7 @@ export function crearServicioFuncionarios(
         tabla: "funcionario_escuela",
         registroId: 0,
         accion: "remover_escuela",
+        escuelaId,
         datosAnteriores: JSON.stringify({ funcionarioId, escuelaId }),
         datosNuevos: null,
       });

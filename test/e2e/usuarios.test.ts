@@ -12,6 +12,7 @@ import {
   datosSesionAdminPais,
   datosSesionAdminRegional,
   datosSesionAdminEscuela,
+  limpiarAuditoriaDeAmbito,
 } from "./helpers";
 
 const DB_PATH = path.resolve(__dirname, "../../temp-e2e.db");
@@ -103,6 +104,7 @@ afterAll(async () => {
   for (const id of idsPersonaCrear) {
     await db.delete(esquema.personas).where(eq(esquema.personas.id, id));
   }
+  await limpiarAuditoriaDeAmbito(db, idsEscuelaCrear, idsRegionCrear);
   for (const id of idsEscuelaCrear) {
     await db.delete(esquema.escuelas).where(eq(esquema.escuelas.id, id));
   }

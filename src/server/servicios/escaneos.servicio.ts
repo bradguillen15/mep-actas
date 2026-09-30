@@ -118,6 +118,7 @@ export function crearServicioEscaneos(
         tabla: "escaneos",
         registroId: escaneo.id,
         accion: "subir",
+        escuelaId: escaneo.escuelaId,
         datosAnteriores: null,
         datosNuevos: JSON.stringify(escaneo),
       });
@@ -147,6 +148,7 @@ export function crearServicioEscaneos(
           tabla: "escaneos",
           registroId: escaneo.id,
           accion: "eliminar",
+          escuelaId: existente.escuelaId,
           datosAnteriores: JSON.stringify(escaneo),
           datosNuevos: null,
         });
