@@ -1,7 +1,8 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { eq, desc, type SQL, and } from "drizzle-orm";
+import { eq, desc, sql, type SQL, and } from "drizzle-orm";
 import { auditoria } from "@/db/esquema";
 import * as esquema from "@/db/esquema";
+import type { AmbitoConsulta } from "@/server/auth/ambito";
 
 export interface DatosAuditoria {
   usuarioId: number;
@@ -10,8 +11,17 @@ export interface DatosAuditoria {
   accion: string;
   datosAnteriores: string | null;
   datosNuevos: string | null;
+  escuelaId: number | null;
+  regionId: number | null;
   createdAt: string;
 }
+
+export type FiltrosAuditoria = {
+  usuarioId?: number;
+  tabla?: string;
+  accion?: string;
+  limite?: number;
+};
 
 export type FilaAuditoriaLista = {
   id: number;
@@ -36,20 +46,31 @@ export async function insertarRegistroAuditoria(
     accion: datos.accion,
     datosAnteriores: datos.datosAnteriores,
     datosNuevos: datos.datosNuevos,
+    escuelaId: datos.escuelaId,
+    regionId: datos.regionId,
     createdAt: datos.createdAt,
   });
 }
 
+function condicionAuditoriaEnAmbito(ambito: AmbitoConsulta): SQL | undefined {
+  switch (ambito.tipo) {
+    case "pais":
+      return undefined;
+    case "region":
+      return eq(esquema.auditoria.regionId, ambito.regionId);
+    case "escuela":
+      return eq(esquema.auditoria.escuelaId, ambito.escuelaId);
+    case "ninguno":
+      return sql`0 = 1`;
+  }
+}
+
 export async function listarAuditoria(
   db: LibSQLDatabase<typeof esquema>,
-  filtros: {
-    usuarioId?: number;
-    tabla?: string;
-    accion?: string;
-    limite?: number;
-  }
+  filtros: FiltrosAuditoria,
+  ambito: AmbitoConsulta
 ): Promise<FilaAuditoriaLista[]> {
-  const condiciones: SQL[] = [];
+  const condiciones: (SQL | undefined)[] = [condicionAuditoriaEnAmbito(ambito)];
 
   if (filtros.usuarioId)
     condiciones.push(eq(esquema.auditoria.usuarioId, filtros.usuarioId));
@@ -75,12 +96,9 @@ export async function listarAuditoria(
       esquema.usuarios,
       eq(esquema.auditoria.usuarioId, esquema.usuarios.id)
     )
+    .where(and(...condiciones))
     .orderBy(desc(esquema.auditoria.createdAt))
     .limit(filtros.limite ?? 100);
-
-  if (condiciones.length > 0) {
-    return query.where(and(...condiciones));
-  }
 
   return query;
 }

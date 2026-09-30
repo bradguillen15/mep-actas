@@ -4,6 +4,7 @@ import * as repositorio from "@/server/repositorios/auditoria.repositorio";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
+import { derivarAmbitoConsulta } from "@/server/auth/ambito";
 
 const db = clienteDb();
 
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const verificacion = verificarRol(sesion, 1);
+  const verificacion = verificarRol(sesion, 4);
   if (!verificacion.autorizado) {
     return NextResponse.json({ error: verificacion.error }, { status: 403 });
   }
@@ -29,15 +30,14 @@ export async function GET(request: NextRequest) {
     : undefined;
 
   const servicio = crearServicioAuditoria({
-    listarAuditoria: (filtros) => repositorio.listarAuditoria(db, filtros),
+    listarAuditoria: (filtros, ambito) =>
+      repositorio.listarAuditoria(db, filtros, ambito),
   });
 
-  const registros = await servicio.listar({
-    usuarioId,
-    tabla,
-    accion,
-    limite,
-  });
+  const registros = await servicio.listar(
+    { usuarioId, tabla, accion, limite },
+    derivarAmbitoConsulta(sesion)
+  );
 
   return NextResponse.json(registros);
 }

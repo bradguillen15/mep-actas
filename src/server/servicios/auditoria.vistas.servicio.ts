@@ -1,29 +1,29 @@
-import type { FilaAuditoriaLista } from "@/server/repositorios/auditoria.repositorio";
+import type {
+  FilaAuditoriaLista,
+  FiltrosAuditoria,
+} from "@/server/repositorios/auditoria.repositorio";
+import type { AmbitoConsulta } from "@/server/auth/ambito";
 
 type RepositorioAuditoria = {
-  listarAuditoria: (filtros: {
-    usuarioId?: number;
-    tabla?: string;
-    accion?: string;
-    limite?: number;
-  }) => Promise<FilaAuditoriaLista[]>;
+  listarAuditoria: (
+    filtros: FiltrosAuditoria,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaAuditoriaLista[]>;
 };
 
 export type ServicioAuditoria = {
-  listar: (filtros: {
-    usuarioId?: number;
-    tabla?: string;
-    accion?: string;
-    limite?: number;
-  }) => Promise<FilaAuditoriaLista[]>;
+  listar: (
+    filtros: FiltrosAuditoria,
+    ambito: AmbitoConsulta
+  ) => Promise<FilaAuditoriaLista[]>;
 };
 
 export function crearServicioAuditoria(
   repositorio: RepositorioAuditoria
 ): ServicioAuditoria {
   return {
-    async listar(filtros) {
-      return repositorio.listarAuditoria(filtros);
+    async listar(filtros, ambito) {
+      return repositorio.listarAuditoria(filtros, ambito);
     },
   };
 }
