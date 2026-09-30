@@ -16,7 +16,7 @@ alwaysApply: true
 - **Autenticación:** NextAuth (estrategia JWT). Contraseñas con bcrypt.
 - **Archivos:** Cloudflare R2 (compatible con S3) para escaneos de folios, con URLs firmadas generadas en el servidor.
 - **Despliegue:** Vercel. Secretos en variables de entorno del servidor.
-- **Pruebas:** Vitest (unitarias/servicios) y Playwright (E2E). Cobertura pragmática, sin umbral fijo.
+- **Pruebas:** Vitest (unitarias, servicios, repositorios y E2E contra SQLite con `pnpm test:e2e`, en `test/e2e/**`). Cobertura pragmática, sin umbral fijo.
 
 ## 2. Arquitectura por capas (pragmática)
 
@@ -73,6 +73,18 @@ src/server/almacenamiento/        # firma de URLs de Cloudflare R2
 - Sin auto-registro: las cuentas se crean por invitación desde un nivel superior. El primer arranque crea el primer Admin País mediante asistente (sin credenciales por defecto).
 - Contraseñas siempre con bcrypt; nunca texto plano; nunca las devuelvas en respuestas.
 
+## 5.1 Control de acceso por ámbito (patrón obligatorio)
+
+Además del nivel mínimo, todo dato se limita al ámbito del usuario: nivel 1, país; nivel 2, las escuelas de su región; nivel 3–4, su escuela. El ámbito se aplica en la consulta SQL, nunca filtrando en memoria.
+
+- El route handler deriva el ámbito **una sola vez** con `derivarAmbitoConsulta(sesion)` (`src/server/auth/ambito.ts`) y lo pasa al servicio, que lo pasa al repositorio. El parámetro `AmbitoConsulta` es **obligatorio** (no opcional) en toda operación de lectura o de carga de un recurso existente, para que un olvido no equivalga a "sin restricción".
+- El repositorio lo aplica con `condicionEscuelaEnAmbito`, `condicionFuncionarioEnAmbito` o `condicionPersonaEnAmbito` (`src/server/repositorios/ambito.condiciones.ts`), combinadas con `and(...)` junto a los filtros del cliente: estos solo pueden estrechar el resultado.
+- Las **escrituras sobre recursos existentes** cargan primero el recurso con ámbito; si no se obtiene, el servicio lanza `ErrorNoEncontrado` (`src/server/errores.ts`) antes de escribir o auditar. El handler lo traduce con `responderErrorDeRecurso` (`src/server/http/respuestas.ts`) a `404` con el mismo cuerpo que un recurso inexistente.
+- Orden de respuestas en rutas `[id]`: `401` sin sesión → `403` nivel insuficiente → `404` fuera de ámbito → `403` jerarquía (usuarios).
+- Un `POST` con `escuelaId` en el cuerpo fuera del ámbito, o inexistente, responde `403`; el Admin Regional se valida contra la región de la escuela objetivo.
+- Los servicios se arman con las fábricas `crear<Recurso>DesdeDb(db)` (`src/server/servicios/*.fabrica.ts`).
+- Las pruebas de repositorio de ámbito corren contra SQLite en memoria (`src/server/repositorios/__tests__/db-en-memoria.ts`), no contra una base simulada, para validar el SQL real.
+
 ## 6. Almacenamiento de archivos (Cloudflare R2)
 
 - Las credenciales de R2 viven solo en el servidor (variables de entorno de Vercel).
@@ -92,7 +104,7 @@ src/server/almacenamiento/        # firma de URLs de Cloudflare R2
 - Prueba servicios y repositorios con datos de prueba; patrón AAA; nombres descriptivos en español.
 - Las pruebas que escriben deben **restaurar el estado** de la base al terminar.
 - Cubre: caso de éxito, errores de validación, no encontrado (`404`), conflicto de unicidad, y verificación de rol.
-- Cobertura pragmática del dominio y los servicios; **sin** umbral fijo del 90%. No se usa "curl manual": la API se prueba con pruebas de route handlers/servicios y E2E con Playwright cuando cambia un flujo de usuario.
+- Cobertura pragmática del dominio y los servicios; **sin** umbral fijo del 90%. No se usa "curl manual": la API se prueba con pruebas de route handlers/servicios y con pruebas E2E de Vitest contra SQLite (`pnpm test:e2e`, `test/e2e/**`) cuando cambia un flujo o una regla de acceso.
 
 ## 9. Seguridad
 

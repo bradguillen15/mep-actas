@@ -10,6 +10,7 @@
 | **Clasificación** | Interno — personal MEP |
 
 > Nota de mantenimiento: este documento es la **fuente de verdad del producto**. El almacenamiento de archivos se definió como **Cloudflare R2** (el borrador original mencionaba Cloudinary; ver §8, §9 y §10).
+> Cambio `seguridad-alcance-escuela-region`: la consulta y la escritura se limitan al ámbito del usuario (escuela o región) y la auditoría pasa a ser visible por ámbito para los niveles 1 a 4 (§6, §7.3 y §7.5).
 
 ---
 
@@ -108,9 +109,9 @@ Los roles son **jerárquicos por nivel**. Cada nivel puede crear usuarios de su 
 | Rol | Nivel | Permisos |
 |---|---|---|
 | Admin País | 1 | Acceso total nacional. Gestiona regiones, escuelas, usuarios de cualquier nivel, configuración global. Ve toda la auditoría. |
-| Admin Regional | 2 | Gestiona escuelas y usuarios dentro de su región. Configura valores por defecto regionales. |
-| Admin Escuela | 3 | Gestiona actas, estudiantes y escaneos de su escuela. Crea usuarios staff de su escuela. |
-| Staff | 4 | Consulta y registro dentro de su escuela. No puede gestionar usuarios ni eliminar registros. |
+| Admin Regional | 2 | Gestiona escuelas y usuarios dentro de su región. Configura valores por defecto regionales. Ve la auditoría de su región. |
+| Admin Escuela | 3 | Gestiona actas, estudiantes y escaneos de su escuela. Crea usuarios staff de su escuela. Ve la auditoría de su escuela. |
+| Staff | 4 | Consulta y registro de actas, estudiantes, firmantes y personas dentro de su escuela. Ve la auditoría de su escuela. No puede gestionar usuarios ni eliminar registros. |
 
 - Primer arranque → asistente de configuración crea la primera cuenta Admin País (sin credenciales por defecto).
 - No hay auto-registro: las cuentas se crean por invitación desde un nivel superior.
@@ -140,6 +141,8 @@ Los roles son **jerárquicos por nivel**. Cada nivel puede crear usuarios de su 
 - Los resultados muestran: nombre, identificación, escuela, acta, tipo de acta, fecha y número de certificado.
 - Al abrir un resultado, mostrar el detalle del acta y, si existe, el escaneo del folio vinculado.
 - Si no hay coincidencia, mostrar un mensaje claro de "Sin registros".
+- La consulta se limita al ámbito del usuario: Admin País ve todo el país, Admin Regional las escuelas de su región y Admin Escuela y Staff su escuela. Lo que queda fuera del ámbito no se lista ni se puede abrir (se responde como si no existiera).
+- Excepción: la búsqueda de una persona por identificación exacta está disponible para cualquier usuario autenticado y devuelve solo datos mínimos (id, nombres, apellidos e identificación), para evitar duplicar personas ya registradas en otra escuela.
 
 ### 7.4 Control de acceso y autenticación
 - Todos los usuarios inician sesión con email y contraseña.
@@ -150,7 +153,7 @@ Los roles son **jerárquicos por nivel**. Cada nivel puede crear usuarios de su 
 ### 7.5 Auditoría
 - Todo cambio se registra con: usuario, tabla, acción, datos anteriores, datos nuevos y fecha/hora.
 - La auditoría es de solo lectura — ningún usuario puede modificarla o eliminarla.
-- Admin País ve toda la auditoría; los admins inferiores ven la de su ámbito.
+- La auditoría es visible por ámbito para los niveles 1 a 4: Admin País ve toda; Admin Regional, la de su región; Admin Escuela y Staff, la de su escuela. Los registros de alcance nacional (sin escuela ni región) solo los ve Admin País.
 
 ---
 
@@ -363,6 +366,8 @@ La interfaz sigue la identidad institucional del MEP (azul, dorado y blanco) par
 | accion | TEXT | crear / editar / desactivar… |
 | datos_anteriores | TEXT (JSON) | |
 | datos_nuevos | TEXT (JSON) | |
+| escuela_id | INTEGER FK | → escuelas.id, nullable; escuela del recurso auditado |
+| region_id | INTEGER FK | → regiones.id, nullable; región del recurso auditado |
 | created_at | TIMESTAMP | |
 
 ---

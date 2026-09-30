@@ -10,7 +10,7 @@
     "repository": {
       "url": "git@github.com:bradguillen15/mep-actas.git",
       "link_mode": "local-only",
-      "revision": "3193a44624865177b91ee4c6b6ebec9185afeb13"
+      "revision": "b1d4c6c235697ac61328c766141199e2c6b25e38"
     },
     "translations": {
       "page.title": "{title} · Diagrama",
@@ -540,8 +540,8 @@
       "sources": [
         {
           "path": "src/server/auth/autorizacion.servicio.ts",
-          "line": 13,
-          "end_line": 19
+          "line": 8,
+          "end_line": 26
         }
       ]
     },
@@ -556,8 +556,14 @@
       "sources": [
         {
           "path": "src/server/auth/autorizacion.servicio.ts",
-          "line": 21,
-          "end_line": 37
+          "line": 28,
+          "end_line": 46
+        },
+        {
+          "path": "src/server/auth/ambito.ts",
+          "line": 9,
+          "end_line": 19,
+          "label": "ámbito de consulta"
         }
       ]
     },
@@ -567,8 +573,15 @@
       "col": 4,
       "type": "backend",
       "label": "Filtro SQL",
-      "sublabel": "propuesto: por ámbito",
-      "width": 140
+      "sublabel": "filtra por ámbito",
+      "width": 140,
+      "sources": [
+        {
+          "path": "src/server/repositorios/ambito.condiciones.ts",
+          "line": 14,
+          "end_line": 31
+        }
+      ]
     },
     {
       "id": "escritura",
@@ -576,18 +589,19 @@
       "col": 3,
       "type": "backend",
       "label": "Escritura",
-      "sublabel": "actas, escaneos",
+      "sublabel": "carga con ámbito",
       "width": 140,
       "sources": [
         {
           "path": "src/app/api/actas/route.ts",
-          "line": 66,
-          "end_line": 91
+          "line": 34,
+          "end_line": 64
         },
         {
-          "path": "src/app/api/escaneos/[id]/route.ts",
-          "line": 79,
-          "end_line": 98
+          "path": "src/server/servicios/actas.servicio.ts",
+          "line": 115,
+          "end_line": 122,
+          "label": "carga con ámbito"
         }
       ]
     },
@@ -621,14 +635,14 @@
       "lane": "denegacion",
       "col": 2,
       "type": "security",
-      "label": "401 o 403",
-      "sublabel": "acceso denegado",
+      "label": "401, 403 o 404",
+      "sublabel": "denegado u oculto",
       "width": 140,
       "sources": [
         {
-          "path": "src/server/auth/autorizacion.servicio.ts",
-          "line": 13,
-          "end_line": 35
+          "path": "src/server/http/respuestas.ts",
+          "line": 3,
+          "end_line": 14
         }
       ]
     }
@@ -682,7 +696,7 @@
       "id": "e7",
       "from": "ambito",
       "to": "rechazo",
-      "label": "ámbito ajeno",
+      "label": "ajeno: 403 o 404",
       "variant": "security",
       "role": "error"
     },
@@ -722,16 +736,16 @@
       "dot": "emerald",
       "title": "Vigente en el código",
       "items": [
-        "Escrituras verifican nivel y luego ámbito por escuelaId",
-        "Staff y Admin Escuela solo escriben en su escuela"
+        "Lecturas filtradas en SQL; recurso ajeno responde 404",
+        "Admin Regional validado contra la región de la escuela"
       ]
     },
     {
       "dot": "amber",
-      "title": "Brecha que cierra el cambio",
+      "title": "Reglas por nivel",
       "items": [
-        "GET de actas y graduaciones hoy solo exige sesión",
-        "seguridad-alcance-escuela-region filtra en SQL y falla cerrado"
+        "Staff registra actas, estudiantes, firmantes y personas en su escuela",
+        "Auditoría por ámbito para niveles 1 a 4; cédula exacta con datos mínimos"
       ]
     }
   ]
