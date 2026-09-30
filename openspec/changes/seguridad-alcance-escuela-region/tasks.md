@@ -168,13 +168,13 @@ Requisitos: todas las specs del cambio. Diseño: estrategia de pruebas (capa E2E
 
 ## 11. Documentación técnica (OBLIGATORIO)
 
-- [ ] 11.1 Actualizar `docs/api-spec.yml`: respuestas `404` por ámbito en las rutas `[id]` y en las escrituras IDOR; `GET /api/personas?identificacion=` como consulta exacta con `PersonaMinima`; `GET /api/auditoria` para niveles 1–4; nivel mínimo 4 en `POST /api/actas/[id]/estudiantes`, `POST /api/actas/[id]/firmantes` y `POST /api/personas`; `DELETE /api/escaneos/[id]` fuera de ámbito → 404.
-- [ ] 11.2 Actualizar `docs/data-model.md`: corregir las notas de control de acceso de las líneas ~76 y ~118 que hoy eximen al nivel 2; agregar las columnas `auditoria.escuela_id` y `auditoria.region_id` y la lista de índices nuevos.
-- [ ] 11.3 Actualizar `docs/brd.md` §6 (Staff: consulta y registro de actas, estudiantes, firmantes y personas dentro de su escuela) y §7.5 (el Staff y el Admin Regional también consultan la auditoría de su ámbito; se desvía del texto "admins inferiores").
-- [ ] 11.4 Actualizar `docs/backend-standards.md` si el patrón de `AmbitoConsulta`/`404` por ámbito debe quedar como estándar (si no aplica, dejar constancia en el commit).
-- [ ] 11.5 Regenerar o actualizar el diagrama `docs/arquitectura/alcance-escuela-region/alcance-escuela-region.json` (fuente de archify) y su `.html`: el diagrama es anterior a las decisiones D3–D7 (Staff en auditoría; Staff registrando estudiantes, firmantes y personas) y debe reflejarlas tras la implementación.
-- [ ] 11.6 Revisar el idioma (español, Costa Rica), eliminar comentarios redundantes en el código tocado por el cambio y confirmar que `openspec/changes/seguridad-alcance-escuela-region/tasks.md` refleja el estado real.
-- [ ] 11.7 Commit sugerido: `docs: actualizar API, modelo de datos, BRD y diagrama por la seguridad de ámbito`
+- [x] 11.1 Actualizar `docs/api-spec.yml`: respuestas `404` por ámbito en las rutas `[id]` y en las escrituras IDOR; `GET /api/personas?identificacion=` como consulta exacta con `PersonaMinima`; `GET /api/auditoria` para niveles 1–4; nivel mínimo 4 en `POST /api/actas/[id]/estudiantes`, `POST /api/actas/[id]/firmantes` y `POST /api/personas`; `DELETE /api/escaneos/[id]` fuera de ámbito → 404.
+- [x] 11.2 Actualizar `docs/data-model.md`: corregir las notas de control de acceso de las líneas ~76 y ~118 que hoy eximen al nivel 2; agregar las columnas `auditoria.escuela_id` y `auditoria.region_id` y la lista de índices nuevos.
+- [x] 11.3 Actualizar `docs/brd.md` §6 (Staff: consulta y registro de actas, estudiantes, firmantes y personas dentro de su escuela) y §7.5 (el Staff y el Admin Regional también consultan la auditoría de su ámbito; se desvía del texto "admins inferiores").
+- [x] 11.4 Actualizar `docs/backend-standards.md` si el patrón de `AmbitoConsulta`/`404` por ámbito debe quedar como estándar (si no aplica, dejar constancia en el commit).
+- [x] 11.5 Regenerar o actualizar el diagrama `docs/arquitectura/alcance-escuela-region/alcance-escuela-region.json` (fuente de archify) y su `.html`: el diagrama es anterior a las decisiones D3–D7 (Staff en auditoría; Staff registrando estudiantes, firmantes y personas) y debe reflejarlas tras la implementación.
+- [x] 11.6 Revisar el idioma (español, Costa Rica), eliminar comentarios redundantes en el código tocado por el cambio y confirmar que `openspec/changes/seguridad-alcance-escuela-region/tasks.md` refleja el estado real.
+- [x] 11.7 Commit sugerido: `docs: actualizar API, modelo de datos, BRD y diagrama por la seguridad de ámbito`
 
 ## 12. Verificación final (OBLIGATORIO)
 
