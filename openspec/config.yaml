@@ -11,7 +11,7 @@ context: |
   (acceso a datos con Drizzle). Mantener separación de responsabilidades y dominio tipado, sin la
   ceremonia completa de DDD (sin entity.save(), sin 4 capas formales).
   Estado en el cliente: SWR (datos), React Context (sesión/usuario), useReducer (formularios).
-  Pruebas: Vitest (unitarias/servicios) y Playwright (E2E). Cobertura pragmática del dominio y de
+  Pruebas: Vitest (unitarias/servicios) y Vitest contra SQLite para E2E (`pnpm test:e2e`). Cobertura pragmática del dominio y de
   los servicios; sin umbral fijo del 90%.
   Commits convencionales (prefijo en inglés `feat:`/`fix:`, descripción en español).
   Dominio: Sistema de Consulta de Títulos del MEP (Ministerio de Educación Pública, Costa Rica) —
@@ -48,7 +48,7 @@ rules:
       Seguir TDD: escribir la prueba que falla primero, luego implementar hasta ponerla en verde
     - |
       Pasos obligatorios por cambio: crear rama de feature; escribir/actualizar pruebas (Vitest);
-      ejecutar pruebas; verificación E2E con Playwright cuando cambie un flujo de usuario;
+      ejecutar pruebas; verificación E2E (`pnpm test:e2e`) cuando cambie la persistencia o un flujo de usuario;
       actualizar documentación
     - |
       No incluir pasos de "curl manual"; la API se prueba con pruebas de route handlers/servicios

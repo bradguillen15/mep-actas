@@ -15,7 +15,7 @@ Aplicación web cerrada y autenticada para que el personal del Ministerio de Edu
 | Autenticación | NextAuth (JWT), contraseñas con bcrypt |
 | Archivos | Cloudflare R2 (escaneos de folios, URLs firmadas del lado del servidor) |
 | Estado (cliente) | SWR (datos) · React Context (sesión) · useReducer (formularios) |
-| Pruebas | Vitest (unitarias/servicios) · Playwright (E2E) |
+| Pruebas | Vitest (unitarias/servicios) · Vitest contra SQLite (E2E) |
 | Despliegue | Vercel |
 
 Detalles y convenciones: **[docs/backend-standards.md](docs/backend-standards.md)** y **[docs/frontend-standards.md](docs/frontend-standards.md)**.

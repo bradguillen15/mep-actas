@@ -1,5 +1,5 @@
 ---
-description: Pasos obligatorios al crear archivos tasks.md de OpenSpec y reglas de ejecución de pruebas para el agente. Stack Next.js + Drizzle/Turso + Vitest/Playwright. Todo en español.
+description: Pasos obligatorios al crear archivos tasks.md de OpenSpec y reglas de ejecución de pruebas para el agente. Stack Next.js + Drizzle/Turso + Vitest (unitarias y E2E). Todo en español.
 alwaysApply: true
 ---
 
@@ -21,14 +21,14 @@ Lee también `docs/base-standards.md`, `docs/brd.md` y el estándar de backend/f
 
 Toda lista de tareas de implementación DEBE incluir:
 
-- **Paso 0 — Crear rama de feature (PRIMERO):** `feature/[nombre-cambio]`. Crear y cambiarse a la rama antes de tocar código.
+- **Paso 0 — Crear rama de feature (PRIMERO):** `feat/[nombre-cambio]`. Crear y cambiarse a la rama antes de tocar código.
 - **TDD por tarea:** escribir la prueba que falla (Vitest) → implementar hasta ponerla en verde.
 - **Paso N — Revisar/actualizar pruebas existentes** afectadas por el cambio.
 - **Paso N+1 — Ejecutar las pruebas (Vitest)** y dejarlas en verde. El agente las ejecuta; restaura el estado de la base tras pruebas que escriben.
-- **Paso N+2 — Verificación E2E con Playwright** (cuando el cambio toca un flujo de usuario). El agente la ejecuta.
+- **Paso N+2 — Verificación E2E** (Vitest contra SQLite real, `pnpm test:e2e`) cuando el cambio toca la persistencia o un flujo de usuario. El agente la ejecuta.
 - **Paso N+3 — Actualizar la documentación técnica** (`docs/data-model.md`, `docs/api-spec.yml`, `*-standards.md` según corresponda).
 
-> No se usa "curl manual": la API (route handlers de `app/api`) se prueba con pruebas de route handlers/servicios (Vitest) y con E2E (Playwright). No se requieren reportes-artefacto por paso; basta con dejar las pruebas en verde y documentar lo necesario.
+> No se usa "curl manual": la API (route handlers de `app/api`) se prueba con pruebas de route handlers/servicios (Vitest) y con E2E (Vitest contra SQLite, `test/e2e/**`). No se requieren reportes-artefacto por paso; basta con dejar las pruebas en verde y documentar lo necesario.
 
 ## 3. El agente ejecuta las pruebas — nunca las delega
 
@@ -41,13 +41,12 @@ Toda lista de tareas de implementación DEBE incluir:
 4. Si una prueba escribió en la base, **restaura el estado**.
 5. Marca el paso como completado solo cuando las pruebas están en verde (o se documenta una excepción aprobada).
 
-### E2E con Playwright (Paso N+2, cuando aplica)
-Aplica cuando el cambio afecta un flujo de usuario o la integración frontend↔backend.
-1. Levanta la app (`next dev`) si hace falta y deja la base en un estado conocido.
-2. Ejecuta el/los flujo(s) completos del usuario y verifica los resultados esperados, incluyendo casos de error/validación.
-3. Verifica la persistencia de datos cuando el flujo crea/edita.
-4. Limpia los datos de prueba y restaura el estado.
-5. Actualiza `e2e/*.e2e.ts` cuando cambien la UX, los `data-testid` o los diálogos.
+### E2E con Vitest contra SQLite (Paso N+2, cuando aplica)
+Aplica cuando el cambio afecta la persistencia, las consultas SQL o un flujo de usuario.
+1. Ejecuta `pnpm test:e2e`: las pruebas de `test/e2e/**/*.test.ts` usan los servicios reales contra `temp-e2e.db`, creada y migrada por `test/e2e/globalSetup.ts`.
+2. Cubre los casos de error/validación y verifica la persistencia cuando el flujo crea o edita.
+3. Limpia en `afterAll` los datos que la prueba creó (incluida la auditoría de sus escuelas y regiones con `limpiarAuditoriaDeAmbito`).
+4. Si cambia la interfaz, verifica además el flujo en el navegador con `pnpm dev:local:demo`.
 
 ## 4. Checklist de verificación
 
@@ -57,7 +56,7 @@ Antes de finalizar un `tasks.md`, verifica:
 - [ ] Los pasos están numerados secuencialmente.
 - [ ] Se sigue TDD (prueba que falla antes de implementar).
 - [ ] Hay un paso de ejecución de pruebas (Vitest) que el agente ejecuta.
-- [ ] Hay verificación E2E (Playwright) si el cambio toca un flujo de usuario.
+- [ ] Hay verificación E2E (`pnpm test:e2e`) si el cambio toca la persistencia o un flujo de usuario.
 - [ ] Hay un paso de actualización de documentación.
 - [ ] Las tareas con escritura en base incluyen restauración del estado.
 
@@ -84,12 +83,12 @@ Antes de finalizar un `tasks.md`, verifica:
 - [ ] 5.3 Restaurar el estado de la base si alguna prueba escribió
 - [ ] 5.4 Marcar completo solo con las pruebas en verde
 
-## 6. Frontend: E2E con Playwright (OBLIGATORIO si aplica)
-- [ ] 6.1 Levantar la app y dejar la base en estado conocido
-- [ ] 6.2 Ejecutar el flujo de usuario completo y verificar resultados
+## 6. E2E (OBLIGATORIO si aplica)
+- [ ] 6.1 Agregar o adaptar pruebas en `test/e2e/**/*.test.ts`
+- [ ] 6.2 Ejecutar `pnpm test:e2e` y dejarlo en verde
 - [ ] 6.3 Probar escenarios de error/validación
-- [ ] 6.4 Limpiar datos de prueba y restaurar estado
-- [ ] 6.5 Actualizar e2e/*.e2e.ts si cambió la UX/testids
+- [ ] 6.4 Limpiar los datos de prueba en `afterAll`
+- [ ] 6.5 Si cambió la interfaz, verificar el flujo en el navegador con `pnpm dev:local:demo`
 
 ## 7. Actualizar documentación técnica (OBLIGATORIO)
 - [ ] 7.1 Actualizar docs/data-model.md y/o docs/api-spec.yml según el cambio
@@ -98,7 +97,7 @@ Antes de finalizar un `tasks.md`, verifica:
 ## 7. Requisitos de ejecución del agente
 
 Al implementar tareas (`/gentle-sdd-apply`), el agente DEBE:
-1. **Ejecutar todas las pruebas él mismo** (Vitest y, si aplica, Playwright); levantar la app si hace falta; verificar resultados; restaurar el estado de la base.
+1. **Ejecutar todas las pruebas él mismo** (`pnpm test` y, si aplica, `pnpm test:e2e`); levantar la app si hace falta; verificar resultados; restaurar el estado de la base.
 2. **Marcar tareas como completadas (`[x]`)** solo después de que las pruebas pasen, se verifiquen los resultados y se restaure el estado.
 3. **Nunca delegar las pruebas** al usuario ni marcar tareas sin ejecutarlas.
 4. **Documentar** lo necesario: qué se probó, resultados y cualquier problema y su resolución.
