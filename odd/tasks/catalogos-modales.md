@@ -43,3 +43,4 @@ Admin País puede crear regiones y escuelas desde la UI, y Admin Regional escuel
 
 - Rama: `feat/gestion-usuarios-jerarquia`.
 - T1 (ea3115a): `ModalFormulario` sobre `Modal`, 9 pruebas (RED observado: módulo inexistente; GREEN).
+- T2 (ee01690): pestañas Usuarios/Tipos de acta/Regiones/Escuelas; secciones extraídas a `src/components/configuracion/`; `src/lib/api-cliente.ts`; Nuevo usuario migrado a `ModalFormulario`. Verificación: lint, typecheck, test (347) y test:e2e (82) en verde.
