@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
   const servicio = crearServicioGraduacionesDesdeDb(clienteDb());
 
   const resultados = await servicio.buscar({
+    busqueda: parametroOpcional(searchParams, "busqueda"),
     identificacion: parametroOpcional(searchParams, "identificacion"),
     nombre: parametroOpcional(searchParams, "nombre"),
     escuelaId: escuelaIdParam ? Number(escuelaIdParam) : undefined,

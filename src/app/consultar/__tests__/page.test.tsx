@@ -28,21 +28,22 @@ const { estado, mutarMock, opcionesSwr } = vi.hoisted(() => ({
 }));
 
 vi.mock("swr", () => ({
-  default: (clave: string, _fetcher: unknown, opciones: unknown) => {
-    if (clave === "/api/tipos-acta") {
-      return { data: [{ id: 1, nombre: "Primaria" }] };
-    }
+  default: (_clave: string, _fetcher: unknown, opciones: unknown) => {
     opcionesSwr.valor = opciones;
     return { ...estado, mutate: mutarMock };
   },
 }));
 
-vi.mock("@/hooks/useEscuelaActual", () => ({
-  useEscuelaActual: () => ({
-    escuelaId: 5,
-    escuelas: [],
+const escuelaActualMock = vi.hoisted(() => ({
+  valor: {
+    escuelaId: 5 as number | undefined,
+    escuelas: [] as { id: number; nombre: string }[],
     puedeElegirEscuela: false,
-  }),
+  },
+}));
+
+vi.mock("@/hooks/useEscuelaActual", () => ({
+  useEscuelaActual: () => escuelaActualMock.valor,
 }));
 
 vi.mock("@/hooks/useDebouncedValue", () => ({
@@ -60,15 +61,33 @@ beforeEach(() => {
   estado.isValidating = false;
   mutarMock.mockReset();
   opcionesSwr.valor = undefined;
+  escuelaActualMock.valor = {
+    escuelaId: 5,
+    escuelas: [],
+    puedeElegirEscuela: false,
+  };
 });
 
 describe("Consultar — búsqueda", () => {
-  it("expone la búsqueda con nombre accesible y botón de limpiar solo con texto", async () => {
+  it("expone un solo campo con ayuda y fechas visibles", async () => {
     conResultados([graduacion]);
     render(<Consultar />);
 
-    const campo = screen.getByRole("textbox", { name: "Buscar graduados" });
-    expect(screen.queryByRole("button", { name: "Limpiar búsqueda" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Búsqueda avanzada" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Busca a la vez en cédula/ })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Fecha desde")).toBeInTheDocument();
+    expect(screen.getByLabelText("Fecha hasta")).toBeInTheDocument();
+    expect(screen.queryByLabelText("N° certificado")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Tipo de acta")).not.toBeInTheDocument();
+
+    const campo = screen.getByRole("textbox", { name: "Búsqueda avanzada" });
+    expect(
+      screen.queryByRole("button", { name: "Limpiar búsqueda" })
+    ).not.toBeInTheDocument();
 
     await userEvent.type(campo, "mar");
     await userEvent.click(screen.getByRole("button", { name: "Limpiar búsqueda" }));
@@ -82,26 +101,25 @@ describe("Consultar — búsqueda", () => {
     render(<Consultar />);
     expect(opcionesSwr.valor).toMatchObject({ keepPreviousData: true });
   });
-});
 
-describe("Consultar — búsqueda avanzada", () => {
-  it("informa expansión con aria-expanded y cuenta los filtros activos", async () => {
+  it("muestra la escuela como primer filtro solo si el admin puede elegirla", () => {
     conResultados([graduacion]);
-    render(<Consultar />);
+    const { rerender } = render(<Consultar />);
+    expect(screen.queryByLabelText("Escuela")).not.toBeInTheDocument();
 
-    const boton = screen.getByRole("button", { name: /Búsqueda avanzada/ });
-    expect(boton).toHaveAttribute("aria-expanded", "false");
+    escuelaActualMock.valor = {
+      escuelaId: undefined,
+      escuelas: [{ id: 10, nombre: "Escuela Central" }],
+      puedeElegirEscuela: true,
+    };
+    rerender(<Consultar />);
 
-    await userEvent.click(boton);
-    expect(boton).toHaveAttribute("aria-expanded", "true");
-    expect(document.getElementById(boton.getAttribute("aria-controls")!)).toBeInTheDocument();
-
-    await userEvent.type(screen.getByLabelText("N° certificado"), "5001");
-    expect(within(boton).getByText("1")).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole("button", { name: "Limpiar filtros" }));
-    expect(screen.getByLabelText("N° certificado")).toHaveValue("");
-    expect(screen.queryByRole("button", { name: "Limpiar filtros" })).not.toBeInTheDocument();
+    const escuela = screen.getByLabelText("Escuela");
+    const busqueda = screen.getByRole("textbox", { name: "Búsqueda avanzada" });
+    expect(
+      escuela.compareDocumentPosition(busqueda) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
   });
 });
 
@@ -122,13 +140,21 @@ describe("Consultar — estados", () => {
     expect(screen.queryByRole("button", { name: "Limpiar filtros" })).not.toBeInTheDocument();
     expect(screen.getByText("No hay graduados registrados todavía.")).toBeInTheDocument();
 
-    await userEvent.type(screen.getByRole("textbox", { name: "Buscar graduados" }), "zzz");
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Búsqueda avanzada" }),
+      "zzz"
+    );
 
     expect(
       screen.getByText("No se encontraron graduaciones con los criterios ingresados.")
     ).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Limpiar filtros" }));
-    expect(screen.getByRole("textbox", { name: "Buscar graduados" })).toHaveValue("");
+    const botonesLimpiar = screen.getAllByRole("button", {
+      name: "Limpiar filtros",
+    });
+    await userEvent.click(botonesLimpiar[0]!);
+    expect(screen.getByRole("textbox", { name: "Búsqueda avanzada" })).toHaveValue(
+      ""
+    );
   });
 });
 

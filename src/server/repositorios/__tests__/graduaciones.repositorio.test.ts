@@ -89,6 +89,58 @@ describe("buscarGraduaciones con ámbito", () => {
   });
 });
 
+describe("buscarGraduaciones con término único", () => {
+  const ambitoPais: AmbitoConsulta = { tipo: "pais" };
+
+  it("encuentra por cédula, nombre, tipo de acta, certificado o título", async () => {
+    const porCedula = await buscarGraduaciones(
+      db,
+      { busqueda: "100000011" },
+      ambitoPais
+    );
+    expect(porCedula.datos.map((f) => f.escuelaId)).toEqual([11]);
+
+    const porNombre = await buscarGraduaciones(
+      db,
+      { busqueda: "Mora 20" },
+      ambitoPais
+    );
+    expect(porNombre.datos.map((f) => f.escuelaId)).toEqual([20]);
+
+    const porTipo = await buscarGraduaciones(
+      db,
+      { busqueda: "Bachillerato" },
+      ambitoPais
+    );
+    expect(porTipo.total).toBe(3);
+
+    const porCertificado = await buscarGraduaciones(
+      db,
+      { busqueda: "11" },
+      ambitoPais
+    );
+    expect(porCertificado.datos.some((f) => f.numeroCertificado === 11)).toBe(
+      true
+    );
+
+    const porTitulo = await buscarGraduaciones(
+      db,
+      { busqueda: "Acta 10" },
+      ambitoPais
+    );
+    expect(porTitulo.datos.map((f) => f.escuelaId)).toEqual([10]);
+  });
+
+  it("combina el término con el rango de fechas", async () => {
+    const resultado = await buscarGraduaciones(
+      db,
+      { busqueda: "Ana", fechaDesde: "2026-01-01" },
+      ambitoPais
+    );
+    expect(resultado).toMatchObject({ datos: [], total: 0 });
+  });
+});
+
 describe("obtenerGraduacionPorId con ámbito", () => {
   it("devuelve el acta dentro del ámbito", async () => {
     const filas = await obtenerGraduacionPorId(db, 20, { tipo: "region", regionId: 2 });

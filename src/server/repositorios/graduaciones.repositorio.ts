@@ -25,6 +25,7 @@ export type ResultadoGraduacion = {
 };
 
 export type ParametrosBusquedaGraduaciones = {
+  busqueda?: string;
   identificacion?: string;
   nombre?: string;
   escuelaId?: number;
@@ -74,6 +75,22 @@ function construirCondiciones(
   const condiciones: SQL[] = [];
   const condicionAmbito = condicionEscuelaEnAmbito(ambito, esquema.actas.escuelaId);
   if (condicionAmbito) condiciones.push(condicionAmbito);
+
+  if (params.busqueda) {
+    const patron = patronLike(params.busqueda);
+    const patronCertificado = `%${params.busqueda.trim()}%`;
+    condiciones.push(
+      or(
+        sql`lower(${esquema.personas.identificacion}) like ${patron}`,
+        sql`lower(${esquema.personas.nombres}) like ${patron}`,
+        sql`lower(${esquema.personas.apellidos}) like ${patron}`,
+        sql`lower(${esquema.personas.nombres} || ' ' || ${esquema.personas.apellidos}) like ${patron}`,
+        sql`lower(${esquema.tiposActas.nombre}) like ${patron}`,
+        sql`cast(${esquema.actaEstudiantes.numeroCertificado} as text) like ${patronCertificado}`,
+        sql`lower(${esquema.actas.titulo}) like ${patron}`
+      )!
+    );
+  }
 
   if (params.identificacion) {
     const patron = patronLike(params.identificacion);
