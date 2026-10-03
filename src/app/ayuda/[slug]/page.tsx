@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { cargarContenidoTema } from "@/contenido/ayuda/contenido";
 import { temasAyuda } from "@/contenido/ayuda/temas";
+import { RegistrarEncabezado } from "@/contextos/EncabezadoShellContext";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 
 interface PaginaTemaAyudaProps {
@@ -20,15 +21,17 @@ export default async function PaginaTemaAyuda({ params }: PaginaTemaAyudaProps) 
   if (!Contenido) notFound();
 
   return (
-    <article className="max-w-3xl">
+    <article className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      <RegistrarEncabezado titulo={tema.titulo} descripcion={tema.descripcion} />
       <Link
         href="/ayuda"
-        className="text-sm font-medium text-primario underline underline-offset-2 hover:text-primario-hover"
+        className="mb-4 text-sm font-medium text-primario underline underline-offset-2 hover:text-primario-hover"
       >
         Volver a Ayuda
       </Link>
-      <h1 className="mb-4 mt-4 text-3xl font-bold text-primario">{tema.titulo}</h1>
-      <Contenido />
+      <div className="max-w-3xl">
+        <Contenido />
+      </div>
     </article>
   );
 }

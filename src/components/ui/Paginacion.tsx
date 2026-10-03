@@ -2,6 +2,10 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import {
+  LIMITE_PAGINA_POR_DEFECTO,
+  OPCIONES_LIMITE_PAGINA,
+} from "@/lib/paginacion";
 import { Boton } from "./Boton";
 
 interface PaginacionProps {
@@ -11,6 +15,8 @@ interface PaginacionProps {
   limite: number;
   registrosEnPagina: number;
   onChange: (pagina: number) => void;
+  onLimiteChange?: (limite: number) => void;
+  opcionesLimite?: readonly number[];
 }
 
 function textoRango(
@@ -38,41 +44,67 @@ export function Paginacion({
   limite,
   registrosEnPagina,
   onChange,
+  onLimiteChange,
+  opcionesLimite = OPCIONES_LIMITE_PAGINA,
 }: PaginacionProps) {
   if (totalRegistros === 0) return null;
 
+  const limites =
+    opcionesLimite.includes(limite) || limite === LIMITE_PAGINA_POR_DEFECTO
+      ? opcionesLimite
+      : [...opcionesLimite, limite].sort((a, b) => a - b);
+
   return (
-    <div className="flex items-center justify-between border-t border-borde px-4 py-3">
-      <p className="text-sm text-texto-suave">
+    <div className="flex flex-col gap-3 border-t border-borde px-3 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-4">
+      <p className="text-xs text-texto-suave sm:text-sm">
         {textoRango(pagina, limite, totalRegistros, registrosEnPagina)}
       </p>
-      {totalPaginas > 1 && (
-        <div className="flex items-center gap-2">
-          <Boton
-            variante="secundario"
-            tamano="sm"
-            aria-label="Página anterior"
-            onClick={() => onChange(pagina - 1)}
-            disabled={pagina <= 1}
-          >
-            <ChevronLeft aria-hidden />
-            Anterior
-          </Boton>
-          <span className="px-2 text-sm tabular-nums text-texto-suave">
-            {pagina} de {totalPaginas}
-          </span>
-          <Boton
-            variante="secundario"
-            tamano="sm"
-            aria-label="Página siguiente"
-            onClick={() => onChange(pagina + 1)}
-            disabled={pagina >= totalPaginas}
-          >
-            Siguiente
-            <ChevronRight aria-hidden />
-          </Boton>
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        {onLimiteChange && (
+          <label className="flex items-center gap-2 text-xs text-texto-suave sm:text-sm">
+            <span className="whitespace-nowrap">Por página</span>
+            <select
+              aria-label="Registros por página"
+              value={limite}
+              onChange={(evento) => onLimiteChange(Number(evento.target.value))}
+              className="h-9 rounded-lg border border-borde bg-white px-2 text-sm text-texto outline-none transition-[border-color,box-shadow] duration-150 focus-visible:border-primario focus-visible:ring-2 focus-visible:ring-primario/20"
+            >
+              {limites.map((opcion) => (
+                <option key={opcion} value={opcion}>
+                  {opcion}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {totalPaginas > 1 && (
+          <div className="flex flex-1 items-center justify-between gap-2 sm:flex-none">
+            <Boton
+              variante="secundario"
+              tamano="sm"
+              aria-label="Página anterior"
+              onClick={() => onChange(pagina - 1)}
+              disabled={pagina <= 1}
+            >
+              <ChevronLeft aria-hidden />
+              <span className="hidden sm:inline">Anterior</span>
+            </Boton>
+            <span className="px-1 text-xs tabular-nums text-texto-suave sm:px-2 sm:text-sm">
+              {pagina} de {totalPaginas}
+            </span>
+            <Boton
+              variante="secundario"
+              tamano="sm"
+              aria-label="Página siguiente"
+              onClick={() => onChange(pagina + 1)}
+              disabled={pagina >= totalPaginas}
+            >
+              <span className="hidden sm:inline">Siguiente</span>
+              <ChevronRight aria-hidden />
+            </Boton>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

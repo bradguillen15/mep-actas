@@ -75,12 +75,12 @@ describe("página /ayuda/[slug]", () => {
     );
   });
 
-  it("renderiza título, contenido y enlace de regreso para un tema permitido", async () => {
+  it("renderiza contenido y enlace de regreso para un tema permitido", async () => {
     obtenerSesionMock.mockResolvedValue(sesionConNivel(4));
 
     render(await PaginaTemaAyuda(parametros("general")));
 
-    expect(screen.getByRole("heading", { name: "Tema general" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Tema general" })).not.toBeInTheDocument();
     expect(screen.getByText("Contenido del tema")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Volver a Ayuda/ })).toHaveAttribute("href", "/ayuda");
   });

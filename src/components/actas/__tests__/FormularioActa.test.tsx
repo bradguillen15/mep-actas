@@ -67,7 +67,7 @@ describe("FormularioActa", () => {
     const cedula = screen.getByRole("textbox", { name: "Cédula del estudiante 1" });
     expect(cedula).toHaveFocus();
 
-    await userEvent.click(screen.getByRole("button", { name: "Quitar estudiante 1" }));
+    await userEvent.click(screen.getByRole("button", { name: "Quitar estudiante" }));
     expect(screen.queryByLabelText("Cédula del estudiante 1")).not.toBeInTheDocument();
   });
 

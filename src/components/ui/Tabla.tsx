@@ -7,13 +7,16 @@ import {
   getSortedRowModel,
   getPaginationRowModel,
   useReactTable,
+  type PaginationState,
   type RowData,
   type SortingState,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
+import { useMediaMin } from "@/hooks/useMediaMin";
+import { LIMITE_PAGINA_POR_DEFECTO } from "@/lib/paginacion";
 import { cn } from "@/lib/utils";
 import {
   TableBody,
@@ -22,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "./table";
-import { FilasEsqueleto } from "./Esqueleto";
+import { Esqueleto, FilasEsqueleto } from "./Esqueleto";
 import { Paginacion } from "./Paginacion";
 
 declare module "@tanstack/react-table" {
@@ -43,7 +46,8 @@ interface TablaProps<T> {
   datos: T[];
   onFilaClick?: (fila: T) => void;
   paginacion?: boolean;
-  virtualizada?: boolean;
+  numeracion?: boolean;
+  indiceInicio?: number;
   className?: string;
   cargando?: boolean;
   vacio?: ReactNode;
@@ -54,33 +58,62 @@ export function Tabla<T>({
   datos,
   onFilaClick,
   paginacion = true,
-  virtualizada = false,
+  numeracion = true,
+  indiceInicio = 0,
   className = "",
   cargando = false,
   vacio,
 }: TablaProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [estadoPaginacion, setEstadoPaginacion] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: LIMITE_PAGINA_POR_DEFECTO,
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const esEscritorio = useMediaMin(768);
 
-  const usarPaginacion = paginacion && !virtualizada;
+  const columnasConNumero = useMemo(() => {
+    if (!numeracion) return columnas;
+
+    const columnaNumero: ColumnDef<T> = {
+      id: "__numero",
+      header: "#",
+      enableSorting: false,
+      meta: {
+        className:
+          "w-[1%] whitespace-nowrap px-3 text-center tabular-nums text-texto-suave",
+      },
+      cell: ({ row, table }) => {
+        const { pageIndex, pageSize } = table.getState().pagination;
+        const base = paginacion ? pageIndex * pageSize : indiceInicio;
+        return base + row.index + 1;
+      },
+    };
+
+    return [columnaNumero, ...columnas];
+  }, [columnas, numeracion, paginacion, indiceInicio]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const tabla = useReactTable({
     data: datos,
-    columns: columnas,
-    state: { sorting },
+    columns: columnasConNumero,
+    state: {
+      sorting,
+      ...(paginacion ? { pagination: estadoPaginacion } : {}),
+    },
     onSortingChange: setSorting,
+    onPaginationChange: paginacion ? setEstadoPaginacion : undefined,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: usarPaginacion ? getPaginationRowModel() : undefined,
-    initialState: { pagination: { pageSize: 20 } },
+    getPaginationRowModel: paginacion ? getPaginationRowModel() : undefined,
   });
 
   const filas = tabla.getRowModel().rows;
   const cantidadColumnas = tabla.getAllColumns().length;
+  const mostrarVirtual = !cargando && !(filas.length === 0 && vacio);
 
   const virtualizer = useVirtualizer({
-    count: virtualizada ? filas.length : 0,
+    count: mostrarVirtual ? filas.length : 0,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => ALTURA_FILA,
     overscan: 8,
@@ -120,7 +153,7 @@ export function Tabla<T>({
                   : undefined
               }
               className={cn(
-                "bg-primario text-xs font-semibold uppercase tracking-wider text-white/90",
+                "sticky top-0 bg-primario px-3 text-xs font-semibold uppercase tracking-wider text-white/90",
                 header.column.columnDef.meta?.className
               )}
             >
@@ -152,40 +185,48 @@ export function Tabla<T>({
     fila.getVisibleCells().map((celda) => (
       <TableCell
         key={celda.id}
-        className={cn("text-texto", celda.column.columnDef.meta?.className)}
+        className={cn(
+          "px-3 py-2.5 text-texto",
+          celda.column.columnDef.meta?.className
+        )}
       >
         {flexRender(celda.column.columnDef.cell, celda.getContext())}
       </TableCell>
     ));
 
-  const cuerpoFilas = cargando ? (
-    <FilasEsqueleto filas={5} columnas={cantidadColumnas} />
-  ) : filas.length === 0 && vacio ? (
-    <TableRow className="hover:bg-transparent">
-      <TableCell colSpan={cantidadColumnas} className="whitespace-normal p-0">
-        {vacio}
-      </TableCell>
-    </TableRow>
-  ) : (
-    filas.map((fila, indice) => (
-      <TableRow
-        key={fila.id}
-        className={cn(
-          clasesFilaInteractiva,
-          "animate-in fade-in-0 slide-in-from-bottom-1 duration-200 fill-mode-backwards",
-          fila.index % 2 === 1 && "bg-superficie/50"
-        )}
-        style={{ animationDelay: `${Math.min(indice, 8) * 30}ms` }}
-        {...propiedadesFilaInteractiva(fila.original)}
-      >
-        {celdas(fila)}
-      </TableRow>
-    ))
-  );
+  const cuerpo = (() => {
+    if (cargando) {
+      return <FilasEsqueleto filas={5} columnas={cantidadColumnas} />;
+    }
+    if (filas.length === 0 && vacio) {
+      return (
+        <TableRow className="hover:bg-transparent">
+          <TableCell colSpan={cantidadColumnas} className="whitespace-normal p-0">
+            {vacio}
+          </TableCell>
+        </TableRow>
+      );
+    }
 
-  const cuerpoVirtual = (
-    <TableBody>
-      {filasVirtuales.length > 0 && (
+    if (filasVirtuales.length === 0) {
+      return filas.map((fila, indice) => (
+        <TableRow
+          key={fila.id}
+          className={cn(
+            clasesFilaInteractiva,
+            "animate-in fade-in-0 slide-in-from-bottom-1 duration-200 fill-mode-backwards",
+            fila.index % 2 === 1 && "bg-superficie/50"
+          )}
+          style={{ animationDelay: `${Math.min(indice, 8) * 30}ms` }}
+          {...propiedadesFilaInteractiva(fila.original)}
+        >
+          {celdas(fila)}
+        </TableRow>
+      ));
+    }
+
+    return (
+      <>
         <TableRow aria-hidden className="pointer-events-none border-0 hover:bg-transparent">
           <TableCell
             colSpan={cantidadColumnas}
@@ -193,24 +234,22 @@ export function Tabla<T>({
             style={{ height: filasVirtuales[0].start }}
           />
         </TableRow>
-      )}
-      {filasVirtuales.map((filaVirtual) => {
-        const fila = filas[filaVirtual.index];
-        return (
-          <TableRow
-            key={fila.id}
-            className={cn(
-              clasesFilaInteractiva,
-              fila.index % 2 === 1 && "bg-superficie/50"
-            )}
-            style={{ height: ALTURA_FILA }}
-            {...propiedadesFilaInteractiva(fila.original)}
-          >
-            {celdas(fila)}
-          </TableRow>
-        );
-      })}
-      {filasVirtuales.length > 0 && (
+        {filasVirtuales.map((filaVirtual) => {
+          const fila = filas[filaVirtual.index];
+          return (
+            <TableRow
+              key={fila.id}
+              className={cn(
+                clasesFilaInteractiva,
+                fila.index % 2 === 1 && "bg-superficie/50"
+              )}
+              style={{ height: ALTURA_FILA }}
+              {...propiedadesFilaInteractiva(fila.original)}
+            >
+              {celdas(fila)}
+            </TableRow>
+          );
+        })}
         <TableRow aria-hidden className="pointer-events-none border-0 hover:bg-transparent">
           <TableCell
             colSpan={cantidadColumnas}
@@ -222,54 +261,155 @@ export function Tabla<T>({
             }}
           />
         </TableRow>
-      )}
-    </TableBody>
-  );
+      </>
+    );
+  })();
 
-  if (virtualizada) {
+  const cambiarLimite = (limite: number) => {
+    setEstadoPaginacion({ pageIndex: 0, pageSize: limite });
+  };
+
+  const pie = paginacion ? (
+    <div className="shrink-0">
+      <Paginacion
+        pagina={tabla.getState().pagination.pageIndex + 1}
+        totalPaginas={tabla.getPageCount()}
+        totalRegistros={tabla.getFilteredRowModel().rows.length}
+        limite={tabla.getState().pagination.pageSize}
+        registrosEnPagina={filas.length}
+        onChange={(p) => tabla.setPageIndex(p - 1)}
+        onLimiteChange={cambiarLimite}
+      />
+    </div>
+  ) : null;
+
+  if (!esEscritorio) {
     return (
       <div
+        data-testid="tabla-contenedor"
         className={cn(
-          "flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-borde bg-white",
+          "flex h-0 min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-borde bg-white",
           className
         )}
       >
-        <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]">
-          <table className="w-full table-fixed caption-bottom text-sm">
-            {encabezado}
-            {cuerpoVirtual}
-          </table>
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          {cargando ? (
+            <ul className="flex flex-col gap-3" aria-hidden>
+              {Array.from({ length: 4 }, (_, i) => (
+                <li key={i} className="rounded-xl border border-borde p-4">
+                  <Esqueleto className="mb-2 h-4 w-2/3" />
+                  <Esqueleto className="mb-1 h-3 w-full" />
+                  <Esqueleto className="h-3 w-1/2" />
+                </li>
+              ))}
+            </ul>
+          ) : filas.length === 0 && vacio ? (
+            vacio
+          ) : (
+            <ul aria-label="Lista de registros" className="flex flex-col gap-3">
+              {filas.map((fila) => {
+                const celdasVisibles = fila
+                  .getVisibleCells()
+                  .filter((celda) => celda.column.id !== "__numero");
+                const [principal, ...resto] = celdasVisibles;
+                const numero = numeracion
+                  ? fila.getVisibleCells().find((c) => c.column.id === "__numero")
+                  : undefined;
+
+                return (
+                  <li key={fila.id}>
+                    <div
+                      className={cn(
+                        "rounded-xl border border-borde bg-white p-4",
+                        onFilaClick &&
+                          "cursor-pointer outline-none transition-colors duration-150 hover-fino:bg-primario-suave focus-visible:ring-2 focus-visible:ring-primario/40"
+                      )}
+                      {...(onFilaClick
+                        ? {
+                            role: "button",
+                            tabIndex: 0,
+                            onClick: () => onFilaClick(fila.original),
+                            onKeyDown: (evento: KeyboardEvent<HTMLDivElement>) => {
+                              if (evento.key === "Enter" || evento.key === " ") {
+                                evento.preventDefault();
+                                onFilaClick(fila.original);
+                              }
+                            },
+                          }
+                        : {})}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1 text-sm font-medium text-texto">
+                          {principal &&
+                            flexRender(
+                              principal.column.columnDef.cell,
+                              principal.getContext()
+                            )}
+                        </div>
+                        {numero && (
+                          <span className="shrink-0 text-xs tabular-nums text-texto-suave">
+                            #
+                            {flexRender(
+                              numero.column.columnDef.cell,
+                              numero.getContext()
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      {resto.length > 0 && (
+                        <dl className="mt-3 space-y-2 border-t border-borde pt-3">
+                          {resto.map((celda) => {
+                            const etiqueta =
+                              typeof celda.column.columnDef.header === "string"
+                                ? celda.column.columnDef.header
+                                : celda.column.id;
+                            return (
+                              <div
+                                key={celda.id}
+                                className="flex items-start justify-between gap-3 text-sm"
+                              >
+                                <dt className="shrink-0 text-texto-suave">{etiqueta}</dt>
+                                <dd className="min-w-0 text-right text-texto">
+                                  {flexRender(
+                                    celda.column.columnDef.cell,
+                                    celda.getContext()
+                                  )}
+                                </dd>
+                              </div>
+                            );
+                          })}
+                        </dl>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
-        <div className="flex-shrink-0 border-t border-borde px-4 py-2 text-xs text-texto-suave">
-          {filas.length} registro{filas.length === 1 ? "" : "s"}
-        </div>
+        {pie}
       </div>
     );
   }
 
   return (
     <div
+      data-testid="tabla-contenedor"
       className={cn(
-        "overflow-hidden rounded-xl border border-borde bg-white",
+        "flex h-0 min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-borde bg-white",
         className
       )}
     >
-      <div className="relative w-full overflow-x-auto">
-        <table className="w-full caption-bottom text-sm">
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]"
+      >
+        <table className="w-max min-w-full border-separate border-spacing-0 caption-bottom text-sm">
           {encabezado}
-          <TableBody>{cuerpoFilas}</TableBody>
+          <TableBody>{cuerpo}</TableBody>
         </table>
       </div>
-      {usarPaginacion && (
-        <Paginacion
-          pagina={tabla.getState().pagination.pageIndex + 1}
-          totalPaginas={tabla.getPageCount()}
-          totalRegistros={tabla.getFilteredRowModel().rows.length}
-          limite={tabla.getState().pagination.pageSize}
-          registrosEnPagina={filas.length}
-          onChange={(p) => tabla.setPageIndex(p - 1)}
-        />
-      )}
+      {pie}
     </div>
   );
 }

@@ -2,7 +2,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Header } from "@/components/layout/Header";
+import { EncabezadoShellProvider } from "@/contextos/EncabezadoShellContext";
 import Auditoria from "../page";
+
+vi.mock("next/navigation", () => ({ usePathname: () => "/auditoria" }));
+
+function renderizarAuditoria() {
+  return render(
+    <EncabezadoShellProvider>
+      <Header menuAbierto={false} onAbrirMenu={() => {}} />
+      <Auditoria />
+    </EncabezadoShellProvider>
+  );
+}
 
 const { sesion, datos } = vi.hoisted(() => ({
   sesion: {
@@ -65,9 +78,10 @@ describe("Auditoría", () => {
   it.each([1, 2, 3, 4])("muestra la auditoría dentro del ámbito al nivel %i", (nivel) => {
     sesion.usuario = { nivel };
 
-    render(<Auditoria />);
+    renderizarAuditoria();
 
     expect(screen.queryByText("Acceso restringido")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Auditoría" })).toBeInTheDocument();
     expect(screen.getByText("Muestra los cambios registrados dentro de su ámbito.")).toBeInTheDocument();
     expect(screen.getByText("pais@mep.go.cr")).toBeInTheDocument();
   });

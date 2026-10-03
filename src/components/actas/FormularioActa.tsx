@@ -252,6 +252,7 @@ export function FormularioActa({
               columnas={columnasRegistrados}
               datos={estudiantesExistentes}
               paginacion={false}
+              className="h-[min(24rem,50dvh)] max-h-[min(24rem,50dvh)] flex-none"
             />
           )}
         </Seccion>

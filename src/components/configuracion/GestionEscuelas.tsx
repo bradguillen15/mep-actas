@@ -1,21 +1,30 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { useForm } from "react-hook-form";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { Ban, Pencil, Plus } from "lucide-react";
 import {
+  Alerta,
   Badge,
   Boton,
+  BotonIcono,
   Campo,
+  DialogoConfirmacion,
   ModalFormulario,
   Selector,
   Tabla,
   toast,
 } from "@/components/ui";
 import { useSesion } from "@/hooks/useSesion";
-import { enviarJson, obtenerJsonEstricto } from "@/lib/api-cliente";
+import { useValorRetenido } from "@/hooks/useValorRetenido";
+import {
+  eliminarJson,
+  enviarJson,
+  obtenerJsonEstricto,
+  patchJson,
+} from "@/lib/api-cliente";
 import { ErrorCarga } from "./ErrorCarga";
 import { BarraSeccion, textoConteo } from "./BarraSeccion";
 import type { Escuela, Region } from "./tipos";
@@ -30,6 +39,7 @@ type EscuelaConRegion = Escuela & { nombreRegion: string };
 
 const NIVEL_ADMIN_PAIS = 1;
 const NIVEL_ADMIN_REGIONAL = 2;
+const MENSAJE_ERROR_DESACTIVAR = "No se pudo desactivar la escuela";
 
 export function GestionEscuelas() {
   const { usuario } = useSesion();
@@ -41,10 +51,16 @@ export function GestionEscuelas() {
   } = useSWR<Escuela[]>("/api/escuelas", obtenerJsonEstricto);
   const { data: regiones } = useSWR<Region[]>("/api/regiones", obtenerJsonEstricto);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [escuelaEdicion, setEscuelaEdicion] = useState<Escuela | null>(null);
+  const [escuelaADesactivar, setEscuelaADesactivar] = useState<Escuela | null>(null);
+  const escuelaADesactivarMostrada = useValorRetenido(escuelaADesactivar);
+  const [errorDesactivar, setErrorDesactivar] = useState("");
 
   const nivel = usuario?.nivel;
-  const puedeCrear = nivel === NIVEL_ADMIN_PAIS || nivel === NIVEL_ADMIN_REGIONAL;
+  const puedeGestionar =
+    nivel === NIVEL_ADMIN_PAIS || nivel === NIVEL_ADMIN_REGIONAL;
   const regionFija = nivel === NIVEL_ADMIN_REGIONAL ? usuario?.regionId : undefined;
+  const editando = escuelaEdicion !== null;
 
   const { register, handleSubmit, reset, formState } = useForm<DatosEscuela>({
     defaultValues: {
@@ -76,6 +92,88 @@ export function GestionEscuelas() {
     [escuelas, nombrePorRegion]
   );
 
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    setEscuelaEdicion(null);
+    reset({
+      regionId: regionFija ? String(regionFija) : "",
+      codigoMep: "",
+      nombre: "",
+    });
+  };
+
+  const abrirCrear = () => {
+    setEscuelaEdicion(null);
+    reset({
+      regionId: regionFija ? String(regionFija) : "",
+      codigoMep: "",
+      nombre: "",
+    });
+    setModalAbierto(true);
+  };
+
+  const abrirEditar = (escuela: Escuela) => {
+    setEscuelaEdicion(escuela);
+    reset({
+      regionId: String(escuela.regionId),
+      codigoMep: escuela.codigoMep,
+      nombre: escuela.nombre,
+    });
+    setModalAbierto(true);
+  };
+
+  const guardarEscuela = async (datos: DatosEscuela) => {
+    const codigoMep = datos.codigoMep.trim();
+    const nombre = datos.nombre.trim();
+
+    if (escuelaEdicion) {
+      await patchJson(
+        `/api/escuelas/${escuelaEdicion.id}`,
+        { codigoMep, nombre },
+        "No se pudo actualizar la escuela"
+      );
+      await refrescarEscuelas();
+      cerrarModal();
+      toast.success("Escuela actualizada");
+      return;
+    }
+
+    await enviarJson(
+      "/api/escuelas",
+      {
+        regionId: regionFija ?? Number(datos.regionId),
+        codigoMep,
+        nombre,
+      },
+      "No se pudo crear la escuela"
+    );
+    await refrescarEscuelas();
+    cerrarModal();
+    toast.success("Escuela creada");
+  };
+
+  const desactivarEscuela = async () => {
+    if (!escuelaADesactivar) return;
+    setErrorDesactivar("");
+    try {
+      await eliminarJson(
+        `/api/escuelas/${escuelaADesactivar.id}`,
+        MENSAJE_ERROR_DESACTIVAR
+      );
+      await refrescarEscuelas();
+      toast.success("Escuela desactivada");
+    } catch (e) {
+      setErrorDesactivar(
+        e instanceof Error ? e.message : MENSAJE_ERROR_DESACTIVAR
+      );
+    } finally {
+      setEscuelaADesactivar(null);
+    }
+  };
+
+  const requerido = (mensaje: string) => (valor: string) =>
+    valor.trim() !== "" || mensaje;
+
   const columnas: ColumnDef<EscuelaConRegion>[] = [
     {
       header: "ID",
@@ -94,44 +192,49 @@ export function GestionEscuelas() {
       cell: ({ getValue }) =>
         getValue() ? <Badge variante="exito">Activa</Badge> : <Badge variante="error">Inactiva</Badge>,
     },
+    ...(puedeGestionar
+      ? [
+          {
+            header: "",
+            id: "acciones",
+            enableSorting: false,
+            meta: { className: "w-24 text-right" },
+            cell: ({ row }) => (
+              <div className="flex items-center justify-end gap-1">
+                <BotonIcono
+                  etiqueta="Editar"
+                  icono={<Pencil aria-hidden />}
+                  onClick={() => abrirEditar(row.original)}
+                />
+                <BotonIcono
+                  variante="peligro"
+                  etiqueta="Desactivar"
+                  icono={<Ban aria-hidden />}
+                  onClick={() => setEscuelaADesactivar(row.original)}
+                />
+              </div>
+            ),
+          } satisfies ColumnDef<EscuelaConRegion>,
+        ]
+      : []),
   ];
 
-  const cerrarModal = () => {
-    setModalAbierto(false);
-    reset();
-  };
-
-  const crearEscuela = async (datos: DatosEscuela) => {
-    await enviarJson(
-      "/api/escuelas",
-      {
-        regionId: regionFija ?? Number(datos.regionId),
-        codigoMep: datos.codigoMep.trim(),
-        nombre: datos.nombre.trim(),
-      },
-      "No se pudo crear la escuela"
-    );
-    await mutate("/api/escuelas");
-    cerrarModal();
-    toast.success("Escuela creada");
-  };
-
-  const requerido = (mensaje: string) => (valor: string) =>
-    valor.trim() !== "" || mensaje;
-
   return (
-    <div className="flex flex-col gap-4">
-      <BarraSeccion
-        texto={escuelas && textoConteo(escuelas.length, "escuela", "escuelas")}
-        accion={
-          puedeCrear && (
-            <Boton tamano="sm" onClick={() => setModalAbierto(true)}>
-              <Plus className="h-4 w-4" />
-              Nueva escuela
-            </Boton>
-          )
-        }
-      />
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="shrink-0">
+        <BarraSeccion
+          texto={escuelas && textoConteo(escuelas.length, "escuela", "escuelas")}
+          accion={
+            puedeGestionar && (
+              <Boton tamano="sm" onClick={abrirCrear}>
+                <Plus className="h-4 w-4" />
+                Nueva escuela
+              </Boton>
+            )
+          }
+        />
+      </div>
+      {errorDesactivar && <Alerta variante="error">{errorDesactivar}</Alerta>}
       {error ? (
         <ErrorCarga
           mensaje="No se pudieron cargar las escuelas"
@@ -141,29 +244,41 @@ export function GestionEscuelas() {
         <Tabla columnas={columnas} datos={filas} cargando={isLoading} />
       )}
 
+      <DialogoConfirmacion
+        abierto={escuelaADesactivar !== null}
+        onCerrar={() => setEscuelaADesactivar(null)}
+        onConfirmar={desactivarEscuela}
+        titulo="Desactivar escuela"
+        descripcion={`Se desactivará la escuela "${escuelaADesactivarMostrada?.nombre ?? ""}". No podrá usarse para nuevas actas mientras esté inactiva.`}
+        etiquetaConfirmar="Desactivar"
+        variante="peligro"
+      />
+
       <ModalFormulario
         abierto={modalAbierto}
         onCerrar={cerrarModal}
-        titulo="Nueva escuela"
-        textoEnviar="Crear escuela"
-        onEnviar={() => handleSubmit(crearEscuela)()}
+        titulo={editando ? "Editar escuela" : "Nueva escuela"}
+        textoEnviar={editando ? "Guardar cambios" : "Crear escuela"}
+        onEnviar={() => handleSubmit(guardarEscuela)()}
       >
-        <Selector
-          label="Región"
-          requerido
-          autoFocus={regionFija === undefined}
-          placeholder="Seleccione una región"
-          opciones={opcionesRegion}
-          disabled={regionFija !== undefined}
-          error={formState.errors.regionId?.message}
-          {...register("regionId", {
-            validate: requerido("La región es requerida"),
-          })}
-        />
+        {!editando && (
+          <Selector
+            label="Región"
+            requerido
+            autoFocus={regionFija === undefined}
+            placeholder="Seleccione una región"
+            opciones={opcionesRegion}
+            disabled={regionFija !== undefined}
+            error={formState.errors.regionId?.message}
+            {...register("regionId", {
+              validate: requerido("La región es requerida"),
+            })}
+          />
+        )}
         <Campo
           label="Código MEP"
           requerido
-          autoFocus={regionFija !== undefined}
+          autoFocus={editando || regionFija !== undefined}
           error={formState.errors.codigoMep?.message}
           {...register("codigoMep", {
             validate: requerido("El código MEP es requerido"),

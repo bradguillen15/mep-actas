@@ -68,9 +68,9 @@ function AccionesUsuario({
   onDesactivar,
   onActivar,
 }: AccionesUsuarioProps) {
-  const etiquetaReset = `Restablecer contraseña de ${usuario.email}`;
-  const etiquetaDesactivar = `Desactivar ${usuario.email}`;
-  const etiquetaActivar = `Activar ${usuario.email}`;
+  const etiquetaReset = "Restablecer contraseña";
+  const etiquetaDesactivar = "Desactivar";
+  const etiquetaActivar = "Activar";
 
   if (conEtiquetas) {
     return (
@@ -267,7 +267,7 @@ export default function Usuarios() {
   const sinUsuarios = !isLoading && !errorUsuarios && (usuarios?.length ?? 0) === 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <EncabezadoPagina
         titulo="Usuarios"
         descripcion="Gestione las cuentas de acceso. Solo puede crear o modificar cuentas de su mismo nivel o inferior, dentro de su ámbito."
@@ -302,9 +302,12 @@ export default function Usuarios() {
 
       {usuarios && usuarios.length > 0 && (
         <>
-          <ul aria-label="Lista de usuarios" className="flex flex-col gap-3 md:hidden">
+          <ul
+            aria-label="Lista de usuarios"
+            className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto md:hidden"
+          >
             {usuarios.map((u) => (
-              <li key={u.id} className="rounded-xl border border-borde bg-white p-4">
+              <li key={u.id} className="shrink-0 rounded-xl border border-borde bg-white p-4">
                 <p className="truncate text-sm font-medium text-texto">{u.email}</p>
                 <p className="truncate text-sm text-texto-suave">
                   {u.funcionarioNombres} {u.funcionarioApellidos}
@@ -317,7 +320,7 @@ export default function Usuarios() {
               </li>
             ))}
           </ul>
-          <div className="hidden md:block">
+          <div className="hidden min-h-0 flex-1 flex-col md:flex">
             <Tabla columnas={columnas} datos={usuarios} />
           </div>
         </>

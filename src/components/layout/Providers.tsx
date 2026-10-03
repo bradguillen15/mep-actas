@@ -3,6 +3,7 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { SesionProvider, useSesionContext } from "@/contextos/SesionContext";
+import { EncabezadoShellProvider } from "@/contextos/EncabezadoShellContext";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { CajonNavegacion } from "./CajonNavegacion";
@@ -42,20 +43,22 @@ function ContenidoLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex h-dvh overflow-hidden">
-      <div className="hidden w-64 shrink-0 md:block">
-        <Sidebar />
+    <EncabezadoShellProvider>
+      <div className="flex h-dvh overflow-hidden">
+        <div className="hidden w-64 shrink-0 md:block">
+          <Sidebar />
+        </div>
+        <CajonNavegacion abierto={menuAbierto} onCerrar={cerrarMenu} />
+        <div inert={menuAbierto} className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <Header menuAbierto={menuAbierto} onAbrirMenu={() => setAbiertoEn(pathname)} />
+          <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-superficie">
+            <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-      <CajonNavegacion abierto={menuAbierto} onCerrar={cerrarMenu} />
-      <div inert={menuAbierto} className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Header menuAbierto={menuAbierto} onAbrirMenu={() => setAbiertoEn(pathname)} />
-        <main className="flex-1 overflow-y-auto bg-superficie">
-          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-            {children}
-          </div>
-        </main>
-      </div>
-    </div>
+    </EncabezadoShellProvider>
   );
 }
 

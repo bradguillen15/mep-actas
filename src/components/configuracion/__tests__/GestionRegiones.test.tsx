@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { GestionRegiones } from "../GestionRegiones";
 
@@ -77,7 +77,7 @@ describe("GestionRegiones", () => {
         body: JSON.stringify({ nombre: "Chorotega" }),
       })
     );
-    await vi.waitFor(() => expect(mutarMock).toHaveBeenCalledWith("/api/regiones"));
+    await vi.waitFor(() => expect(mutarMock).toHaveBeenCalled());
     await vi.waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     );
@@ -104,5 +104,76 @@ describe("GestionRegiones", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("La región ya existe");
     expect(mutarMock).not.toHaveBeenCalled();
+  });
+
+  it("muestra Editar y Desactivar solo al Admin País", () => {
+    const { unmount } = render(<GestionRegiones />);
+    expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Desactivar" })).toBeInTheDocument();
+    unmount();
+
+    nivel = 2;
+    render(<GestionRegiones />);
+    expect(screen.queryByRole("button", { name: "Editar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Desactivar" })).not.toBeInTheDocument();
+  });
+
+  it("edita la región, refresca la lista y cierra el modal", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 1 }) });
+    render(<GestionRegiones />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Editar" }));
+    const dialogo = await screen.findByRole("dialog", { name: "Editar región" });
+    const campoNombre = within(dialogo).getByLabelText(/^Nombre/);
+    expect(campoNombre).toHaveValue("Central");
+
+    await userEvent.clear(campoNombre);
+    await userEvent.type(campoNombre, "Central Norte");
+    await userEvent.click(within(dialogo).getByRole("button", { name: "Guardar cambios" }));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/regiones/1",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ nombre: "Central Norte" }),
+      })
+    );
+    await vi.waitFor(() => expect(mutarMock).toHaveBeenCalled());
+    await vi.waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    );
+  });
+
+  it("pide confirmación antes de desactivar y solo llama a la API al confirmar", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) });
+    render(<GestionRegiones />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Desactivar" }));
+    const dialogo = await screen.findByRole("dialog", { name: "Desactivar región" });
+    expect(dialogo).toHaveTextContent("Central");
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await userEvent.click(within(dialogo).getByRole("button", { name: "Desactivar" }));
+
+    await vi.waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/regiones/1", { method: "DELETE" })
+    );
+    await vi.waitFor(() => expect(mutarMock).toHaveBeenCalled());
+  });
+
+  it("muestra el error de la API al fallar la desactivación", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: "No se puede desactivar una región con escuelas activas" }),
+    });
+    render(<GestionRegiones />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Desactivar" }));
+    const dialogo = await screen.findByRole("dialog");
+    await userEvent.click(within(dialogo).getByRole("button", { name: "Desactivar" }));
+
+    expect(
+      await screen.findByText("No se puede desactivar una región con escuelas activas")
+    ).toBeInTheDocument();
   });
 });

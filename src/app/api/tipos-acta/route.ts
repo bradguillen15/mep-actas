@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
@@ -20,7 +20,7 @@ export async function GET() {
   return NextResponse.json(tipos);
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   const sesion = await obtenerSesion();
   if (!sesion) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });

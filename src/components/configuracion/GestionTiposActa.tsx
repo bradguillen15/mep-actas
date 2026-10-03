@@ -94,7 +94,7 @@ export function GestionTiposActa() {
       cell: ({ row }) => (
         <BotonIcono
           variante="peligro"
-          etiqueta={`Eliminar tipo de acta ${row.original.nombre}`}
+          etiqueta="Eliminar"
           icono={<Trash2 aria-hidden />}
           onClick={() => setTipoAEliminar(row.original)}
         />
@@ -103,16 +103,18 @@ export function GestionTiposActa() {
   ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <BarraSeccion
-        texto={tipos && textoConteo(tipos.length, "tipo de acta", "tipos de acta")}
-        accion={
-          <Boton tamano="sm" onClick={() => setModalAbierto(true)}>
-            <Plus className="h-4 w-4" />
-            Nuevo tipo de acta
-          </Boton>
-        }
-      />
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="shrink-0">
+        <BarraSeccion
+          texto={tipos && textoConteo(tipos.length, "tipo de acta", "tipos de acta")}
+          accion={
+            <Boton tamano="sm" onClick={() => setModalAbierto(true)}>
+              <Plus className="h-4 w-4" />
+              Nuevo tipo de acta
+            </Boton>
+          }
+        />
+      </div>
       {error && <Alerta variante="error">{error}</Alerta>}
       {errorCarga ? (
         <ErrorCarga

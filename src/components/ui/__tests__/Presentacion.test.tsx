@@ -1,24 +1,41 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { EncabezadoPagina } from "../EncabezadoPagina";
 import { ListaDefiniciones } from "../ListaDefiniciones";
 import { EstadoVacio } from "../EstadoVacio";
+import { EncabezadoShellProvider } from "@/contextos/EncabezadoShellContext";
+import { Header } from "@/components/layout/Header";
+
+vi.mock("next/navigation", () => ({ usePathname: () => "/actas" }));
 
 describe("EncabezadoPagina", () => {
-  it("muestra título, descripción, acciones y enlace de regreso", () => {
+  it("registra el título en el header y solo muestra acciones y enlace de regreso", () => {
     render(
-      <EncabezadoPagina
-        titulo="Actas"
-        descripcion="Listado"
-        acciones={<button>Nueva</button>}
-        volverA={{ href: "/actas", etiqueta: "Volver a actas" }}
-      />
+      <EncabezadoShellProvider>
+        <Header menuAbierto={false} onAbrirMenu={() => {}} />
+        <EncabezadoPagina
+          titulo="Actas"
+          descripcion="Listado"
+          acciones={<button>Nueva</button>}
+          volverA={{ href: "/actas", etiqueta: "Volver a actas" }}
+        />
+      </EncabezadoShellProvider>
     );
     expect(screen.getByRole("heading", { level: 1, name: "Actas" })).toBeInTheDocument();
     expect(screen.getByText("Listado")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Nueva" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Volver a actas/ })).toHaveAttribute("href", "/actas");
+  });
+
+  it("no renderiza contenedor cuando solo registra título y descripción", () => {
+    const { container } = render(
+      <EncabezadoShellProvider>
+        <EncabezadoPagina titulo="Usuarios" descripcion="Gestione las cuentas." />
+      </EncabezadoShellProvider>
+    );
+    expect(container.querySelector("h1")).toBeNull();
+    expect(container.textContent).toBe("");
   });
 });
 

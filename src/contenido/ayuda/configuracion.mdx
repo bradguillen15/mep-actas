@@ -5,8 +5,8 @@ En **Configuración** (menú **Administración**) hay tres pestañas: **Tipos de
 | Pestaña | Admin País | Admin Regional | Admin Escuela |
 |---|---|---|---|
 | Tipos de acta | Crear y eliminar | Crear y eliminar | Crear y eliminar |
-| Regiones | Ver y crear | Solo ver | Solo ver |
-| Escuelas | Ver y crear | Ver y crear (en su región) | Solo ver |
+| Regiones | Ver, crear, editar y desactivar | Solo ver | Solo ver |
+| Escuelas | Ver, crear, editar y desactivar | Ver, crear, editar y desactivar (en su región) | Solo ver |
 
 ## Tipos de acta
 
@@ -18,12 +18,22 @@ En **Configuración** (menú **Administración**) hay tres pestañas: **Tipos de
 
 ## Regiones
 
-La pestaña **Regiones** lista las regiones y su estado. Solo el Admin País ve el botón **Nueva región**: escriba el **Nombre** y presione **Crear región**.
+La pestaña **Regiones** lista las regiones y su estado. Solo el Admin País puede gestionarlas:
+
+1. **Nueva región:** escriba el **Nombre** y presione **Crear región**.
+2. **Editar:** en la fila, presione el icono de lápiz (**Editar**), cambie el nombre y presione **Guardar cambios**.
+3. **Desactivar:** en la fila, presione el icono de prohibido (**Desactivar**) y confirme.
+
+> **Tenga en cuenta:** no se puede desactivar una región que aún tiene escuelas activas.
 
 ## Escuelas
 
 1. Abra la pestaña **Escuelas**. La tabla muestra **ID**, **Nombre**, **Código MEP**, **Región** y **Estado**.
-2. Si es Admin País o Admin Regional, presione **Nueva escuela**.
-3. Seleccione la **Región**, escriba el **Código MEP** y el **Nombre**, y presione **Crear escuela**.
+2. Si es Admin País o Admin Regional, puede crear, editar y desactivar escuelas.
+3. **Nueva escuela:** seleccione la **Región**, escriba el **Código MEP** y el **Nombre**, y presione **Crear escuela**.
+4. **Editar:** en la fila, presione **Editar**, cambie el código o el nombre y presione **Guardar cambios**. La región no se puede cambiar.
+5. **Desactivar:** en la fila, presione **Desactivar** y confirme.
 
-Para el Admin Regional, la **Región** ya viene fija con la suya y no se puede cambiar. El Admin Escuela puede consultar la lista, pero no ve el botón **Nueva escuela**.
+Para el Admin Regional, la **Región** al crear ya viene fija con la suya y no se puede cambiar. El Admin Escuela puede consultar la lista, pero no ve los botones de gestión.
+
+> **Tenga en cuenta:** no se puede desactivar una escuela que aún tiene actas activas.

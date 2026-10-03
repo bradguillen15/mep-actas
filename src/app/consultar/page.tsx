@@ -19,7 +19,10 @@ import { Paginacion } from "@/components/ui/Paginacion";
 import { useEscuelaActual } from "@/hooks/useEscuelaActual";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { obtenerJsonEstricto } from "@/lib/api-cliente";
-import { LIMITE_GRADUACIONES_POR_PAGINA } from "@/lib/graduaciones";
+import {
+  LIMITE_PAGINA_POR_DEFECTO,
+  type LimitePagina,
+} from "@/lib/paginacion";
 import { cn } from "@/lib/utils";
 
 interface Graduacion {
@@ -72,6 +75,7 @@ export default function Consultar() {
   const [tituloActa, setTituloActa] = useState("");
   const [seleccionado, setSeleccionado] = useState<Graduacion | null>(null);
   const [pagina, setPagina] = useState(1);
+  const [limite, setLimite] = useState<LimitePagina>(LIMITE_PAGINA_POR_DEFECTO);
 
   const busquedaDebounced = useDebouncedValue(busqueda, 300);
   const tipoActaDebounced = useDebouncedValue(tipoActaFiltro, 300);
@@ -132,7 +136,7 @@ export default function Consultar() {
     }
 
     params.set("pagina", String(pagina));
-    params.set("limite", String(LIMITE_GRADUACIONES_POR_PAGINA));
+    params.set("limite", String(limite));
 
     return `/api/graduaciones?${params.toString()}`;
   }, [
@@ -146,6 +150,7 @@ export default function Consultar() {
     numeroCertificadoDebounced,
     tituloActaDebounced,
     pagina,
+    limite,
   ]);
 
   const {
@@ -180,22 +185,8 @@ export default function Consultar() {
   const hayFiltros =
     busqueda !== "" || escuelaFiltro !== "" || filtrosAvanzadosActivos > 0;
 
-  const columnas: ColumnDef<Graduacion>[] = useMemo(() => {
-    const indiceBase = respuesta
-      ? (respuesta.pagina - 1) * respuesta.limite
-      : 0;
-
-    return [
-      {
-        id: "indice",
-        header: "#",
-        enableSorting: false,
-        size: 48,
-        meta: { className: "tabular-nums" },
-        cell: ({ row }) => (
-          <span className="text-texto-suave">{indiceBase + row.index + 1}</span>
-        ),
-      },
+  const columnas: ColumnDef<Graduacion>[] = useMemo(
+    () => [
       {
         header: "Nombre completo",
         accessorKey: "nombreCompleto",
@@ -236,8 +227,13 @@ export default function Consultar() {
         enableSorting: true,
         meta: { className: "text-right tabular-nums [&>button]:justify-end" },
       },
-    ];
-  }, [respuesta]);
+    ],
+    []
+  );
+
+  const indiceInicio = respuesta
+    ? (respuesta.pagina - 1) * respuesta.limite
+    : 0;
 
   const escuelaOpciones = escuelas.map((e) => ({
     valor: e.id,
@@ -288,13 +284,13 @@ export default function Consultar() {
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <EncabezadoPagina
         titulo="Consultar graduados"
         descripcion="Vea los graduados registrados recientemente o busque por identificación, nombre u otros criterios."
       />
 
-      <div className="flex flex-col gap-3">
+      <div className="flex shrink-0 flex-col gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex h-10 min-w-[280px] flex-1 items-stretch rounded-lg border border-borde bg-white transition-[border-color,box-shadow] duration-150 focus-within:border-primario focus-within:ring-2 focus-within:ring-primario/20">
             <div className="relative">
@@ -440,11 +436,11 @@ export default function Consultar() {
         )}
       </div>
 
-      <div className="relative flex flex-col gap-3">
+      <div className="relative flex min-h-0 flex-1 flex-col gap-3">
         <div
           aria-hidden
           className={cn(
-            "absolute inset-x-0 -top-1 h-0.5 animate-pulse rounded-full bg-acento transition-opacity duration-150",
+            "absolute inset-x-0 -top-1 z-10 h-0.5 animate-pulse rounded-full bg-acento transition-opacity duration-150",
             actualizando ? "opacity-100" : "opacity-0"
           )}
         />
@@ -462,7 +458,7 @@ export default function Consultar() {
         ) : (
           <div
             className={cn(
-              "overflow-hidden rounded-xl border border-borde bg-white transition-opacity duration-150",
+              "flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-borde bg-white transition-opacity duration-150",
               actualizando && !cargaInicial && "opacity-60"
             )}
           >
@@ -473,20 +469,27 @@ export default function Consultar() {
               vacio={estadoVacio}
               onFilaClick={(fila) => setSeleccionado(fila)}
               paginacion={false}
+              indiceInicio={indiceInicio}
               className="rounded-none border-0"
             />
             {respuesta && resultados.length > 0 && (
-              <Paginacion
-                pagina={respuesta.pagina}
-                totalPaginas={Math.max(
-                  1,
-                  Math.ceil(respuesta.total / respuesta.limite)
-                )}
-                totalRegistros={respuesta.total}
-                limite={respuesta.limite}
-                registrosEnPagina={resultados.length}
-                onChange={setPagina}
-              />
+              <div className="shrink-0">
+                <Paginacion
+                  pagina={respuesta.pagina}
+                  totalPaginas={Math.max(
+                    1,
+                    Math.ceil(respuesta.total / respuesta.limite)
+                  )}
+                  totalRegistros={respuesta.total}
+                  limite={respuesta.limite}
+                  registrosEnPagina={resultados.length}
+                  onChange={setPagina}
+                  onLimiteChange={(nuevoLimite) => {
+                    setLimite(nuevoLimite as LimitePagina);
+                    setPagina(1);
+                  }}
+                />
+              </div>
             )}
           </div>
         )}

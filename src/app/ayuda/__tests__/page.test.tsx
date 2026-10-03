@@ -55,12 +55,11 @@ describe("página /ayuda", () => {
     await expect(PaginaAyuda()).rejects.toThrow("REDIRECT:/iniciar-sesion");
   });
 
-  it("muestra el encabezado y todos los temas al nivel 1", async () => {
+  it("muestra todos los temas al nivel 1", async () => {
     obtenerSesionMock.mockResolvedValue(sesionConNivel(1));
 
     render(await PaginaAyuda());
 
-    expect(screen.getByRole("heading", { name: "Ayuda" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Tema general/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Tema solo país/ })).toBeInTheDocument();
   });

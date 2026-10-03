@@ -83,7 +83,7 @@ describe("GestionTiposActa", () => {
     render(<GestionTiposActa />);
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Eliminar tipo de acta Graduación" })
+      screen.getByRole("button", { name: "Eliminar" })
     );
     const dialogo = await screen.findByRole("dialog", { name: "Eliminar tipo de acta" });
     expect(dialogo).toHaveTextContent("Graduación");
@@ -101,7 +101,7 @@ describe("GestionTiposActa", () => {
     render(<GestionTiposActa />);
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Eliminar tipo de acta Graduación" })
+      screen.getByRole("button", { name: "Eliminar" })
     );
     const dialogo = await screen.findByRole("dialog");
     await userEvent.click(within(dialogo).getByRole("button", { name: "Cancelar" }));
@@ -117,7 +117,7 @@ describe("GestionTiposActa", () => {
     render(<GestionTiposActa />);
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Eliminar tipo de acta Graduación" })
+      screen.getByRole("button", { name: "Eliminar" })
     );
     const dialogo = await screen.findByRole("dialog");
     await userEvent.click(within(dialogo).getByRole("button", { name: "Eliminar" }));

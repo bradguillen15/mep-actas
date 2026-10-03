@@ -31,7 +31,7 @@ export function FilaEstudiante({
         <BotonIcono
           variante="peligro"
           tamano="sm"
-          etiqueta={`Quitar estudiante ${numero}`}
+          etiqueta="Quitar estudiante"
           icono={<Trash2 aria-hidden />}
           onClick={onQuitar}
         />

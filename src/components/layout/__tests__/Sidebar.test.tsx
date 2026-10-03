@@ -56,6 +56,14 @@ describe("Sidebar (estado y marca)", () => {
     );
   });
 
+  it("el bloque de marca muestra el logo institucional del MEP", () => {
+    render(<Sidebar />);
+
+    expect(
+      screen.getByRole("img", { name: /Ministerio de Educación Pública/ })
+    ).toHaveAttribute("src", "/logo-mep-blanco.svg");
+  });
+
   it("muestra iniciales, nombre y rol del usuario", () => {
     sesion.nivel = 2;
     render(<Sidebar />);

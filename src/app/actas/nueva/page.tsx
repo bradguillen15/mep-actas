@@ -50,7 +50,7 @@ export default function NuevaActa() {
   };
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+    <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-6 overflow-y-auto">
       <EncabezadoPagina
         titulo="Nueva acta"
         descripcion="Registre un acta de graduación con sus estudiantes asociados."

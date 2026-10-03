@@ -108,16 +108,16 @@ describe("Pantalla de usuarios — responsividad", () => {
     const tabla = screen.getByRole("table");
     const contenedorEscritorio = tabla.closest(".hidden");
     expect(contenedorEscritorio).not.toBeNull();
-    expect(contenedorEscritorio!.className).toContain("md:block");
+    expect(contenedorEscritorio!.className).toContain("md:flex");
   });
 
-  it("apila el encabezado en columna en pantallas pequeñas", () => {
+  it("adapta la barra de acciones del encabezado en pantallas pequeñas", () => {
     render(<Usuarios />);
 
-    const titulo = screen.getByRole("heading", { name: "Usuarios" });
-    const encabezado = titulo.closest(".flex-col");
-    expect(encabezado).not.toBeNull();
-    expect(encabezado!.className).toContain("sm:flex-row");
+    const boton = screen.getByRole("button", { name: /Nuevo usuario/ });
+    const barra = boton.closest(".flex-col");
+    expect(barra).not.toBeNull();
+    expect(barra!.className).toContain("sm:flex-row");
   });
 });
 
@@ -225,7 +225,7 @@ describe("Pantalla de usuarios — restablecer contraseña", () => {
 
     const lista = screen.getByRole("list", { name: "Lista de usuarios" });
     await usuaria.click(
-      within(lista).getByRole("button", { name: /Restablecer contraseña de activa@mep.go.cr/ })
+      within(lista).getAllByRole("button", { name: "Restablecer contraseña" })[0]
     );
     const dialogo = await screen.findByRole("dialog", { name: "Restablecer contraseña" });
     expect(within(dialogo).getByText(/Mínimo 12 caracteres/)).toBeInTheDocument();
@@ -252,7 +252,7 @@ describe("Pantalla de usuarios — restablecer contraseña", () => {
 
     const lista = screen.getByRole("list", { name: "Lista de usuarios" });
     await usuaria.click(
-      within(lista).getByRole("button", { name: /Restablecer contraseña de activa@mep.go.cr/ })
+      within(lista).getAllByRole("button", { name: "Restablecer contraseña" })[0]
     );
     const dialogo = await screen.findByRole("dialog");
     await usuaria.type(within(dialogo).getByLabelText(/^Nueva contraseña/), "corta{Enter}");

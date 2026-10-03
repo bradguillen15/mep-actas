@@ -1,9 +1,29 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Tabla } from "../Tabla";
+
+vi.mock("@tanstack/react-virtual", () => ({
+  useVirtualizer: ({ count }: { count: number }) => ({
+    getVirtualItems: () =>
+      Array.from({ length: count }, (_, index) => ({
+        index,
+        key: index,
+        start: index * 53,
+        end: (index + 1) * 53,
+        size: 53,
+      })),
+    getTotalSize: () => count * 53,
+  }),
+}));
+
+const matchMediaOriginal = window.matchMedia;
+
+afterEach(() => {
+  window.matchMedia = matchMediaOriginal;
+});
 
 interface Fila {
   nombre: string;
@@ -51,7 +71,8 @@ describe("Tabla", () => {
   it("aplica meta.className a encabezado y celdas", () => {
     render(<Tabla columnas={columnas} datos={datos} />);
     expect(screen.getByRole("columnheader", { name: /Monto/ })).toHaveClass("text-right");
-    expect(screen.getByText("2").closest("td")).toHaveClass("text-right");
+    const filaAna = screen.getByText("Ana").closest("tr")!;
+    expect(within(filaAna).getByText("2").closest("td")).toHaveClass("text-right");
   });
 
   it("muestra esqueleto y conserva el encabezado mientras carga", () => {
@@ -68,5 +89,71 @@ describe("Tabla", () => {
   it("no muestra el contenido vacío mientras carga", () => {
     render(<Tabla columnas={columnas} datos={[]} cargando vacio={<p>Sin resultados</p>} />);
     expect(screen.queryByText("Sin resultados")).not.toBeInTheDocument();
+  });
+
+  it("usa un contenedor con scroll interno", () => {
+    render(<Tabla columnas={columnas} datos={datos} />);
+    const contenedor = screen.getByTestId("tabla-contenedor");
+    expect(contenedor).toHaveClass("overflow-hidden");
+    expect(contenedor).toHaveClass("flex-1");
+    expect(contenedor.querySelector(".overflow-auto")).not.toBeNull();
+  });
+
+  it("numera las filas empezando en 1", () => {
+    render(<Tabla columnas={columnas} datos={datos} />);
+    const filas = screen.getAllByRole("row").slice(1);
+    expect(within(filas[0]).getByText("1")).toBeInTheDocument();
+    expect(within(filas[1]).getByText("2")).toBeInTheDocument();
+  });
+
+  it("numera con desplazamiento cuando hay indiceInicio", () => {
+    render(
+      <Tabla
+        columnas={columnas}
+        datos={datos}
+        paginacion={false}
+        indiceInicio={20}
+      />
+    );
+    const filas = screen.getAllByRole("row").slice(1);
+    expect(within(filas[0]).getByText("21")).toBeInTheDocument();
+    expect(within(filas[1]).getByText("22")).toBeInTheDocument();
+  });
+
+  it("permite cambiar el tamaño de página", async () => {
+    const muchas: Fila[] = Array.from({ length: 25 }, (_, i) => ({
+      nombre: `Persona ${i + 1}`,
+      monto: i,
+    }));
+    render(<Tabla columnas={columnas} datos={muchas} />);
+
+    expect(screen.getByText("Persona 1")).toBeInTheDocument();
+    expect(screen.queryByText("Persona 21")).not.toBeInTheDocument();
+
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: "Registros por página" }),
+      "50"
+    );
+
+    expect(screen.getByText("Persona 21")).toBeInTheDocument();
+  });
+
+  it("en vista compacta muestra tarjetas en lugar de la tabla", () => {
+    window.matchMedia = vi.fn().mockImplementation((consulta: string) => ({
+      matches: !consulta.includes("min-width: 768px"),
+      media: consulta,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      onchange: null,
+    }));
+
+    render(<Tabla columnas={columnas} datos={datos} />);
+
+    expect(screen.getByRole("list", { name: "Lista de registros" })).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.getByText("Ana")).toBeInTheDocument();
   });
 });

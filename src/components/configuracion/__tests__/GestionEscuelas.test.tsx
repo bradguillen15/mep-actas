@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { GestionEscuelas } from "../GestionEscuelas";
 
@@ -110,7 +110,7 @@ describe("GestionEscuelas", () => {
         body: JSON.stringify({ regionId: 2, codigoMep: "E-002", nombre: "Escuela Dos" }),
       })
     );
-    await vi.waitFor(() => expect(mutarMock).toHaveBeenCalledWith("/api/escuelas"));
+    await vi.waitFor(() => expect(mutarMock).toHaveBeenCalled());
   });
 
   it("Admin Regional tiene la región fija y deshabilitada", async () => {
@@ -160,5 +160,87 @@ describe("GestionEscuelas", () => {
     await userEvent.click(screen.getByRole("button", { name: "Crear escuela" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("El código MEP ya existe");
+  });
+
+  it("muestra Editar y Desactivar a nivel 1 y 2, y los oculta a nivel 3 y 4", () => {
+    for (const nivel of [1, 2]) {
+      usuario = { nivel, regionId: 2 };
+      const { unmount } = render(<GestionEscuelas />);
+      expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Desactivar" })).toBeInTheDocument();
+      unmount();
+    }
+    for (const nivel of [3, 4]) {
+      usuario = { nivel, regionId: 2 };
+      const { unmount } = render(<GestionEscuelas />);
+      expect(screen.queryByRole("button", { name: "Editar" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Desactivar" })).not.toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("edita nombre y código MEP, refresca la lista y cierra el modal", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 10 }) });
+    render(<GestionEscuelas />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Editar" }));
+    const dialogo = await screen.findByRole("dialog", { name: "Editar escuela" });
+    expect(within(dialogo).queryByLabelText(/^Región/)).not.toBeInTheDocument();
+
+    const codigo = within(dialogo).getByLabelText(/^Código MEP/);
+    const nombre = within(dialogo).getByLabelText(/^Nombre/);
+    expect(codigo).toHaveValue("E-001");
+    expect(nombre).toHaveValue("Escuela Uno");
+
+    await userEvent.clear(codigo);
+    await userEvent.type(codigo, "E-010");
+    await userEvent.clear(nombre);
+    await userEvent.type(nombre, "Escuela Renombrada");
+    await userEvent.click(within(dialogo).getByRole("button", { name: "Guardar cambios" }));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/escuelas/10",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ codigoMep: "E-010", nombre: "Escuela Renombrada" }),
+      })
+    );
+    await vi.waitFor(() => expect(mutarMock).toHaveBeenCalled());
+    await vi.waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    );
+  });
+
+  it("pide confirmación antes de desactivar y solo llama a la API al confirmar", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) });
+    render(<GestionEscuelas />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Desactivar" }));
+    const dialogo = await screen.findByRole("dialog", { name: "Desactivar escuela" });
+    expect(dialogo).toHaveTextContent("Escuela Uno");
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await userEvent.click(within(dialogo).getByRole("button", { name: "Desactivar" }));
+
+    await vi.waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/escuelas/10", { method: "DELETE" })
+    );
+    await vi.waitFor(() => expect(mutarMock).toHaveBeenCalled());
+  });
+
+  it("muestra el error de la API al fallar la desactivación", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: "No se puede desactivar una escuela con actas activas" }),
+    });
+    render(<GestionEscuelas />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Desactivar" }));
+    const dialogo = await screen.findByRole("dialog");
+    await userEvent.click(within(dialogo).getByRole("button", { name: "Desactivar" }));
+
+    expect(
+      await screen.findByText("No se puede desactivar una escuela con actas activas")
+    ).toBeInTheDocument();
   });
 });

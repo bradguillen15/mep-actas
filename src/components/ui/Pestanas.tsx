@@ -77,13 +77,13 @@ export function Pestanas({
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-6">
       <div
         ref={listaRef}
         role="tablist"
         aria-label={etiqueta}
         onKeyDown={manejarTeclado}
-        className="relative flex w-fit max-w-full overflow-x-auto rounded-lg border border-borde bg-white p-1"
+        className="relative flex w-fit max-w-full shrink-0 overflow-x-auto rounded-lg border border-borde bg-white p-1"
       >
         {indicador && (
           <span
@@ -124,7 +124,7 @@ export function Pestanas({
         id={idPanel(activa)}
         role="tabpanel"
         aria-labelledby={idPestana(activa)}
-        className="animate-in fade-in-0 duration-150"
+        className="flex min-h-0 flex-1 flex-col animate-in fade-in-0 duration-150"
       >
         {children}
       </div>

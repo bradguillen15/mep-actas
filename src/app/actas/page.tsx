@@ -79,11 +79,13 @@ export default function Actas() {
         header: "Acta",
         accessorKey: "titulo",
         enableSorting: true,
+        meta: { className: "min-w-[12rem] max-w-[20rem]" },
         cell: ({ row }) => (
           <Link
             href={`/actas/${row.original.id}`}
             onClick={(evento) => evento.stopPropagation()}
-            className="rounded font-medium text-primario outline-none transition-colors duration-150 hover-fino:underline focus-visible:ring-2 focus-visible:ring-primario"
+            className="block truncate rounded font-medium text-primario outline-none transition-colors duration-150 hover-fino:underline focus-visible:ring-2 focus-visible:ring-primario"
+            title={row.original.titulo}
           >
             {row.original.titulo}
           </Link>
@@ -93,6 +95,7 @@ export default function Actas() {
         header: "Tipo",
         accessorKey: "nombreTipo",
         enableSorting: true,
+        meta: { className: "whitespace-nowrap" },
         cell: ({ getValue }) => {
           const nombre = getValue() as string;
           return nombre ? <Badge variante="info">{nombre}</Badge> : "—";
@@ -102,21 +105,21 @@ export default function Actas() {
         header: "Tomo",
         accessorKey: "numeroTomo",
         enableSorting: true,
-        meta: { className: "tabular-nums" },
+        meta: { className: "w-[1%] whitespace-nowrap tabular-nums" },
       },
       {
         header: "Folios",
         id: "folios",
         accessorFn: (fila) => fila.folioInicio,
         enableSorting: true,
-        meta: { className: "tabular-nums" },
+        meta: { className: "w-[1%] whitespace-nowrap tabular-nums" },
         cell: ({ row }) => `${row.original.folioInicio}–${row.original.folioFin}`,
       },
       {
         header: "Fecha",
         accessorKey: "fecha",
         enableSorting: true,
-        meta: { className: "tabular-nums" },
+        meta: { className: "w-[1%] whitespace-nowrap tabular-nums" },
         cell: ({ getValue }) =>
           new Date(getValue() as string).toLocaleDateString("es-CR"),
       },
@@ -135,7 +138,7 @@ export default function Actas() {
       : "Su escuela todavía no tiene actas. Cree la primera.";
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <EncabezadoPagina
         titulo="Actas"
         descripcion="Consulte y administre las actas de graduación."
@@ -143,7 +146,7 @@ export default function Actas() {
       />
 
       {puedeElegirEscuela && (
-        <div className="flex flex-wrap items-end gap-3">
+        <div className="flex shrink-0 flex-wrap items-end gap-3">
           <Selector
             label="Escuela"
             opciones={[
