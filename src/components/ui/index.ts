@@ -2,6 +2,7 @@ export { Boton } from "./Boton";
 export { Campo } from "./Campo";
 export { Selector } from "./Selector";
 export { Modal } from "./Modal";
+export { ModalFormulario } from "./ModalFormulario";
 export { Cargando, CargandoChico } from "./Cargando";
 export { Badge } from "./Badge";
 export { Tarjeta } from "./Tarjeta";
