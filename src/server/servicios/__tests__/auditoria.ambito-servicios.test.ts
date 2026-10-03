@@ -7,12 +7,6 @@ import { crearServicioFuncionarios } from "../funcionarios.servicio";
 import { crearServicioUsuarios } from "../usuarios.servicio";
 import { crearServicioEscaneos } from "../escaneos.servicio";
 
-vi.mock("@/server/almacenamiento/r2.util", () => ({
-  construirClave: () => "escaneos/7/1/1.jpg",
-  generarUrlSubida: async () => "https://r2.example/subida",
-  generarUrlLectura: async () => "https://r2.example/lectura",
-}));
-
 const adminPais: SesionUsuario = { usuarioId: 1, email: "p@mep.go.cr", rolId: 1, nivel: 1, funcionarioId: 1 };
 
 function ambitoAuditado(auditor: ReturnType<typeof vi.fn>) {
@@ -67,7 +61,11 @@ describe("cada servicio informa el ámbito del registro auditado", () => {
         crearEscaneo: vi.fn().mockResolvedValue(escaneo),
         eliminarEscaneo: vi.fn().mockResolvedValue(escaneo),
       },
-      auditor
+      auditor,
+      {
+        generarUrlSubida: async () => "https://r2.example/subida",
+        generarUrlLectura: async () => "https://r2.example/lectura",
+      }
     );
     await servicio.prepararSubida({ escuelaId: 7, numeroTomo: 1, numeroFolio: 1, formato: "jpg" }, adminPais);
     expect(ambitoAuditado(auditor).escuelaId).toBe(7);

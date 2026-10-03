@@ -9,6 +9,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import Image from "next/image";
+import { tipoContenidoDeExtension } from "@/lib/escaneos";
 import { Boton } from "@/components/ui/Boton";
 import { Campo } from "@/components/ui/Campo";
 import { Selector } from "@/components/ui/Selector";
@@ -87,10 +88,10 @@ export default function Tomos() {
       const resUpload = await fetch(urlSubida, {
         method: "PUT",
         body: archivo,
-        headers: { "Content-Type": `image/${ext === "pdf" ? "pdf" : ext}` },
+        headers: { "Content-Type": tipoContenidoDeExtension(ext) },
       });
 
-      if (!resUpload.ok) throw new Error("Error al subir archivo a R2");
+      if (!resUpload.ok) throw new Error("Error al subir el archivo");
 
       setArchivo(null);
       setNuevoTomo("");
@@ -186,6 +187,7 @@ export default function Tomos() {
             <Tarjeta className="flex items-center justify-center p-4">
               <Image
                 src={escaneoVisible.urlLectura}
+                unoptimized={escaneoVisible.urlLectura.startsWith("/")}
                 alt={`Folio ${escaneoVisible.numeroFolio}`}
                 width={800}
                 height={600}

@@ -2,6 +2,7 @@ import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import type * as esquema from "@/db/esquema";
 import { crearAuditor } from "./auditoria.servicio";
 import { crearServicioEscaneos, type ServicioEscaneos } from "./escaneos.servicio";
+import { crearAlmacenamientoEscaneos } from "@/server/almacenamiento/seleccion";
 import * as repositorio from "@/server/repositorios/escaneos.repositorio";
 
 export function crearServicioEscaneosDesdeDb(
@@ -16,6 +17,7 @@ export function crearServicioEscaneosDesdeDb(
       crearEscaneo: (datos) => repositorio.crearEscaneo(db, datos),
       eliminarEscaneo: (id) => repositorio.eliminarEscaneo(db, id),
     },
-    crearAuditor(db)
+    crearAuditor(db),
+    crearAlmacenamientoEscaneos()
   );
 }

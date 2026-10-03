@@ -1,6 +1,8 @@
 import type { Auditor } from "./auditoria.servicio";
 import type { FilaEscaneo } from "../repositorios/escaneos.repositorio";
-import { construirClave, generarUrlSubida, generarUrlLectura } from "../almacenamiento/r2.util";
+import { construirClave } from "../almacenamiento/r2.util";
+import type { AlmacenamientoEscaneos } from "../almacenamiento/puerto";
+import { tipoContenidoDeExtension } from "@/lib/escaneos";
 import type { SesionUsuario } from "@/server/auth/tipos";
 import { derivarAmbitoConsulta, type AmbitoConsulta } from "@/server/auth/ambito";
 import { ErrorNoEncontrado } from "@/server/errores";
@@ -58,7 +60,8 @@ const EXTENSIONES_PERMITIDAS = ["jpg", "jpeg", "png", "pdf"];
 
 export function crearServicioEscaneos(
   repositorio: RepositorioEscaneos,
-  auditor: Auditor
+  auditor: Auditor,
+  almacenamiento: AlmacenamientoEscaneos
 ): ServicioEscaneos {
   return {
     async listarEscaneos(filtros, ambito) {
@@ -70,7 +73,7 @@ export function crearServicioEscaneos(
       return Promise.all(
         escaneos.map(async (escaneo) => ({
           ...escaneo,
-          urlLectura: await generarUrlLectura(escaneo.url),
+          urlLectura: await almacenamiento.generarUrlLectura(escaneo.url),
         }))
       );
     },
@@ -111,7 +114,10 @@ export function crearServicioEscaneos(
         uploadedBy: sesion.usuarioId,
       });
 
-      const urlSubida = await generarUrlSubida(clave, `image/${ext === "pdf" ? "pdf" : ext}`);
+      const urlSubida = await almacenamiento.generarUrlSubida(
+        clave,
+        tipoContenidoDeExtension(ext)
+      );
 
       await auditor({
         usuarioId: sesion.usuarioId,
@@ -130,7 +136,7 @@ export function crearServicioEscaneos(
       const escaneo = await repositorio.obtenerEscaneoPorId(id, ambito);
       if (!escaneo) return undefined;
 
-      return generarUrlLectura(escaneo.url);
+      return almacenamiento.generarUrlLectura(escaneo.url);
     },
 
     async eliminarEscaneo(id, sesion) {

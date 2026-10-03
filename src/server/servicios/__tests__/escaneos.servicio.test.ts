@@ -1,14 +1,15 @@
 import { describe, it, expect, vi } from "vitest";
 
-const mockGenerarUrlLectura = vi.hoisted(() => vi.fn());
-
-vi.mock("@/server/almacenamiento/r2.util", () => ({
-  construirClave: vi.fn(),
-  generarUrlSubida: vi.fn(),
-  generarUrlLectura: mockGenerarUrlLectura,
-}));
-
 import { crearServicioEscaneos } from "../escaneos.servicio";
+import type { AlmacenamientoEscaneos } from "@/server/almacenamiento/puerto";
+
+const mockGenerarUrlLectura = vi.fn();
+const mockGenerarUrlSubida = vi.fn();
+
+const almacenamiento: AlmacenamientoEscaneos = {
+  generarUrlLectura: mockGenerarUrlLectura,
+  generarUrlSubida: mockGenerarUrlSubida,
+};
 
 describe("listarConUrlLectura", () => {
   it("adjunta la URL firmada de lectura a cada escaneo listado", async () => {
@@ -34,7 +35,7 @@ describe("listarConUrlLectura", () => {
       eliminarEscaneo: vi.fn(),
     };
 
-    const servicio = crearServicioEscaneos(repositorio, vi.fn());
+    const servicio = crearServicioEscaneos(repositorio, vi.fn(), almacenamiento);
     const resultado = await servicio.listarConUrlLectura({}, { tipo: "pais" });
 
     expect(resultado[0].urlLectura).toBe(
@@ -53,7 +54,7 @@ describe("escaneos con ámbito", () => {
       eliminarEscaneo: vi.fn(),
     };
     const auditor = vi.fn();
-    return { repositorio, auditor, servicio: crearServicioEscaneos(repositorio, auditor) };
+    return { repositorio, auditor, servicio: crearServicioEscaneos(repositorio, auditor, almacenamiento) };
   }
 
   const staff = {
@@ -88,5 +89,44 @@ describe("escaneos con ámbito", () => {
     });
     expect(repositorio.eliminarEscaneo).not.toHaveBeenCalled();
     expect(auditor).not.toHaveBeenCalled();
+  });
+});
+
+describe("prepararSubida", () => {
+  const sesion = {
+    usuarioId: 4, email: "s@mep.go.cr", rolId: 4, nivel: 4 as const, funcionarioId: 4, escuelaId: 5,
+  };
+
+  function crearServicio() {
+    const repositorio = {
+      listarEscaneos: vi.fn(),
+      obtenerEscaneoPorId: vi.fn(),
+      crearEscaneo: vi.fn().mockResolvedValue({ id: 9, escuelaId: 5 }),
+      eliminarEscaneo: vi.fn(),
+    };
+    mockGenerarUrlSubida.mockReset().mockResolvedValue("/api/almacenamiento-local/x");
+    return crearServicioEscaneos(repositorio, vi.fn(), almacenamiento);
+  }
+
+  it.each([
+    ["pdf", "application/pdf"],
+    ["png", "image/png"],
+    ["jpg", "image/jpeg"],
+    ["jpeg", "image/jpeg"],
+  ])("pide la URL de subida con el tipo de contenido de %s", async (formato, tipo) => {
+    const servicio = crearServicio();
+    const resultado = await servicio.prepararSubida(
+      { escuelaId: 5, numeroTomo: 2, numeroFolio: 3, formato },
+      sesion
+    );
+    expect(resultado.clave).toBe(`escaneos/5/2/3.${formato}`);
+    expect(mockGenerarUrlSubida).toHaveBeenCalledWith(resultado.clave, tipo);
+  });
+
+  it("rechaza formatos no permitidos", async () => {
+    const servicio = crearServicio();
+    await expect(
+      servicio.prepararSubida({ escuelaId: 5, numeroTomo: 2, numeroFolio: 3, formato: "exe" }, sesion)
+    ).rejects.toThrow(/no permitido/i);
   });
 });

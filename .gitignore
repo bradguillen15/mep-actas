@@ -68,3 +68,6 @@ docs/arquitectura/**/*.finalize.json
 docs/arquitectura/**/*.finalize-summary.json
 docs/arquitectura/**/*.browser-check.json
 docs/arquitectura/**/*.delivery.json
+
+# almacenamiento local de escaneos (desarrollo)
+/.almacenamiento-local/
