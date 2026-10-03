@@ -16,13 +16,3 @@ export interface TipoActa {
   id: number;
   nombre: string;
 }
-
-export interface Usuario {
-  id: number;
-  email: string;
-  nombre: string;
-  rol: string;
-  nivel: number;
-  escuela: string;
-  activo: boolean;
-}

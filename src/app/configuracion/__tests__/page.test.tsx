@@ -14,10 +14,15 @@ vi.mock("swr", () => ({
 }));
 
 describe("Configuración — pestañas", () => {
-  it("muestra Usuarios, Tipos de acta, Regiones y Escuelas sin Catálogos", () => {
+  it("muestra Tipos de acta, Regiones y Escuelas, sin Usuarios ni Catálogos", () => {
     render(<Configuracion />);
     const nombres = screen.getAllByRole("button", { name: /^(Usuarios|Tipos de acta|Regiones|Escuelas|Catálogos)$/ }).map((b) => b.textContent);
-    expect(nombres).toEqual(["Usuarios", "Tipos de acta", "Regiones", "Escuelas"]);
+    expect(nombres).toEqual(["Tipos de acta", "Regiones", "Escuelas"]);
+  });
+
+  it("abre por defecto la pestaña Tipos de acta", () => {
+    render(<Configuracion />);
+    expect(screen.getByRole("button", { name: /nuevo tipo/i })).toBeInTheDocument();
   });
 
   it("cambia de pestaña a Regiones y a Escuelas", async () => {

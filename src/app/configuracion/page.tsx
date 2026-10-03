@@ -4,19 +4,17 @@ import { useState } from "react";
 import { GestionEscuelas } from "@/components/configuracion/GestionEscuelas";
 import { GestionRegiones } from "@/components/configuracion/GestionRegiones";
 import { GestionTiposActa } from "@/components/configuracion/GestionTiposActa";
-import { GestionUsuarios } from "@/components/configuracion/GestionUsuarios";
 
-type Pestana = "usuarios" | "tipos-acta" | "regiones" | "escuelas";
+type Pestana = "tipos-acta" | "regiones" | "escuelas";
 
 const pestanas: { id: Pestana; etiqueta: string }[] = [
-  { id: "usuarios", etiqueta: "Usuarios" },
   { id: "tipos-acta", etiqueta: "Tipos de acta" },
   { id: "regiones", etiqueta: "Regiones" },
   { id: "escuelas", etiqueta: "Escuelas" },
 ];
 
 export default function Configuracion() {
-  const [pestanaActiva, setPestanaActiva] = useState<Pestana>("usuarios");
+  const [pestanaActiva, setPestanaActiva] = useState<Pestana>("tipos-acta");
 
   return (
     <div className="flex flex-col gap-6">
@@ -43,7 +41,6 @@ export default function Configuracion() {
         ))}
       </div>
 
-      {pestanaActiva === "usuarios" && <GestionUsuarios />}
       {pestanaActiva === "tipos-acta" && <GestionTiposActa />}
       {pestanaActiva === "regiones" && <GestionRegiones />}
       {pestanaActiva === "escuelas" && <GestionEscuelas />}

@@ -34,6 +34,8 @@ Admin País puede crear regiones y escuelas desde la UI, y Admin Regional escuel
 
 - [x] T1 — `ModalFormulario` reutilizable con pruebas (ruta: delegado)
 - [x] T2 — Tabs Regiones y Escuelas con creación por modal y control por nivel; tipos de acta al modal (ruta: delegado, disparador: 2+ archivos no triviales)
+- [x] T3 — Eliminar el tab Usuarios de `/configuracion` y `GestionUsuarios.tsx`: era una copia rota de `/usuarios` (columna `rol` inexistente en la API, sin activar/desactivar, creación sin `funcionarioId`/`rolId`). `/usuarios` queda como única pantalla de usuarios (ruta: delegado)
+- [ ] T4 — Migrar "Nuevo usuario" de `/usuarios` a `ModalFormulario` conservando funcionario, rol, validaciones y pruebas (ruta: delegado, disparador: 2+ archivos no triviales)
 
 ## Verificación
 
