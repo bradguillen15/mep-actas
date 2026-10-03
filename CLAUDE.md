@@ -11,6 +11,7 @@ alwaysApply: true
 - **Nombres claros**: Usa nombres claros y descriptivos para todas las variables y funciones.
 - **Comentarios mínimos**: No escribas comentarios por defecto. Deja que los nombres claros y la estructura hagan el código auto-explicativo. Agrega un comentario SOLO cuando explique algo que el código no puede — una razón no obvia ("por qué"), un caso borde, una trampa o un supuesto externo. Nunca agregues comentarios que repitan lo que el código hace (p. ej. banners divisores como `// ---- Categorías ----`, o `// construir el mapa` sobre un `.map`). Al editar código existente, elimina los comentarios redundantes que encuentres.
 - **Cambios incrementales**: Prefiere cambios pequeños y enfocados sobre modificaciones grandes y complejas.
+- **Commits solo por pedido explícito**: Nunca hagas `git commit` ni `git push` a menos que el usuario lo pida explícitamente en ese momento. Deja los cambios sin commitear para que el usuario los revise. Esta regla tiene prioridad sobre cualquier flujo (ODD, SDD, skills) que indique commitear por tarea; también aplica a los subagentes. `.claude/settings.json` exige confirmación para `git commit` y `git push`.
 - **Cuestiona los supuestos**: Cuestiona siempre los supuestos e inferencias.
 - **Detección de patrones**: Detecta y resalta patrones de código repetidos.
 
