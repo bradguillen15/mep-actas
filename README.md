@@ -68,7 +68,9 @@ Requiere Gentle AI instalado globalmente (`gentle-ai install`). Ver la sección 
 
 ## Desarrollo local
 
-`pnpm dev` aplica las migraciones y siembra la base local (`file:./mep-actas-local.db`) antes de iniciar Next.js. La semilla es idempotente (se puede ejecutar en cada arranque) y se niega a correr contra una URL que no sea `file:`. Las pruebas E2E reutilizan el mismo conjunto de datos.
+`pnpm dev` inicia Next.js contra la base configurada en `TURSO_DATABASE_URL` (Turso remoto cuando esté configurado); no siembra nada.
+
+`pnpm dev:local` es el modo demo: aplica las migraciones y siembra la base local (`file:./mep-actas-local.db`) antes de iniciar Next.js, forzando esa URL aunque `.env.local` apunte a Turso. La semilla es idempotente (se puede ejecutar en cada arranque) y se niega a correr contra una URL que no sea `file:`. Las pruebas E2E reutilizan el mismo conjunto de datos.
 
 - `pnpm db:sembrar`: migra y siembra sin iniciar la aplicación.
 - `pnpm db:reiniciar`: borra el archivo local y lo regenera desde cero.

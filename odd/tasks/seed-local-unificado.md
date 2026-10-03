@@ -13,7 +13,7 @@ El entorno local siempre arranca con datos de prueba completos (mock) para explo
 ## Alcance autorizado
 
 - Un único módulo de seed reutilizable (catálogos + usuarios de los 4 roles + escuelas en varias regiones + actas, graduados, firmantes y escaneos de prueba).
-- Idempotente por clave natural (email, identificación, `codigo_mep`, nombre de catálogo); se ejecuta en cada `pnpm dev`.
+- Idempotente por clave natural (email, identificación, `codigo_mep`, nombre de catálogo); se ejecuta en cada `pnpm dev:local`; `pnpm dev` queda para la base real (Turso).
 - Se niega a ejecutarse contra una URL que no sea `file:` (nunca sembrar Turso remoto).
 - `pnpm db:reiniciar` borra el archivo local y lo regenera.
 - `globalSetup` E2E reutiliza el mismo dataset; prueba E2E de humo por rol que verifica datos visibles según su ámbito.

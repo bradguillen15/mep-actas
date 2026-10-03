@@ -73,6 +73,6 @@ app/globals.css            # tokens de diseño (variables CSS del MEP)
 
 ## 8. Pruebas
 
-- Vitest (con jsdom y Testing Library) para lógica de UI, hooks y páginas; la lógica extraíble de las páginas (p. ej. `src/lib/personas.ts`) se prueba como función pura. Los E2E corren con Vitest contra SQLite (`pnpm test:e2e`); los flujos clave (consulta, registro de actas, gestión de escaneos) se verifican además en el navegador con `pnpm dev`.
+- Vitest (con jsdom y Testing Library) para lógica de UI, hooks y páginas; la lógica extraíble de las páginas (p. ej. `src/lib/personas.ts`) se prueba como función pura. Los E2E corren con Vitest contra SQLite (`pnpm test:e2e`); los flujos clave (consulta, registro de actas, gestión de escaneos) se verifican además en el navegador con `pnpm dev:local`.
 - Actualiza las pruebas E2E cuando cambie un flujo de usuario, los `data-testid` o los diálogos.
 - Cobertura pragmática, sin umbral fijo.

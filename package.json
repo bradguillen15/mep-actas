@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm db:sembrar && next dev",
+    "dev": "next dev",
+    "dev:local": "TURSO_DATABASE_URL=file:./mep-actas-local.db pnpm db:sembrar && TURSO_DATABASE_URL=file:./mep-actas-local.db next dev",
     "db:sembrar": "tsx scripts/sembrar-local.ts",
     "db:reiniciar": "tsx scripts/sembrar-local.ts --reiniciar",
     "build": "next build",
