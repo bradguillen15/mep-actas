@@ -188,6 +188,9 @@ export function crearServicioUsuarios(
     },
 
     async cambiarEstado(id, activo, sesion) {
+      if (!activo && id === sesion.usuarioId) {
+        throw new ErrorProhibido("No puede desactivar su propia cuenta");
+      }
       const objetivo = await cargarDestinoGestionable(repositorio, id, sesion);
 
       const usuario = await repositorio.cambiarEstadoUsuario(id, activo);

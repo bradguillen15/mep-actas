@@ -222,3 +222,20 @@ describe("usuarios.servicio — Admin País", () => {
     expect(repo.actualizarPassword).toHaveBeenCalledWith(10, "h");
   });
 });
+
+describe("usuarios.servicio — autodesactivación", () => {
+  it("impide que un usuario desactive su propia cuenta, incluso siendo Admin País", async () => {
+    const repo = crearRepoFalso();
+    const auditor = vi.fn().mockResolvedValue(undefined);
+    const servicio = crearServicioUsuarios(repo, auditor);
+
+    await expect(
+      servicio.cambiarEstado(99, false, sesion({ nivel: 1, usuarioId: 99 }))
+    ).rejects.toMatchObject({
+      name: "ForbiddenError",
+      message: "No puede desactivar su propia cuenta",
+    });
+    expect(repo.cambiarEstadoUsuario).not.toHaveBeenCalled();
+    expect(auditor).not.toHaveBeenCalled();
+  });
+});

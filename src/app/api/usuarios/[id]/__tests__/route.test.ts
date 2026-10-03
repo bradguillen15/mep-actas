@@ -122,4 +122,18 @@ describe("/api/usuarios/[id] con ámbito", () => {
     expect(respuesta.status).toBe(403);
     expect(mockCambiarEstado).not.toHaveBeenCalled();
   });
+
+  it("desactivar la propia cuenta responde 403 sin tocar el repositorio", async () => {
+    const { PATCH } = await import("../route");
+    const respuesta = await PATCH(
+      new Request("http://localhost/api/usuarios/2", {
+        method: "PATCH",
+        body: JSON.stringify({ activo: false }),
+      }) as never,
+      { params: Promise.resolve({ id: "2" }) }
+    );
+    expect(respuesta.status).toBe(403);
+    expect(await respuesta.json()).toEqual({ error: "No puede desactivar su propia cuenta" });
+    expect(mockCambiarEstado).not.toHaveBeenCalled();
+  });
 });
