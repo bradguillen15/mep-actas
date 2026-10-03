@@ -13,21 +13,132 @@
 
 ## Diagrama de entidades
 
-**[Ver el diagrama interactivo del modelo de datos](https://htmlpreview.github.io/?https://github.com/bradguillen15/mep-actas/blob/main/docs/arquitectura/modelo-datos/modelo-datos.html)** (fuente archify en [`arquitectura/modelo-datos/`](arquitectura/modelo-datos/)).
+GitHub renderiza este diagrama directamente al ver el archivo.
 
-```
-regiones
-  └── escuelas (region_id)
-        ├── actas (escuela_id)
-        │     ├── acta_estudiantes (acta_id) ─── estudiantes (estudiante_id) ─── personas (persona_id)
-        │     ├── acta_escaneos (acta_id) ─── escaneos (escaneo_id)
-        │     └── acta_firmantes (acta_id) ─── funcionarios (funcionario_id) ─── personas (persona_id)
-        └── escaneos (escuela_id)
+```mermaid
+erDiagram
+    regiones ||--o{ escuelas : "region_id"
+    escuelas ||--o{ actas : "escuela_id"
+    escuelas ||--o{ escaneos : "escuela_id"
+    escuelas ||--o{ funcionario_escuela : "escuela_id"
+    tipos_acta ||--o{ actas : "tipo_acta_id"
+    actas ||--o{ acta_estudiantes : "acta_id"
+    actas ||--o{ acta_escaneos : "acta_id"
+    actas ||--o{ acta_firmantes : "acta_id"
+    estudiantes ||--o{ acta_estudiantes : "estudiante_id"
+    escaneos ||--o{ acta_escaneos : "escaneo_id"
+    personas ||--o{ estudiantes : "persona_id"
+    personas ||--o{ funcionarios : "persona_id"
+    funcionarios ||--o{ funcionario_escuela : "funcionario_id"
+    funcionarios ||--o{ acta_firmantes : "funcionario_id"
+    funcionarios ||--o{ usuarios : "funcionario_id"
+    roles ||--o{ usuarios : "rol_id"
+    usuarios ||--o{ escaneos : "uploaded_by"
+    usuarios ||--o{ auditoria : "usuario_id"
+    escuelas |o--o{ auditoria : "escuela_id"
+    regiones |o--o{ auditoria : "region_id"
 
-usuarios ─── funcionarios (funcionario_id)
-roles ─── usuarios (rol_id)
-
-auditoria (independiente, solo lectura)
+    regiones {
+        int id PK
+        text nombre
+        int activo
+    }
+    escuelas {
+        int id PK
+        int region_id FK
+        text codigo_mep
+        text nombre
+        int activo
+    }
+    tipos_acta {
+        int id PK
+        text nombre
+        int activo
+    }
+    actas {
+        int id PK
+        int escuela_id FK
+        int tipo_acta_id FK
+        int acta_referencia_id "sin restricción FK"
+        text titulo
+        int numero_tomo
+        int folio_inicio
+        int folio_fin
+        text fecha
+        text created_at
+    }
+    personas {
+        int id PK
+        text identificacion UK
+        text nombres
+        text apellidos
+    }
+    estudiantes {
+        int id PK
+        int persona_id FK
+    }
+    acta_estudiantes {
+        int id PK
+        int acta_id FK
+        int estudiante_id FK
+        int numero_certificado
+    }
+    escaneos {
+        int id PK
+        int escuela_id FK
+        int numero_tomo
+        int numero_folio
+        text url
+        text formato
+        int uploaded_by FK
+        text created_at
+    }
+    acta_escaneos {
+        int id PK
+        int acta_id FK
+        int escaneo_id FK
+    }
+    funcionarios {
+        int id PK
+        int persona_id FK
+        text puesto
+    }
+    funcionario_escuela {
+        int id PK
+        int funcionario_id FK
+        int escuela_id FK
+    }
+    acta_firmantes {
+        int id PK
+        int acta_id FK
+        int funcionario_id FK
+        text rol_firma
+    }
+    roles {
+        int id PK
+        text nombre
+        int nivel
+    }
+    usuarios {
+        int id PK
+        int funcionario_id FK
+        int rol_id FK
+        text email UK
+        text password_hash
+        int activo
+    }
+    auditoria {
+        int id PK
+        int usuario_id FK
+        text tabla
+        int registro_id
+        text accion
+        text datos_anteriores
+        text datos_nuevos
+        int escuela_id FK "opcional"
+        int region_id FK "opcional"
+        text created_at
+    }
 ```
 
 ## Tablas
