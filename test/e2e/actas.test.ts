@@ -11,6 +11,7 @@ import {
   obtenerUsuarioPorEmail,
   datosSesionAdminEscuela,
   limpiarAuditoriaDeAmbito,
+  EMAIL_ADMIN_ESCUELA,
 } from "./helpers";
 
 const DB_PATH = path.resolve(__dirname, "../../temp-e2e.db");
@@ -32,7 +33,7 @@ beforeAll(async () => {
   const rolAdminEscuela = await obtenerRolPorNivel(db, 3);
   const usuarioAdminEscuela = await obtenerUsuarioPorEmail(
     db,
-    "admin-escuela@e2e.test"
+    EMAIL_ADMIN_ESCUELA
   );
 
   const [{ id: regionId }] = await db
@@ -51,7 +52,7 @@ beforeAll(async () => {
   escuelaId = escId;
 
   sesionAdminEscuela = datosSesionAdminEscuela(
-    usuarioAdminEscuela.id,
+    usuarioAdminEscuela,
     rolAdminEscuela.id,
     escId
   );

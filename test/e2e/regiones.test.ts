@@ -3,7 +3,10 @@ import { clienteDb } from "@/db/cliente";
 import { crearAuditor } from "@/server/servicios/auditoria.servicio";
 import { crearServicioRegiones } from "@/server/servicios/regiones.servicio";
 import * as repositorio from "@/server/repositorios/regiones.repositorio";
-import { datosSesionAdminPais, obtenerRolPorNivel, obtenerUsuarioPorEmail, limpiarAuditoriaDeAmbito } from "./helpers";
+import { datosSesionAdminPais, obtenerRolPorNivel, obtenerUsuarioPorEmail,
+  limpiarAuditoriaDeAmbito,
+  EMAIL_ADMIN_PAIS,
+} from "./helpers";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { SesionUsuario } from "@/server/auth/tipos";
@@ -14,8 +17,8 @@ let sesionAdminPais: SesionUsuario;
 beforeAll(async () => {
   const db = clienteDb();
   const rol = await obtenerRolPorNivel(db, 1);
-  const usuario = await obtenerUsuarioPorEmail(db, "admin-pais@e2e.test");
-  sesionAdminPais = datosSesionAdminPais(usuario.id, rol.id);
+  const usuario = await obtenerUsuarioPorEmail(db, EMAIL_ADMIN_PAIS);
+  sesionAdminPais = datosSesionAdminPais(usuario, rol.id);
 });
 
 afterAll(async () => {

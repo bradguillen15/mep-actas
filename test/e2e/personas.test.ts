@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { clienteDb } from "@/db/cliente";
 import { crearServicioPersonasDesdeDb } from "@/server/servicios/personas.fabrica";
-import { datosSesionAdminPais, obtenerRolPorNivel, obtenerUsuarioPorEmail } from "./helpers";
+import { datosSesionAdminPais, obtenerRolPorNivel, obtenerUsuarioPorEmail, EMAIL_ADMIN_PAIS } from "./helpers";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { SesionUsuario } from "@/server/auth/tipos";
@@ -12,8 +12,8 @@ let sesion: SesionUsuario;
 beforeAll(async () => {
   const db = clienteDb();
   const rol = await obtenerRolPorNivel(db, 1);
-  const usuario = await obtenerUsuarioPorEmail(db, "admin-pais@e2e.test");
-  sesion = datosSesionAdminPais(usuario.id, rol.id);
+  const usuario = await obtenerUsuarioPorEmail(db, EMAIL_ADMIN_PAIS);
+  sesion = datosSesionAdminPais(usuario, rol.id);
 });
 
 afterAll(async () => {

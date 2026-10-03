@@ -2,9 +2,11 @@ import { describe, it, expect } from "vitest";
 import { clienteDb } from "@/db/cliente";
 import { obtenerUsuarioPorEmail } from "@/server/repositorios/usuarios.repositorio";
 import { compare } from "bcryptjs";
+import { PASSWORD_LOCAL } from "@/db/semilla/sembrar";
+import { EMAIL_ADMIN_PAIS } from "./helpers";
 
-const EMAIL = "admin-pais@e2e.test";
-const PASSWORD = "test-password";
+const EMAIL = EMAIL_ADMIN_PAIS;
+const PASSWORD = PASSWORD_LOCAL;
 
 describe("Autenticación e2e", () => {
   it("obtiene usuario por email con nivel de rol", async () => {

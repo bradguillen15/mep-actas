@@ -26,57 +26,64 @@ export async function obtenerUsuarioPorEmail(
   return resultado[0];
 }
 
-export function datosSesionAdminPais(usuarioId: number, rolId: number) {
+export const EMAIL_ADMIN_PAIS = "admin@pais.local";
+export const EMAIL_ADMIN_REGIONAL = "admin@regional.local";
+export const EMAIL_ADMIN_ESCUELA = "admin@escuela.local";
+export const EMAIL_STAFF = "staff@local";
+
+type UsuarioSesion = { id: number; funcionarioId: number };
+
+export function datosSesionAdminPais(usuario: UsuarioSesion, rolId: number) {
   return {
-    usuarioId,
-    email: "admin-pais@e2e.test",
+    usuarioId: usuario.id,
+    email: EMAIL_ADMIN_PAIS,
     nivel: 1 as const,
     rolId,
-    funcionarioId: 1,
+    funcionarioId: usuario.funcionarioId,
   };
 }
 
 export function datosSesionAdminRegional(
-  usuarioId: number,
+  usuario: UsuarioSesion,
   rolId: number,
   regionId: number
 ) {
   return {
-    usuarioId,
-    email: "admin-regional@e2e.test",
+    usuarioId: usuario.id,
+    email: EMAIL_ADMIN_REGIONAL,
     nivel: 2 as const,
     rolId,
-    funcionarioId: 2,
+    funcionarioId: usuario.funcionarioId,
     regionId,
   };
 }
 
 export function datosSesionAdminEscuela(
-  usuarioId: number,
+  usuario: UsuarioSesion,
   rolId: number,
   escuelaId: number
 ) {
   return {
-    usuarioId,
-    email: "admin-escuela@e2e.test",
+    usuarioId: usuario.id,
+    email: EMAIL_ADMIN_ESCUELA,
     nivel: 3 as const,
     rolId,
-    funcionarioId: 3,
+    funcionarioId: usuario.funcionarioId,
     escuelaId,
   };
 }
 
 export function datosSesionStaff(
-  usuarioId: number,
+  usuario: UsuarioSesion,
   rolId: number,
   escuelaId: number
 ) {
   return {
-    usuarioId,
-    email: "staff@e2e.test",
+    usuarioId: usuario.id,
+    email: EMAIL_STAFF,
     nivel: 4 as const,
     rolId,
-    funcionarioId: 4,
+    funcionarioId: usuario.funcionarioId,
     escuelaId,
   };
 }

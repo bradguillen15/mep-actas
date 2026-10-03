@@ -13,6 +13,9 @@ import {
   datosSesionAdminRegional,
   datosSesionAdminEscuela,
   limpiarAuditoriaDeAmbito,
+  EMAIL_ADMIN_PAIS,
+  EMAIL_ADMIN_REGIONAL,
+  EMAIL_ADMIN_ESCUELA,
 } from "./helpers";
 
 const DB_PATH = path.resolve(__dirname, "../../temp-e2e.db");
@@ -77,9 +80,9 @@ beforeAll(async () => {
   const client = createClient({ url: `file:${DB_PATH}` });
   db = drizzle(client, { schema: esquema }) as LibSQLDatabase<typeof esquema>;
 
-  const usuarioAdminPais = await obtenerUsuarioPorEmail(db, "admin-pais@e2e.test");
+  const usuarioAdminPais = await obtenerUsuarioPorEmail(db, EMAIL_ADMIN_PAIS);
   const rolAdminPais = await obtenerRolPorNivel(db, 1);
-  sesionAdminPais = datosSesionAdminPais(usuarioAdminPais.id, rolAdminPais.id);
+  sesionAdminPais = datosSesionAdminPais(usuarioAdminPais, rolAdminPais.id);
 
   const [{ id: regionId }] = await db
     .insert(esquema.regiones)
@@ -162,7 +165,7 @@ describe("Usuarios e2e", () => {
         {
           funcionarioId: 1,
           rolId: 1,
-          email: "admin-pais@e2e.test",
+          email: EMAIL_ADMIN_PAIS,
           passwordHash: "fakehash",
         },
         sesionAdminPais
@@ -191,11 +194,11 @@ describe("Usuarios e2e — jerarquía y ámbito entre roles", () => {
   it("deniega que un Admin Regional cree un Admin País", async () => {
     const usuarioAdminRegional = await obtenerUsuarioPorEmail(
       db,
-      "admin-regional@e2e.test"
+      EMAIL_ADMIN_REGIONAL
     );
     const rolAdminRegional = await obtenerRolPorNivel(db, 2);
     const sesionAdminRegional = datosSesionAdminRegional(
-      usuarioAdminRegional.id,
+      usuarioAdminRegional,
       rolAdminRegional.id,
       idsRegionCrear[0]
     );
@@ -220,12 +223,12 @@ describe("Usuarios e2e — jerarquía y ámbito entre roles", () => {
   it("permite que un Admin Regional cree un usuario dentro de su región", async () => {
     const usuarioAdminRegional = await obtenerUsuarioPorEmail(
       db,
-      "admin-regional@e2e.test"
+      EMAIL_ADMIN_REGIONAL
     );
     const rolAdminRegional = await obtenerRolPorNivel(db, 2);
     const regionId = idsRegionCrear[0];
     const sesionAdminRegional = datosSesionAdminRegional(
-      usuarioAdminRegional.id,
+      usuarioAdminRegional,
       rolAdminRegional.id,
       regionId
     );
@@ -249,11 +252,11 @@ describe("Usuarios e2e — jerarquía y ámbito entre roles", () => {
   it("deniega que un Admin Regional cree un usuario fuera de su región", async () => {
     const usuarioAdminRegional = await obtenerUsuarioPorEmail(
       db,
-      "admin-regional@e2e.test"
+      EMAIL_ADMIN_REGIONAL
     );
     const rolAdminRegional = await obtenerRolPorNivel(db, 2);
     const sesionRegionAjena = datosSesionAdminRegional(
-      usuarioAdminRegional.id,
+      usuarioAdminRegional,
       rolAdminRegional.id,
       99999
     );
@@ -280,16 +283,16 @@ describe("Usuarios e2e — jerarquía y ámbito entre roles", () => {
   it("deniega que un Admin Escuela restablezca la contraseña de un Admin País", async () => {
     const usuarioAdminEscuela = await obtenerUsuarioPorEmail(
       db,
-      "admin-escuela@e2e.test"
+      EMAIL_ADMIN_ESCUELA
     );
     const rolAdminEscuela = await obtenerRolPorNivel(db, 3);
     const sesionAdminEscuela = datosSesionAdminEscuela(
-      usuarioAdminEscuela.id,
+      usuarioAdminEscuela,
       rolAdminEscuela.id,
       idsEscuelaCrear[0] ?? 1
     );
 
-    const adminPais = await obtenerUsuarioPorEmail(db, "admin-pais@e2e.test");
+    const adminPais = await obtenerUsuarioPorEmail(db, EMAIL_ADMIN_PAIS);
 
     await expect(
       crearServicio().actualizarPassword(

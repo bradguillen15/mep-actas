@@ -14,7 +14,7 @@ import { crearServicioPersonasDesdeDb } from "@/server/servicios/personas.fabric
 import { crearServicioFuncionariosDesdeDb } from "@/server/servicios/funcionarios.fabrica";
 import { crearAuditor } from "@/server/servicios/auditoria.servicio";
 import { listarAuditoria } from "@/server/repositorios/auditoria.repositorio";
-import { limpiarAuditoriaDeAmbito, obtenerUsuarioPorEmail } from "./helpers";
+import { limpiarAuditoriaDeAmbito, obtenerUsuarioPorEmail, EMAIL_ADMIN_PAIS } from "./helpers";
 
 const DB_PATH = path.resolve(__dirname, "../../temp-e2e.db");
 const PREFIJO = `ALC${Date.now()}`;
@@ -111,7 +111,7 @@ beforeAll(async () => {
   const client = createClient({ url: `file:${DB_PATH}` });
   db = drizzle(client, { schema: esquema }) as LibSQLDatabase<typeof esquema>;
 
-  usuarioId = (await obtenerUsuarioPorEmail(db, "admin-pais@e2e.test")).id;
+  usuarioId = (await obtenerUsuarioPorEmail(db, EMAIL_ADMIN_PAIS)).id;
   tipoActaId = (await db.select().from(esquema.tiposActas).limit(1))[0].id;
 
   ids.regionPropia = await insertarRegion(`${PREFIJO} propia`);

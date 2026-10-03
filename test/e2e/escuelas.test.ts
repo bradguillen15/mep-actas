@@ -11,10 +11,13 @@ import {
   obtenerRolPorNivel,
   obtenerUsuarioPorEmail,
   limpiarAuditoriaDeAmbito,
+  EMAIL_ADMIN_PAIS,
+  EMAIL_ADMIN_REGIONAL,
 } from "./helpers";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { SesionUsuario } from "@/server/auth/tipos";
+import { obtenerAmbitoDeFuncionario } from "@/server/repositorios/usuarios.repositorio";
 
 const idsRegion: number[] = [];
 const idsEscuela: number[] = [];
@@ -24,18 +27,22 @@ let sesionRegional: SesionUsuario;
 beforeAll(async () => {
   const db = clienteDb();
   const rolPais = await obtenerRolPorNivel(db, 1);
-  const usuarioPais = await obtenerUsuarioPorEmail(db, "admin-pais@e2e.test");
-  sesionPais = datosSesionAdminPais(usuarioPais.id, rolPais.id);
+  const usuarioPais = await obtenerUsuarioPorEmail(db, EMAIL_ADMIN_PAIS);
+  sesionPais = datosSesionAdminPais(usuarioPais, rolPais.id);
 
   const rolRegional = await obtenerRolPorNivel(db, 2);
   const usuarioRegional = await obtenerUsuarioPorEmail(
     db,
-    "admin-regional@e2e.test"
+    EMAIL_ADMIN_REGIONAL
+  );
+  const ambitoRegional = await obtenerAmbitoDeFuncionario(
+    db,
+    usuarioRegional.funcionarioId
   );
   sesionRegional = datosSesionAdminRegional(
-    usuarioRegional.id,
+    usuarioRegional,
     rolRegional.id,
-    1
+    ambitoRegional.regionIds[0]
   );
 });
 
@@ -171,7 +178,7 @@ describe("Escuelas e2e", () => {
     );
 
     const sesionRegionalB = datosSesionAdminRegional(
-      sesionRegional.usuarioId,
+      { id: sesionRegional.usuarioId, funcionarioId: sesionRegional.funcionarioId },
       sesionRegional.rolId,
       regionA.id
     );

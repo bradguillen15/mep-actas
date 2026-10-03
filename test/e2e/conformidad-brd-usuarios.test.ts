@@ -15,6 +15,10 @@ import {
   datosSesionAdminEscuela,
   datosSesionStaff,
   limpiarAuditoriaDeAmbito,
+  EMAIL_ADMIN_PAIS,
+  EMAIL_ADMIN_REGIONAL,
+  EMAIL_ADMIN_ESCUELA,
+  EMAIL_STAFF,
 } from "./helpers";
 
 const DB_PATH = path.resolve(__dirname, "../../temp-e2e.db");
@@ -161,29 +165,30 @@ beforeAll(async () => {
   escuelaPropiaId = await crearEscuela(regionPropiaId);
   escuelaAjenaId = await crearEscuela(regionAjenaId);
 
-  const adminPais = await obtenerUsuarioPorEmail(db, "admin-pais@e2e.test");
+  const adminPais = await obtenerUsuarioPorEmail(db, EMAIL_ADMIN_PAIS);
   const adminRegional = await obtenerUsuarioPorEmail(
     db,
-    "admin-regional@e2e.test"
+    EMAIL_ADMIN_REGIONAL
   );
   const adminEscuela = await obtenerUsuarioPorEmail(
     db,
-    "admin-escuela@e2e.test"
+    EMAIL_ADMIN_ESCUELA
   );
+  const staff = await obtenerUsuarioPorEmail(db, EMAIL_STAFF);
 
-  sesionAdminPais = datosSesionAdminPais(adminPais.id, rolesPorNivel.get(1)!);
+  sesionAdminPais = datosSesionAdminPais(adminPais, rolesPorNivel.get(1)!);
   sesionAdminRegional = datosSesionAdminRegional(
-    adminRegional.id,
+    adminRegional,
     rolesPorNivel.get(2)!,
     regionPropiaId
   );
   sesionAdminEscuela = datosSesionAdminEscuela(
-    adminEscuela.id,
+    adminEscuela,
     rolesPorNivel.get(3)!,
     escuelaPropiaId
   );
   sesionStaff = datosSesionStaff(
-    adminEscuela.id,
+    adminEscuela,
     rolesPorNivel.get(4)!,
     escuelaPropiaId
   );

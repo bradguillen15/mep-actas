@@ -2,14 +2,14 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { clienteDb } from "@/db/cliente";
 import * as esquema from "@/db/esquema";
 import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { obtenerUsuarioPorEmail } from "./helpers";
+import { obtenerUsuarioPorEmail, EMAIL_ADMIN_PAIS } from "./helpers";
 import { eq } from "drizzle-orm";
 
 let usuarioAdminPaisId: number;
 
 beforeAll(async () => {
   const db = clienteDb();
-  const usuario = await obtenerUsuarioPorEmail(db, "admin-pais@e2e.test");
+  const usuario = await obtenerUsuarioPorEmail(db, EMAIL_ADMIN_PAIS);
   usuarioAdminPaisId = usuario.id;
 });
 
