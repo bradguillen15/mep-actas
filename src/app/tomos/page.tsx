@@ -44,13 +44,14 @@ export default function Tomos() {
   const [errorUpload, setErrorUpload] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const params = new URLSearchParams();
-  if (escuelaFiltro) params.set("escuelaId", escuelaFiltro);
-  else if (escuelaId) params.set("escuelaId", String(escuelaId));
-  params.set("tomo", String(tomoActivo));
+  const escuelaSeleccionada = escuelaFiltro || (escuelaId ? String(escuelaId) : "");
+  const params = new URLSearchParams({
+    escuelaId: escuelaSeleccionada,
+    tomo: String(tomoActivo),
+  });
 
   const { data: escaneos, isLoading, mutate } = useSWR<Escaneo[]>(
-    `/api/escaneos?${params.toString()}`,
+    escuelaSeleccionada ? `/api/escaneos?${params.toString()}` : null,
     fetcher
   );
 
@@ -128,7 +129,10 @@ export default function Tomos() {
               ...escuelaOpciones,
             ]}
             value={escuelaFiltro}
-            onChange={(e) => setEscuelaFiltro(e.target.value)}
+            onChange={(e) => {
+              setEscuelaFiltro(e.target.value);
+              setFolioActual(0);
+            }}
             className="w-56"
           />
         )}
@@ -146,7 +150,15 @@ export default function Tomos() {
 
       {isLoading && <Cargando />}
 
-      {!isLoading && escaneosOrdenados.length === 0 && (
+      {!escuelaSeleccionada && (
+        <EstadoVacio
+          mensaje="Seleccione una escuela"
+          descripcion="Cada escuela tiene sus propios tomos y folios. Elija una escuela para explorarlos."
+          icono={<ImageIcon className="h-8 w-8 text-gray-400" />}
+        />
+      )}
+
+      {escuelaSeleccionada && !isLoading && escaneosOrdenados.length === 0 && (
         <EstadoVacio
           mensaje="Sin folios digitalizados"
           descripcion={`El tomo ${tomoActivo} aún no tiene folios. Use la sección de subida para agregar el primero.`}

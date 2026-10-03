@@ -259,4 +259,38 @@ describe("GET /api/escaneos con ámbito", () => {
       { tipo: "escuela", escuelaId: 5 }
     );
   });
+
+  it("Admin País sin escuelaId recibe 400 porque los tomos son propios de cada escuela", async () => {
+    vi.clearAllMocks();
+    mockObtenerSesion.mockResolvedValue(sesionAdminPais());
+    const { GET } = await import("../route");
+    const respuesta = await GET(new Request("http://localhost/api/escaneos?tomo=1") as never);
+    expect(respuesta.status).toBe(400);
+    expect(mockListarEscaneos).not.toHaveBeenCalled();
+  });
+
+  it("Admin Regional sin escuelaId recibe 400", async () => {
+    vi.clearAllMocks();
+    mockObtenerSesion.mockResolvedValue(sesionAdminRegional());
+    const { GET } = await import("../route");
+    const respuesta = await GET(new Request("http://localhost/api/escaneos?tomo=1") as never);
+    expect(respuesta.status).toBe(400);
+    expect(mockListarEscaneos).not.toHaveBeenCalled();
+  });
+
+  it("Admin País con escuelaId lista solo esa escuela", async () => {
+    vi.clearAllMocks();
+    mockListarEscaneos.mockResolvedValue([]);
+    mockObtenerSesion.mockResolvedValue(sesionAdminPais());
+    const { GET } = await import("../route");
+    const respuesta = await GET(
+      new Request("http://localhost/api/escaneos?escuelaId=7&tomo=1") as never
+    );
+    expect(respuesta.status).toBe(200);
+    expect(mockListarEscaneos).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ escuelaId: 7, tomo: 1 }),
+      { tipo: "pais" }
+    );
+  });
 });

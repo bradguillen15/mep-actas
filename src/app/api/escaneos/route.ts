@@ -20,6 +20,13 @@ export async function GET(request: NextRequest) {
     ? Number(searchParams.get("tomo"))
     : undefined;
 
+  if (sesion.nivel <= 2 && !Number.isInteger(escuelaId)) {
+    return NextResponse.json(
+      { error: "Debe indicar la escuela: cada escuela tiene sus propios tomos y folios" },
+      { status: 400 }
+    );
+  }
+
   const servicio = crearServicioEscaneosDesdeDb(clienteDb());
   const escaneos = await servicio.listarConUrlLectura(
     { escuelaId, tomo },

@@ -34,6 +34,7 @@ En desarrollo local, sin cuenta de Cloudflare R2, se pueden adjuntar y ver escan
 - [x] T1 — Puerto de almacenamiento + adaptador local + rutas de desarrollo; servicio de escaneos usa el puerto; corregir `application/pdf` (ruta: delegado)
 - [x] T2 — Seed con imágenes PNG por folio en almacenamiento local y claves de `construirClave`; ajustar pruebas (ruta: delegado)
 - [x] T3 — Spec `almacenamiento-r2`, README y docs (ruta: delegado)
+- [x] T4 — Tomos por escuela: `GET /api/escaneos` exige `escuelaId` para niveles 1 y 2 (400 si falta) y `/tomos` no consulta hasta elegir escuela; antes mezclaba folios del mismo número de tomo de varias escuelas (ruta: inline)
 
 ## Verificación
 
