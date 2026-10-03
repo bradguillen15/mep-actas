@@ -5,6 +5,7 @@ import type {
   DatosNuevaEscuela,
   FiltrosEscuelas,
 } from "../repositorios/escuelas.repositorio";
+import { ErrorProhibido } from "@/server/errores";
 import type { Auditor } from "./auditoria.servicio";
 
 export interface RepositorioEscuelas {
@@ -54,7 +55,7 @@ export function crearServicioEscuelas(
         regionId: datos.regionId,
       });
       if (!verificacion.autorizado) {
-        throw new Error("No tiene permisos para crear escuelas en esta región");
+        throw new ErrorProhibido("No tiene permisos para crear escuelas en esta región");
       }
 
       if (!datos.codigoMep || datos.codigoMep.trim().length === 0) {
@@ -98,7 +99,7 @@ export function crearServicioEscuelas(
         regionId: existente.regionId,
       });
       if (!verificacion.autorizado) {
-        throw new Error("No tiene permisos para modificar esta escuela");
+        throw new ErrorProhibido("No tiene permisos para modificar esta escuela");
       }
 
       const datosAnteriores = JSON.stringify({
@@ -140,7 +141,7 @@ export function crearServicioEscuelas(
         regionId: existente.regionId,
       });
       if (!verificacion.autorizado) {
-        throw new Error("No tiene permisos para desactivar esta escuela");
+        throw new ErrorProhibido("No tiene permisos para desactivar esta escuela");
       }
 
       const actasActivas = await repositorio.contarActasActivas(id);

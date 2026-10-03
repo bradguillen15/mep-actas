@@ -8,6 +8,7 @@ import { crearAuditor } from "@/server/servicios/auditoria.servicio";
 import { crearServicioEscuelas } from "@/server/servicios/escuelas.servicio";
 import * as repositorio from "@/server/repositorios/escuelas.repositorio";
 import { NIVELES } from "@/server/auth/tipos";
+import { ErrorProhibido } from "@/server/errores";
 
 type Db = LibSQLDatabase<typeof esquema>;
 type RouteParams = Promise<{ id: string }>;
@@ -100,6 +101,9 @@ export async function PATCH(
 
     return NextResponse.json(escuela);
   } catch (error) {
+    if (error instanceof ErrorProhibido) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     const mensaje =
       error instanceof Error ? error.message : "Error al actualizar la escuela";
     const status = mensaje.includes("no encontrada") ? 404 : 400;
@@ -147,6 +151,9 @@ export async function DELETE(
 
     return NextResponse.json(escuela);
   } catch (error) {
+    if (error instanceof ErrorProhibido) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     const mensaje =
       error instanceof Error
         ? error.message

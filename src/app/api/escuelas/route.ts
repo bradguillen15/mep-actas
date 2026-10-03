@@ -8,6 +8,7 @@ import { crearAuditor } from "@/server/servicios/auditoria.servicio";
 import { crearServicioEscuelas } from "@/server/servicios/escuelas.servicio";
 import * as repositorio from "@/server/repositorios/escuelas.repositorio";
 import { NIVELES } from "@/server/auth/tipos";
+import { ErrorProhibido } from "@/server/errores";
 
 type Db = LibSQLDatabase<typeof esquema>;
 
@@ -94,6 +95,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(escuela, { status: 201 });
   } catch (error) {
+    if (error instanceof ErrorProhibido) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     const mensaje =
       error instanceof Error ? error.message : "Error al crear la escuela";
     return NextResponse.json({ error: mensaje }, { status: 400 });

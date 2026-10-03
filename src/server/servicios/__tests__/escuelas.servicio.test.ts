@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import type { Auditor } from "../auditoria.servicio";
 import type { SesionUsuario } from "@/server/auth/tipos";
+import { ErrorProhibido } from "@/server/errores";
 
 describe("escuelasServicio", () => {
   const auditorMock: Auditor = vi.fn().mockResolvedValue(undefined);
@@ -124,6 +125,20 @@ describe("escuelasServicio", () => {
       ).rejects.toThrow("No tiene permisos para crear escuelas en esta región");
     });
 
+    it("el rechazo por región ajena es un ErrorProhibido", async () => {
+      const repos = crearMockRepos();
+
+      const { crearServicioEscuelas } = await import("../escuelas.servicio");
+      const servicio = crearServicioEscuelas(repos, auditorMock);
+
+      await expect(
+        servicio.crearEscuela(
+          { regionId: 5, codigoMep: "MEP-003", nombre: "Escuela" },
+          sesionAdminRegionalOtraRegion
+        )
+      ).rejects.toBeInstanceOf(ErrorProhibido);
+    });
+
     it("rechaza codigoMep vacio", async () => {
       const repos = crearMockRepos();
 
@@ -204,6 +219,28 @@ describe("escuelasServicio", () => {
       ).rejects.toThrow("No tiene permisos para modificar esta escuela");
     });
 
+    it("el rechazo por región ajena al modificar es un ErrorProhibido", async () => {
+      const repos = crearMockRepos();
+      repos.obtenerEscuelaPorId.mockResolvedValue({
+        id: 1,
+        regionId: 5,
+        codigoMep: "MEP-001",
+        nombre: "Escuela Central",
+        activo: true,
+      });
+
+      const { crearServicioEscuelas } = await import("../escuelas.servicio");
+      const servicio = crearServicioEscuelas(repos, auditorMock);
+
+      await expect(
+        servicio.actualizarEscuela(
+          1,
+          { nombre: "Nuevo" },
+          sesionAdminRegionalOtraRegion
+        )
+      ).rejects.toBeInstanceOf(ErrorProhibido);
+    });
+
     it("lanza 404 si la escuela no existe", async () => {
       const repos = crearMockRepos();
       repos.obtenerEscuelaPorId.mockResolvedValue(undefined);
@@ -242,6 +279,26 @@ describe("escuelasServicio", () => {
 
       expect(resultado?.activo).toBe(false);
       expect(auditorMock).toHaveBeenCalled();
+    });
+
+    it("rechaza desactivar una escuela de otra región con ErrorProhibido", async () => {
+      const repos = crearMockRepos();
+      repos.obtenerEscuelaPorId.mockResolvedValue({
+        id: 1,
+        regionId: 5,
+        codigoMep: "MEP-001",
+        nombre: "Escuela Central",
+        activo: true,
+      });
+
+      const { crearServicioEscuelas } = await import("../escuelas.servicio");
+      const servicio = crearServicioEscuelas(repos, auditorMock);
+
+      const promesa = servicio.desactivarEscuela(1, sesionAdminRegionalOtraRegion);
+      await expect(promesa).rejects.toBeInstanceOf(ErrorProhibido);
+      await expect(promesa).rejects.toThrow(
+        "No tiene permisos para desactivar esta escuela"
+      );
     });
 
     it("rechaza desactivar escuela con actas activas", async () => {

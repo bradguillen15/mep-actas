@@ -1,6 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import { ErrorProhibido } from "@/server/errores";
+
 const mockObtenerSesion = vi.fn();
+const mockActualizarEscuela = vi.fn();
+const mockDesactivarEscuela = vi.fn();
+
+vi.mock("@/db/cliente", () => ({ clienteDb: () => ({}) }));
+
+vi.mock("@/server/servicios/auditoria.servicio", () => ({
+  crearAuditor: () => vi.fn(),
+}));
+
+vi.mock("@/server/servicios/escuelas.servicio", () => ({
+  crearServicioEscuelas: () => ({
+    actualizarEscuela: mockActualizarEscuela,
+    desactivarEscuela: mockDesactivarEscuela,
+  }),
+}));
 
 vi.mock("@/server/auth/sesion.servicio", () => ({
   obtenerSesion: mockObtenerSesion,
@@ -96,5 +113,59 @@ describe("DELETE /api/escuelas/[id]", () => {
     });
 
     expect(respuesta.status).toBe(403);
+  });
+});
+
+describe("PATCH y DELETE /api/escuelas/[id] ante ErrorProhibido", () => {
+  const sesionRegional = {
+    usuarioId: 2,
+    email: "regional@mep.go.cr",
+    nivel: 2,
+    rolId: 2,
+    funcionarioId: 2,
+    regionId: 1,
+  };
+  const contexto = { params: Promise.resolve({ id: "1" }) };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockObtenerSesion.mockResolvedValue(sesionRegional);
+  });
+
+  it("PATCH retorna 403 con el mensaje legible", async () => {
+    mockActualizarEscuela.mockRejectedValue(
+      new ErrorProhibido("No tiene permisos para modificar esta escuela")
+    );
+
+    const { PATCH } = await import("../route");
+    const respuesta = await PATCH(
+      new Request("http://localhost/api/escuelas/1", {
+        method: "PATCH",
+        body: JSON.stringify({ nombre: "Nuevo" }),
+      }),
+      contexto
+    );
+
+    expect(respuesta.status).toBe(403);
+    expect(await respuesta.json()).toEqual({
+      error: "No tiene permisos para modificar esta escuela",
+    });
+  });
+
+  it("DELETE retorna 403 con el mensaje legible", async () => {
+    mockDesactivarEscuela.mockRejectedValue(
+      new ErrorProhibido("No tiene permisos para desactivar esta escuela")
+    );
+
+    const { DELETE } = await import("../route");
+    const respuesta = await DELETE(
+      new Request("http://localhost/api/escuelas/1", { method: "DELETE" }),
+      contexto
+    );
+
+    expect(respuesta.status).toBe(403);
+    expect(await respuesta.json()).toEqual({
+      error: "No tiene permisos para desactivar esta escuela",
+    });
   });
 });
