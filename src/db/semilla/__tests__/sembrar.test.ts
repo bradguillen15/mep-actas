@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-non-literal-fs-filename -- directorios temporales de la prueba */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "fs";
 import os from "os";
@@ -11,6 +12,8 @@ import { sembrarBaseDeDatos, PASSWORD_LOCAL } from "../sembrar";
 import { migrarBaseDeDatos } from "../migrar";
 import { resolverUrlLocal } from "../url-local";
 import { ejecutarSemillaLocal } from "../local";
+import { ACTAS } from "../datos";
+import type { GeneradorImagenEscaneo } from "../sembrar";
 import { obtenerAmbitoDeFuncionario } from "../../../server/repositorios/usuarios.repositorio";
 
 const TABLAS = [
@@ -79,6 +82,76 @@ describe("sembrarBaseDeDatos", () => {
     expect(primera.get("acta_firmantes")).toBeGreaterThan(0);
     expect(primera.get("escaneos")).toBeGreaterThan(0);
     expect(primera.get("acta_escaneos")).toBeGreaterThan(0);
+    cliente.close();
+  });
+
+  it("siembra un escaneo por cada folio del rango de cada acta con la clave de la aplicación", async () => {
+    const { cliente, db } = await abrirBaseMigrada();
+    await sembrarBaseDeDatos(db);
+
+    const foliosEsperados = new Set(
+      ACTAS.flatMap((acta) =>
+        Array.from(
+          { length: acta.folioFin - acta.folioInicio + 1 },
+          (_, i) => `${acta.escuela}|${acta.numeroTomo}|${acta.folioInicio + i}`
+        )
+      )
+    );
+    const escaneos = await db.select().from(esquema.escaneos);
+    const escuelas = await db.select().from(esquema.escuelas);
+
+    expect(escaneos).toHaveLength(foliosEsperados.size);
+    for (const escaneo of escaneos) {
+      const codigo = escuelas.find((e) => e.id === escaneo.escuelaId)?.codigoMep;
+      expect(foliosEsperados.has(`${codigo}|${escaneo.numeroTomo}|${escaneo.numeroFolio}`)).toBe(true);
+      expect(escaneo.url).toBe(
+        `escaneos/${escaneo.escuelaId}/${escaneo.numeroTomo}/${escaneo.numeroFolio}.png`
+      );
+      expect(escaneo.formato).toBe("png");
+    }
+    cliente.close();
+  });
+
+  it("migra las claves del formato anterior al volver a sembrar", async () => {
+    const { cliente, db } = await abrirBaseMigrada();
+    await sembrarBaseDeDatos(db);
+    const [escaneo] = await db.select().from(esquema.escaneos);
+    await db
+      .update(esquema.escaneos)
+      .set({ url: "escaneos/001/tomo-1/folio-1.jpg", formato: "jpg" })
+      .where(eq(esquema.escaneos.id, escaneo.id));
+
+    await sembrarBaseDeDatos(db);
+    const [actualizado] = await db
+      .select()
+      .from(esquema.escaneos)
+      .where(eq(esquema.escaneos.id, escaneo.id));
+
+    expect(actualizado.url).toBe(escaneo.url);
+    expect(actualizado.formato).toBe("png");
+    cliente.close();
+  });
+
+  it("pide una imagen por folio sembrado e informa cuántas generó", async () => {
+    const { cliente, db } = await abrirBaseMigrada();
+    const solicitadas: string[] = [];
+    const generarImagenEscaneo: GeneradorImagenEscaneo = async (datos) => {
+      solicitadas.push(datos.clave);
+      return true;
+    };
+
+    const resumen = await sembrarBaseDeDatos(db, { generarImagenEscaneo });
+    const escaneos = await db.select().from(esquema.escaneos);
+
+    expect(solicitadas.sort()).toEqual(escaneos.map((e) => e.url).sort());
+    expect(resumen.imagenesGeneradas).toBe(escaneos.length);
+    cliente.close();
+  });
+
+  it("no genera imágenes si no se inyecta un generador", async () => {
+    const { cliente, db } = await abrirBaseMigrada();
+    const resumen = await sembrarBaseDeDatos(db);
+    expect(resumen.imagenesGeneradas).toBe(0);
     cliente.close();
   });
 
@@ -186,6 +259,41 @@ describe("resolverUrlLocal", () => {
 });
 
 describe("ejecutarSemillaLocal", () => {
+  it("genera las imágenes en el directorio de almacenamiento y al reiniciar lo vacía", async () => {
+    const directorio = fs.mkdtempSync(path.join(os.tmpdir(), "semilla-almacenamiento-"));
+    try {
+      const primera = await ejecutarSemillaLocal({
+        urlBaseDeDatos: `file:${rutaDb}`,
+        reiniciar: false,
+        directorioAlmacenamiento: directorio,
+        rondasHash: 4,
+      });
+      const clave = `escaneos/1/${ACTAS[0].numeroTomo}/1.png`;
+      expect(primera.imagenesGeneradas).toBeGreaterThan(0);
+      expect(fs.existsSync(path.join(directorio, clave))).toBe(true);
+
+      const segunda = await ejecutarSemillaLocal({
+        urlBaseDeDatos: `file:${rutaDb}`,
+        reiniciar: false,
+        directorioAlmacenamiento: directorio,
+        rondasHash: 4,
+      });
+      expect(segunda.imagenesGeneradas).toBe(0);
+
+      fs.writeFileSync(path.join(directorio, "huerfano.txt"), "x");
+      const tercera = await ejecutarSemillaLocal({
+        urlBaseDeDatos: `file:${rutaDb}`,
+        reiniciar: true,
+        directorioAlmacenamiento: directorio,
+        rondasHash: 4,
+      });
+      expect(fs.existsSync(path.join(directorio, "huerfano.txt"))).toBe(false);
+      expect(tercera.imagenesGeneradas).toBe(primera.imagenesGeneradas);
+    } finally {
+      fs.rmSync(directorio, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   it("rechaza una URL remota sin tocar nada", async () => {
     await expect(
       ejecutarSemillaLocal({ urlBaseDeDatos: "libsql://mi-base.turso.io", reiniciar: false })
@@ -193,14 +301,25 @@ describe("ejecutarSemillaLocal", () => {
   });
 
   it("siembra la base local y con reiniciar la recrea desde cero", async () => {
-    await ejecutarSemillaLocal({ urlBaseDeDatos: `file:${rutaDb}`, reiniciar: false });
+    const directorioAlmacenamiento = path.join(directorio, "almacenamiento");
+    await ejecutarSemillaLocal({
+      urlBaseDeDatos: `file:${rutaDb}`,
+      reiniciar: false,
+      directorioAlmacenamiento,
+      rondasHash: 4,
+    });
 
     const cliente = createClient({ url: `file:${rutaDb}` });
     const db = drizzle(cliente, { schema: esquema });
     await db.insert(esquema.regiones).values({ nombre: "Región Temporal" });
     cliente.close();
 
-    await ejecutarSemillaLocal({ urlBaseDeDatos: `file:${rutaDb}`, reiniciar: true });
+    await ejecutarSemillaLocal({
+      urlBaseDeDatos: `file:${rutaDb}`,
+      reiniciar: true,
+      directorioAlmacenamiento,
+      rondasHash: 4,
+    });
 
     const clienteNuevo = createClient({ url: `file:${rutaDb}` });
     const dbNueva = drizzle(clienteNuevo, { schema: esquema });
@@ -208,5 +327,5 @@ describe("ejecutarSemillaLocal", () => {
     expect(regiones.map((r) => r.nombre)).not.toContain("Región Temporal");
     expect(regiones).toHaveLength(6);
     clienteNuevo.close();
-  });
+  }, 30_000);
 });

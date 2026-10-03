@@ -1,10 +1,10 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { and, eq } from "drizzle-orm";
+import { and, eq, like } from "drizzle-orm";
 import { hashSync } from "bcryptjs";
+import { construirClave } from "../../server/almacenamiento/r2.util";
 import * as esquema from "../esquema";
 import {
   ACTAS,
-  ESCANEOS_POR_ACTA,
   ESCUELAS,
   PERSONAL,
   REGIONES,
@@ -22,8 +22,18 @@ export const PASSWORD_LOCAL = "password";
 const RONDAS_HASH_PREDETERMINADAS = 10;
 const PRIORIDAD_REGISTRO_POR_NIVEL: readonly NivelRolSemilla[] = [3, 4, 2, 1];
 
+export type DatosImagenEscaneo = {
+  clave: string;
+  numeroTomo: number;
+  numeroFolio: number;
+  nombreEscuela: string;
+};
+
+export type GeneradorImagenEscaneo = (datos: DatosImagenEscaneo) => Promise<boolean>;
+
 export type OpcionesSemilla = {
   rondasHash?: number;
+  generarImagenEscaneo?: GeneradorImagenEscaneo;
 };
 
 export type UsuarioSembrado = {
@@ -35,6 +45,7 @@ export type UsuarioSembrado = {
 
 export type ResumenSemilla = {
   usuarios: UsuarioSembrado[];
+  imagenesGeneradas: number;
 };
 
 async function primerId(
@@ -214,8 +225,10 @@ function registradorDeActa(acta: ActaSemilla): PersonalSemilla {
 async function sembrarActas(
   db: BaseDeDatos,
   catalogos: Awaited<ReturnType<typeof sembrarCatalogos>>,
-  personal: Awaited<ReturnType<typeof sembrarPersonal>>
-) {
+  personal: Awaited<ReturnType<typeof sembrarPersonal>>,
+  generarImagenEscaneo: GeneradorImagenEscaneo | undefined
+): Promise<number> {
+  let imagenesGeneradas = 0;
   for (const acta of ACTAS) {
     const escuelaId = exigir(catalogos.escuelas.get(acta.escuela), `la escuela ${acta.escuela}`);
     const tipoActaId = exigir(catalogos.tipos.get(acta.tipo), `el tipo de acta ${acta.tipo}`);
@@ -311,8 +324,12 @@ async function sembrarActas(
       "el usuario registrador"
     );
 
-    const ultimoFolio = Math.min(acta.folioFin, acta.folioInicio + ESCANEOS_POR_ACTA - 1);
-    for (let folio = acta.folioInicio; folio <= ultimoFolio; folio++) {
+    const nombreEscuela = exigir(
+      ESCUELAS.find((e) => e.codigoMep === acta.escuela),
+      `la escuela ${acta.escuela}`
+    ).nombre;
+    for (let folio = acta.folioInicio; folio <= acta.folioFin; folio++) {
+      const clave = construirClave(escuelaId, acta.numeroTomo, folio, "png");
       const escaneoId = await obtenerIdOCrear(
         () =>
           db
@@ -332,13 +349,28 @@ async function sembrarActas(
               escuelaId,
               numeroTomo: acta.numeroTomo,
               numeroFolio: folio,
-              url: `escaneos/${acta.escuela}/tomo-${acta.numeroTomo}/folio-${folio}.jpg`,
-              formato: "jpg",
+              url: clave,
+              formato: "png",
               uploadedBy: usuarioId,
               createdAt: fecha,
             })
             .returning({ id: esquema.escaneos.id })
       );
+      await db
+        .update(esquema.escaneos)
+        .set({ url: clave, formato: "png" })
+        .where(
+          and(eq(esquema.escaneos.id, escaneoId), like(esquema.escaneos.url, "escaneos/%/tomo-%"))
+        );
+      if (generarImagenEscaneo) {
+        const generada = await generarImagenEscaneo({
+          clave,
+          numeroTomo: acta.numeroTomo,
+          numeroFolio: folio,
+          nombreEscuela,
+        });
+        if (generada) imagenesGeneradas++;
+      }
       await obtenerIdOCrear(
         () =>
           db
@@ -388,6 +420,7 @@ async function sembrarActas(
           .returning({ id: esquema.auditoria.id })
     );
   }
+  return imagenesGeneradas;
 }
 
 function describirAmbito(persona: PersonalSemilla): string {
@@ -411,7 +444,12 @@ export async function sembrarBaseDeDatos(
     catalogos,
     opciones.rondasHash ?? RONDAS_HASH_PREDETERMINADAS
   );
-  await sembrarActas(db, catalogos, personal);
+  const imagenesGeneradas = await sembrarActas(
+    db,
+    catalogos,
+    personal,
+    opciones.generarImagenEscaneo
+  );
 
   const usuarios = PERSONAL.flatMap((persona): UsuarioSembrado[] =>
     persona.usuario
@@ -426,6 +464,6 @@ export async function sembrarBaseDeDatos(
       : []
   );
 
-  return { usuarios };
+  return { usuarios, imagenesGeneradas };
 }
 

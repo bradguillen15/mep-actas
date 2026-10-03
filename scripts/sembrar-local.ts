@@ -12,6 +12,7 @@ async function main() {
   console.log(
     `Base de datos local ${reiniciar ? "reiniciada y " : ""}lista: ${resultado.rutaBaseDeDatos}`
   );
+  console.log(`Imágenes de escaneos generadas: ${resultado.imagenesGeneradas}`);
   console.log(`Usuarios disponibles (contraseña: ${PASSWORD_LOCAL}):`);
   for (const usuario of resultado.usuarios) {
     console.log(

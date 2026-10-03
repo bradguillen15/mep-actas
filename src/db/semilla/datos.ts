@@ -173,8 +173,6 @@ export type ActaSemilla = {
   certificadoInicial: number;
 };
 
-export const ESCANEOS_POR_ACTA = 2;
-
 export const ACTAS: readonly ActaSemilla[] = [
   { escuela: "001", tipo: "Certificado de Graduación", anio: 2020, numeroTomo: 12, folioInicio: 1, folioFin: 18, estudiantes: GRADUADOS.slice(0, 12), certificadoInicial: 10001 },
   { escuela: "001", tipo: "Certificado de Graduación", anio: 2022, numeroTomo: 14, folioInicio: 1, folioFin: 15, estudiantes: GRADUADOS.slice(12, 24), certificadoInicial: 10101 },

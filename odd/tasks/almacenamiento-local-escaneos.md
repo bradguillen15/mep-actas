@@ -32,7 +32,7 @@ En desarrollo local, sin cuenta de Cloudflare R2, se pueden adjuntar y ver escan
 ## Tareas
 
 - [x] T1 — Puerto de almacenamiento + adaptador local + rutas de desarrollo; servicio de escaneos usa el puerto; corregir `application/pdf` (ruta: delegado)
-- [ ] T2 — Seed con imágenes PNG por folio en almacenamiento local y claves de `construirClave`; ajustar pruebas (ruta: delegado)
+- [x] T2 — Seed con imágenes PNG por folio en almacenamiento local y claves de `construirClave`; ajustar pruebas (ruta: delegado)
 - [ ] T3 — Spec `almacenamiento-r2`, README y docs (ruta: delegado)
 
 ## Verificación
@@ -43,4 +43,4 @@ En desarrollo local, sin cuenta de Cloudflare R2, se pueden adjuntar y ver escan
 ## Progreso
 
 - Rama: `feat/gestion-usuarios-jerarquia`.
-- T1 completada: commit `c82aff6` (puerto `AlmacenamientoEscaneos`, adaptadores R2 y local, rutas `/api/almacenamiento-local/[...clave]`, `Content-Type` correcto para PDF).
+- T1 completada: commit `22fb4e5` (puerto `AlmacenamientoEscaneos`, adaptadores R2 y local, rutas `/api/almacenamiento-local/[...clave]`, `Content-Type` correcto para PDF).
