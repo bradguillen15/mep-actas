@@ -188,7 +188,7 @@ beforeAll(async () => {
     escuelaPropiaId
   );
   sesionStaff = datosSesionStaff(
-    adminEscuela,
+    staff,
     rolesPorNivel.get(4)!,
     escuelaPropiaId
   );
