@@ -44,3 +44,4 @@ En desarrollo local, sin cuenta de Cloudflare R2, se pueden adjuntar y ver escan
 
 - Rama: `feat/gestion-usuarios-jerarquia`.
 - T1 completada: commit `22fb4e5` (puerto `AlmacenamientoEscaneos`, adaptadores R2 y local, rutas `/api/almacenamiento-local/[...clave]`, `Content-Type` correcto para PDF).
+- T2 completada: commit `82ea8cc` (semilla con un escaneo por folio, claves de `construirClave`, 143 imágenes PNG generadas con sharp; `db:reiniciar` vacía el almacenamiento local).
