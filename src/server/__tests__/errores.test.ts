@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { ErrorNoEncontrado, ErrorProhibido } from "../errores";
+import {
+  ErrorNoEncontrado,
+  ErrorProhibido,
+  ErrorConflicto,
+} from "../errores";
 
 describe("errores tipados", () => {
   it("ErrorNoEncontrado conserva el nombre que mapean las rutas a 404", () => {
@@ -13,5 +17,12 @@ describe("errores tipados", () => {
     const error = new ErrorProhibido("Sin permisos");
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe("ForbiddenError");
+  });
+
+  it("ErrorConflicto conserva el nombre que mapean las rutas a 409", () => {
+    const error = new ErrorConflicto("El código MEP ya existe");
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe("ConflictError");
+    expect(error.message).toBe("El código MEP ya existe");
   });
 });

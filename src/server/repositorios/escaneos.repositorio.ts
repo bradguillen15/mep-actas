@@ -1,8 +1,9 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { eq, and, type SQL } from "drizzle-orm";
+import { eq, and, type SQL, sql } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { AmbitoConsulta } from "@/server/auth/ambito";
 import { condicionEscuelaEnAmbito } from "./ambito.condiciones";
+import { ErrorConflicto } from "@/server/errores";
 
 export type FilaEscaneo = typeof esquema.escaneos.$inferSelect;
 
@@ -44,6 +45,36 @@ export async function obtenerEscaneoPorId(
   return resultado[0];
 }
 
+export async function obtenerEscaneoPorEscuelaTomoFolio(
+  db: LibSQLDatabase<typeof esquema>,
+  escuelaId: number,
+  numeroTomo: number,
+  numeroFolio: number
+): Promise<FilaEscaneo | undefined> {
+  const resultado = await db
+    .select()
+    .from(esquema.escaneos)
+    .where(
+      and(
+        eq(esquema.escaneos.escuelaId, escuelaId),
+        eq(esquema.escaneos.numeroTomo, numeroTomo),
+        eq(esquema.escaneos.numeroFolio, numeroFolio)
+      )
+    );
+  return resultado[0];
+}
+
+export async function contarVinculosDeEscaneo(
+  db: LibSQLDatabase<typeof esquema>,
+  escaneoId: number
+): Promise<number> {
+  const resultado = await db
+    .select({ conteo: sql<number>`count(*)` })
+    .from(esquema.actaEscaneos)
+    .where(eq(esquema.actaEscaneos.escaneoId, escaneoId));
+  return Number(resultado[0]?.conteo ?? 0);
+}
+
 export async function crearEscaneo(
   db: LibSQLDatabase<typeof esquema>,
   datos: {
@@ -67,6 +98,13 @@ export async function eliminarEscaneo(
   db: LibSQLDatabase<typeof esquema>,
   id: number
 ): Promise<FilaEscaneo | undefined> {
+  const vinculos = await contarVinculosDeEscaneo(db, id);
+  if (vinculos > 0) {
+    throw new ErrorConflicto(
+      "No se puede eliminar un escaneo vinculado a actas"
+    );
+  }
+
   const [escaneo] = await db
     .delete(esquema.escaneos)
     .where(eq(esquema.escaneos.id, id))

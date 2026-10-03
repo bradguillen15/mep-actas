@@ -8,7 +8,7 @@ import { crearAuditor } from "@/server/servicios/auditoria.servicio";
 import { crearServicioEscuelas } from "@/server/servicios/escuelas.servicio";
 import * as repositorio from "@/server/repositorios/escuelas.repositorio";
 import { NIVELES } from "@/server/auth/tipos";
-import { ErrorProhibido } from "@/server/errores";
+import { ErrorConflicto, ErrorProhibido } from "@/server/errores";
 
 type Db = LibSQLDatabase<typeof esquema>;
 type RouteParams = Promise<{ id: string }>;
@@ -19,8 +19,11 @@ function crearServicio(db: Db) {
     {
       listarEscuelas: (filtros) => repositorio.listarEscuelas(db, filtros),
       obtenerEscuelaPorId: (id) => repositorio.obtenerEscuelaPorId(db, id),
+      obtenerEscuelaPorCodigoMep: (codigoMep) =>
+        repositorio.obtenerEscuelaPorCodigoMep(db, codigoMep),
       crearEscuela: (datos) => repositorio.crearEscuela(db, datos),
-      actualizarEscuela: (id, datos) => repositorio.actualizarEscuela(db, id, datos),
+      actualizarEscuela: (id, datos) =>
+        repositorio.actualizarEscuela(db, id, datos),
       desactivarEscuela: (id) => repositorio.desactivarEscuela(db, id),
       contarActasActivas: (id) => repositorio.contarActasActivas(db, id),
     },
@@ -104,6 +107,9 @@ export async function PATCH(
     if (error instanceof ErrorProhibido) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
+    if (error instanceof ErrorConflicto) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     const mensaje =
       error instanceof Error ? error.message : "Error al actualizar la escuela";
     const status = mensaje.includes("no encontrada") ? 404 : 400;
@@ -154,15 +160,14 @@ export async function DELETE(
     if (error instanceof ErrorProhibido) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
+    if (error instanceof ErrorConflicto) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     const mensaje =
       error instanceof Error
         ? error.message
         : "Error al desactivar la escuela";
-    const status = mensaje.includes("no encontrada")
-      ? 404
-      : mensaje.includes("actas activas")
-        ? 409
-        : 400;
+    const status = mensaje.includes("no encontrada") ? 404 : 400;
     return NextResponse.json({ error: mensaje }, { status });
   }
 }

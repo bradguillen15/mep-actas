@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { ErrorNoEncontrado, ErrorProhibido } from "@/server/errores";
+import {
+  ErrorNoEncontrado,
+  ErrorProhibido,
+  ErrorConflicto,
+} from "@/server/errores";
 import { respuestaNoAutorizada, responderErrorDeRecurso } from "../respuestas";
 
 describe("respuestaNoAutorizada", () => {
@@ -41,6 +45,18 @@ describe("responderErrorDeRecurso", () => {
 
     expect(respuesta.status).toBe(403);
     expect(await respuesta.json()).toEqual({ error: "Sin acceso" });
+  });
+
+  it("mapea ErrorConflicto a 409 con el mensaje del error", async () => {
+    const respuesta = responderErrorDeRecurso(
+      new ErrorConflicto("El código MEP ya existe"),
+      "No encontrado"
+    );
+
+    expect(respuesta.status).toBe(409);
+    expect(await respuesta.json()).toEqual({
+      error: "El código MEP ya existe",
+    });
   });
 
   it("relanza los errores desconocidos", () => {

@@ -18,6 +18,11 @@ export interface RepositorioEscaneos {
     id: number,
     ambito: AmbitoConsulta
   ) => Promise<FilaEscaneo | undefined>;
+  obtenerEscaneoPorEscuelaTomoFolio: (
+    escuelaId: number,
+    numeroTomo: number,
+    numeroFolio: number
+  ) => Promise<FilaEscaneo | undefined>;
   crearEscaneo: (datos: {
     escuelaId: number;
     numeroTomo: number;
@@ -43,7 +48,12 @@ export interface ServicioEscaneos {
     ambito: AmbitoConsulta
   ) => Promise<FilaEscaneo | undefined>;
   prepararSubida: (
-    datos: { escuelaId: number; numeroTomo: number; numeroFolio: number; formato: string },
+    datos: {
+      escuelaId: number;
+      numeroTomo: number;
+      numeroFolio: number;
+      formato: string;
+    },
     sesion: SesionUsuario
   ) => Promise<{ urlSubida: string; clave: string; escaneo: FilaEscaneo }>;
   generarUrlLectura: (
@@ -82,15 +92,7 @@ export function crearServicioEscaneos(
       return repositorio.obtenerEscaneoPorId(id, ambito);
     },
 
-    async prepararSubida(
-      datos: {
-        escuelaId: number;
-        numeroTomo: number;
-        numeroFolio: number;
-        formato: string;
-      },
-      sesion: SesionUsuario
-    ) {
+    async prepararSubida(datos, sesion) {
       const ext = datos.formato.toLowerCase();
       if (!EXTENSIONES_PERMITIDAS.includes(ext)) {
         throw new Error(
@@ -105,29 +107,39 @@ export function crearServicioEscaneos(
         ext
       );
 
-      const escaneo = await repositorio.crearEscaneo({
-        escuelaId: datos.escuelaId,
-        numeroTomo: datos.numeroTomo,
-        numeroFolio: datos.numeroFolio,
-        url: clave,
-        formato: datos.formato,
-        uploadedBy: sesion.usuarioId,
-      });
+      const existente = await repositorio.obtenerEscaneoPorEscuelaTomoFolio(
+        datos.escuelaId,
+        datos.numeroTomo,
+        datos.numeroFolio
+      );
+
+      const escaneo =
+        existente ??
+        (await repositorio.crearEscaneo({
+          escuelaId: datos.escuelaId,
+          numeroTomo: datos.numeroTomo,
+          numeroFolio: datos.numeroFolio,
+          url: clave,
+          formato: datos.formato,
+          uploadedBy: sesion.usuarioId,
+        }));
 
       const urlSubida = await almacenamiento.generarUrlSubida(
         clave,
         tipoContenidoDeExtension(ext)
       );
 
-      await auditor({
-        usuarioId: sesion.usuarioId,
-        tabla: "escaneos",
-        registroId: escaneo.id,
-        accion: "subir",
-        escuelaId: escaneo.escuelaId,
-        datosAnteriores: null,
-        datosNuevos: JSON.stringify(escaneo),
-      });
+      if (!existente) {
+        await auditor({
+          usuarioId: sesion.usuarioId,
+          tabla: "escaneos",
+          registroId: escaneo.id,
+          accion: "subir",
+          escuelaId: escaneo.escuelaId,
+          datosAnteriores: null,
+          datosNuevos: JSON.stringify(escaneo),
+        });
+      }
 
       return { urlSubida, clave, escaneo };
     },

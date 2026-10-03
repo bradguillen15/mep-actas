@@ -11,7 +11,7 @@ import {
   escuelasDentroDeAmbito,
   type AmbitoConsulta,
 } from "@/server/auth/ambito";
-import { ErrorNoEncontrado, ErrorProhibido } from "@/server/errores";
+import { ErrorConflicto, ErrorNoEncontrado, ErrorProhibido } from "@/server/errores";
 
 type RepositorioUsuarios = {
   listarUsuarios: (ambito: AmbitoConsulta) => Promise<FilaUsuarioLista[]>;
@@ -151,9 +151,7 @@ export function crearServicioUsuarios(
 
       const existente = await repositorio.obtenerUsuarioPorEmail(datos.email);
       if (existente) {
-        const error = new Error("El email ya está registrado");
-        error.name = "ConflictError";
-        throw error;
+        throw new ErrorConflicto("El email ya está registrado");
       }
       const usuario = await repositorio.crearUsuario(datos);
       await auditor({

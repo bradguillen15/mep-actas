@@ -23,6 +23,9 @@ export function responderErrorDeRecurso(
   if (error instanceof Error && error.name === "ValidationError") {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+  if (error instanceof Error && error.name === "ConflictError") {
+    return NextResponse.json({ error: error.message }, { status: 409 });
+  }
   if (error instanceof Error && error.name === "PersistenceError") {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

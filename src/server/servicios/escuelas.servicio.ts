@@ -5,12 +5,15 @@ import type {
   DatosNuevaEscuela,
   FiltrosEscuelas,
 } from "../repositorios/escuelas.repositorio";
-import { ErrorProhibido } from "@/server/errores";
+import { ErrorConflicto, ErrorProhibido } from "@/server/errores";
 import type { Auditor } from "./auditoria.servicio";
 
 export interface RepositorioEscuelas {
   listarEscuelas: (filtros?: FiltrosEscuelas) => Promise<FilaEscuela[]>;
   obtenerEscuelaPorId: (id: number) => Promise<FilaEscuela | undefined>;
+  obtenerEscuelaPorCodigoMep: (
+    codigoMep: string
+  ) => Promise<FilaEscuela | undefined>;
   crearEscuela: (
     datos: Pick<DatosNuevaEscuela, "regionId" | "codigoMep" | "nombre">
   ) => Promise<FilaEscuela>;
@@ -55,7 +58,9 @@ export function crearServicioEscuelas(
         regionId: datos.regionId,
       });
       if (!verificacion.autorizado) {
-        throw new ErrorProhibido("No tiene permisos para crear escuelas en esta región");
+        throw new ErrorProhibido(
+          "No tiene permisos para crear escuelas en esta región"
+        );
       }
 
       if (!datos.codigoMep || datos.codigoMep.trim().length === 0) {
@@ -65,9 +70,15 @@ export function crearServicioEscuelas(
         throw new Error("El nombre de la escuela no puede estar vacío");
       }
 
+      const codigoMep = datos.codigoMep.trim();
+      const duplicada = await repositorio.obtenerEscuelaPorCodigoMep(codigoMep);
+      if (duplicada) {
+        throw new ErrorConflicto("El código MEP ya existe");
+      }
+
       const escuela = await repositorio.crearEscuela({
         regionId: datos.regionId,
-        codigoMep: datos.codigoMep.trim(),
+        codigoMep,
         nombre: datos.nombre.trim(),
       });
 
@@ -81,7 +92,7 @@ export function crearServicioEscuelas(
         datosAnteriores: null,
         datosNuevos: JSON.stringify({
           regionId: datos.regionId,
-          codigoMep: datos.codigoMep,
+          codigoMep,
           nombre: datos.nombre,
         }),
       });
@@ -99,7 +110,18 @@ export function crearServicioEscuelas(
         regionId: existente.regionId,
       });
       if (!verificacion.autorizado) {
-        throw new ErrorProhibido("No tiene permisos para modificar esta escuela");
+        throw new ErrorProhibido(
+          "No tiene permisos para modificar esta escuela"
+        );
+      }
+
+      if (datos.codigoMep !== undefined) {
+        const codigoMep = datos.codigoMep.trim();
+        const duplicada =
+          await repositorio.obtenerEscuelaPorCodigoMep(codigoMep);
+        if (duplicada && duplicada.id !== id) {
+          throw new ErrorConflicto("El código MEP ya existe");
+        }
       }
 
       const datosAnteriores = JSON.stringify({
@@ -141,12 +163,14 @@ export function crearServicioEscuelas(
         regionId: existente.regionId,
       });
       if (!verificacion.autorizado) {
-        throw new ErrorProhibido("No tiene permisos para desactivar esta escuela");
+        throw new ErrorProhibido(
+          "No tiene permisos para desactivar esta escuela"
+        );
       }
 
       const actasActivas = await repositorio.contarActasActivas(id);
       if (actasActivas > 0) {
-        throw new Error(
+        throw new ErrorConflicto(
           "No se puede desactivar una escuela con actas activas"
         );
       }

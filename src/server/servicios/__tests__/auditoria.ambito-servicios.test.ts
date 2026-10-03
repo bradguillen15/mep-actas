@@ -59,6 +59,7 @@ describe("cada servicio informa el ámbito del registro auditado", () => {
       {
         listarEscaneos: vi.fn(),
         obtenerEscaneoPorId: vi.fn().mockResolvedValue(escaneo),
+        obtenerEscaneoPorEscuelaTomoFolio: vi.fn().mockResolvedValue(undefined),
         crearEscaneo: vi.fn().mockResolvedValue(escaneo),
         eliminarEscaneo: vi.fn().mockResolvedValue(escaneo),
       },
@@ -81,6 +82,7 @@ describe("cada servicio informa el ámbito del registro auditado", () => {
       {
         listarEscuelas: vi.fn(),
         obtenerEscuelaPorId: vi.fn().mockResolvedValue(escuela),
+        obtenerEscuelaPorCodigoMep: vi.fn().mockResolvedValue(undefined),
         crearEscuela: vi.fn().mockResolvedValue(escuela),
         actualizarEscuela: vi.fn().mockResolvedValue(escuela),
         desactivarEscuela: vi.fn().mockResolvedValue(escuela),

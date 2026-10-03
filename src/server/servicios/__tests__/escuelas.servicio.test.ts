@@ -10,6 +10,7 @@ describe("escuelasServicio", () => {
     return {
       listarEscuelas: vi.fn(),
       obtenerEscuelaPorId: vi.fn(),
+      obtenerEscuelaPorCodigoMep: vi.fn().mockResolvedValue(undefined),
       crearEscuela: vi.fn(),
       actualizarEscuela: vi.fn(),
       desactivarEscuela: vi.fn(),
@@ -165,6 +166,31 @@ describe("escuelasServicio", () => {
           sesionAdminPais
         )
       ).rejects.toThrow("El nombre de la escuela no puede estar vacío");
+    });
+
+    it("rechaza codigo MEP duplicado con ConflictError", async () => {
+      const repos = crearMockRepos();
+      repos.obtenerEscuelaPorCodigoMep.mockResolvedValue({
+        id: 9,
+        regionId: 1,
+        codigoMep: "MEP-001",
+        nombre: "Existente",
+        activo: true,
+      });
+
+      const { crearServicioEscuelas } = await import("../escuelas.servicio");
+      const servicio = crearServicioEscuelas(repos, auditorMock);
+
+      await expect(
+        servicio.crearEscuela(
+          { regionId: 1, codigoMep: "MEP-001", nombre: "Nueva" },
+          sesionAdminPais
+        )
+      ).rejects.toMatchObject({
+        name: "ConflictError",
+        message: "El código MEP ya existe",
+      });
+      expect(repos.crearEscuela).not.toHaveBeenCalled();
     });
   });
 

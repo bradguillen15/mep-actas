@@ -1,7 +1,8 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import type { ConexionDb } from "@/db/tipos";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
+import { ErrorConflicto } from "@/server/errores";
 
 export type FilaEstudiante = typeof esquema.estudiantes.$inferSelect;
 export type FilaActaEstudiante = typeof esquema.actaEstudiantes.$inferSelect;
@@ -50,6 +51,20 @@ export async function agregarEstudianteAActa(
       .values({ personaId })
       .returning()
       .all();
+  }
+
+  const [existente] = await db
+    .select()
+    .from(esquema.actaEstudiantes)
+    .where(
+      and(
+        eq(esquema.actaEstudiantes.actaId, actaId),
+        eq(esquema.actaEstudiantes.estudianteId, estudiante.id)
+      )
+    );
+
+  if (existente) {
+    throw new ErrorConflicto("El estudiante ya está en esta acta");
   }
 
   const [actaEstudiante] = await db

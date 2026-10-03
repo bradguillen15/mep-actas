@@ -14,3 +14,7 @@ export class ErrorValidacion extends Error {
 export class ErrorPersistencia extends Error {
   override name = "PersistenceError";
 }
+
+export class ErrorConflicto extends Error {
+  override name = "ConflictError";
+}

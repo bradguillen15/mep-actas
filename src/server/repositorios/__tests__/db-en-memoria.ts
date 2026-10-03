@@ -6,6 +6,7 @@ import * as esquema from "@/db/esquema";
 
 export async function crearDbEnMemoria() {
   const cliente = createClient({ url: ":memory:" });
+  await cliente.execute("PRAGMA foreign_keys = ON");
   const db = drizzle(cliente, { schema: esquema });
   await migrate(db, {
     migrationsFolder: path.resolve(__dirname, "../../../../drizzle"),

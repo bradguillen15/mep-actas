@@ -1,12 +1,12 @@
 # Modelo de datos — Sistema de Consulta de Títulos del MEP
 
 > Fuente: BRD §10. Este documento describe el modelo de dominio y la estructura de la base de datos.
-> Última actualización: seguridad-alcance-escuela-region (columnas `escuela_id` y `region_id` en auditoría, índices de ámbito y control de acceso por ámbito).
+> Última actualización: integridad del esquema (UNIQUE de negocio, FK de `acta_referencia_id`, CHECKs de folios/nivel, `PRAGMA foreign_keys`).
 
 ## Principios de diseño
 
 - **Nombres en español**: todas las tablas, columnas y relaciones usan español (Costa Rica).
-- **Actas inmutables**: una vez creadas no se editan ni eliminan. Las correcciones se hacen con nuevas actas enlazadas via `acta_referencia_id`.
+- **Actas inmutables (intención de producto)**: el BRD y este modelo asumen que una vez creadas no se editan ni eliminan; las correcciones van con nuevas actas enlazadas via `acta_referencia_id`. Hoy la API aún expone `PATCH` de actas — la decisión de cerrar esa mutación queda fuera de este documento.
 - **Auditoría obligatoria**: toda operación de escritura registra en la tabla `auditoria`.
 - **Sin tomos/folios como entidades estructurales**: son campos de referencia para trazabilidad con el original físico.
 - **Escaneos como recurso reutilizable**: un escaneo se administra independientemente y se vincula a múltiples actas sin duplicación.
@@ -40,26 +40,26 @@ erDiagram
 
     regiones {
         int id PK
-        text nombre
+        text nombre UK
         int activo
     }
     escuelas {
         int id PK
         int region_id FK
-        text codigo_mep
+        text codigo_mep UK
         text nombre
         int activo
     }
     tipos_acta {
         int id PK
-        text nombre
+        text nombre UK
         int activo
     }
     actas {
         int id PK
         int escuela_id FK
         int tipo_acta_id FK
-        int acta_referencia_id "sin restricción FK"
+        int acta_referencia_id FK
         text titulo
         int numero_tomo
         int folio_inicio
@@ -75,7 +75,7 @@ erDiagram
     }
     estudiantes {
         int id PK
-        int persona_id FK
+        int persona_id FK_UK
     }
     acta_estudiantes {
         int id PK
@@ -100,7 +100,7 @@ erDiagram
     }
     funcionarios {
         int id PK
-        int persona_id FK
+        int persona_id FK_UK
         text puesto
     }
     funcionario_escuela {
@@ -116,12 +116,12 @@ erDiagram
     }
     roles {
         int id PK
-        text nombre
-        int nivel
+        text nombre UK
+        int nivel UK
     }
     usuarios {
         int id PK
-        int funcionario_id FK
+        int funcionario_id FK_UK
         int rol_id FK
         text email UK
         text password_hash
@@ -149,7 +149,7 @@ erDiagram
 | Columna | Tipo | Restricciones |
 |---|---|---|
 | id | INTEGER | PK, auto-incremental |
-| nombre | TEXT | NOT NULL |
+| nombre | TEXT | NOT NULL, UNIQUE |
 | activo | INTEGER (boolean) | NOT NULL, default true |
 
 **escuelas**
@@ -157,11 +157,11 @@ erDiagram
 |---|---|---|
 | id | INTEGER | PK, auto-incremental |
 | region_id | INTEGER | FK → regiones.id, NOT NULL |
-| codigo_mep | TEXT | NOT NULL |
+| codigo_mep | TEXT | NOT NULL, UNIQUE |
 | nombre | TEXT | NOT NULL |
 | activo | INTEGER (boolean) | NOT NULL, default true |
 
-Índices: `idx_escuelas_region_id` sobre `region_id`.
+Índices: `idx_escuelas_region_id` sobre `region_id`; UNIQUE `escuelas_codigo_mep_unique`.
 
 ### Actas y estudiantes
 
@@ -169,10 +169,10 @@ erDiagram
 | Columna | Tipo | Restricciones |
 |---|---|---|
 | id | INTEGER | PK, auto-incremental |
-| nombre | TEXT | NOT NULL (Graduación, Reposición, Corrección…) |
+| nombre | TEXT | NOT NULL, UNIQUE (Graduación, Reposición, Corrección…) |
 | activo | INTEGER (boolean) | NOT NULL, default true |
 
-**actas** (inmutable)
+**actas** (inmutable — ver nota de principios)
 | Columna | Tipo | Restricciones |
 |---|---|---|
 | id | INTEGER | PK, auto-incremental |
@@ -180,11 +180,11 @@ erDiagram
 | tipo_acta_id | INTEGER | FK → tipos_acta.id, NOT NULL |
 | acta_referencia_id | INTEGER | FK → actas.id, nullable |
 | titulo | TEXT | NOT NULL |
-| numero_tomo | INTEGER | NOT NULL |
-| folio_inicio | INTEGER | NOT NULL |
-| folio_fin | INTEGER | NOT NULL |
+| numero_tomo | INTEGER | NOT NULL, CHECK > 0 |
+| folio_inicio | INTEGER | NOT NULL, CHECK > 0 |
+| folio_fin | INTEGER | NOT NULL, CHECK >= folio_inicio |
 | fecha | TEXT (ISO-8601) | NOT NULL |
-| created_at | TEXT (ISO-8601) | NOT NULL, default now |
+| created_at | TEXT (ISO-8601) | NOT NULL, default SQL `strftime` ISO-8601 |
 
 Índices: `idx_actas_escuela_id` sobre `escuela_id`.
 
@@ -194,11 +194,9 @@ erDiagram
 | Columna | Tipo | Restricciones |
 |---|---|---|
 | id | INTEGER | PK, auto-incremental |
-| identificacion | TEXT | NOT NULL, UNIQUE, indexada |
+| identificacion | TEXT | NOT NULL, UNIQUE |
 | nombres | TEXT | NOT NULL |
 | apellidos | TEXT | NOT NULL |
-
-Índices: `idx_personas_identificacion` sobre `identificacion`.
 
 > Control de acceso: una persona está en el ámbito si aparece como estudiante o firmante en un acta de una escuela del ámbito, o es funcionario asignado a una escuela del ámbito; las personas sin vínculo solo las ve el nivel 1. La consulta por identificación exacta (`GET /api/personas?identificacion=`) es la única excepción: cualquier usuario autenticado obtiene solo `id`, `nombres`, `apellidos` e `identificacion`.
 
@@ -206,9 +204,7 @@ erDiagram
 | Columna | Tipo | Restricciones |
 |---|---|---|
 | id | INTEGER | PK, auto-incremental |
-| persona_id | INTEGER | FK → personas.id, NOT NULL |
-
-Índices: `idx_estudiantes_persona_id` sobre `persona_id`.
+| persona_id | INTEGER | FK → personas.id, NOT NULL, UNIQUE |
 
 **acta_estudiantes** (puente acta ↔ estudiante)
 | Columna | Tipo | Restricciones |
@@ -218,7 +214,7 @@ erDiagram
 | estudiante_id | INTEGER | FK → estudiantes.id, NOT NULL |
 | numero_certificado | INTEGER | NOT NULL |
 
-Índices: `idx_acta_estudiantes_acta_id` sobre `acta_id` e `idx_acta_estudiantes_estudiante_id` sobre `estudiante_id`.
+Índices: `idx_acta_estudiantes_acta_id`, `idx_acta_estudiantes_estudiante_id`; UNIQUE `uq_acta_estudiantes_acta_estudiante` sobre `(acta_id, estudiante_id)`.
 
 ### Escaneos de folios
 
@@ -227,14 +223,14 @@ erDiagram
 |---|---|---|
 | id | INTEGER | PK, auto-incremental |
 | escuela_id | INTEGER | FK → escuelas.id, NOT NULL |
-| numero_tomo | INTEGER | NOT NULL |
-| numero_folio | INTEGER | NOT NULL |
+| numero_tomo | INTEGER | NOT NULL, CHECK > 0 |
+| numero_folio | INTEGER | NOT NULL, CHECK > 0 |
 | url | TEXT | NOT NULL (clave en R2) |
 | formato | TEXT | NOT NULL |
 | uploaded_by | INTEGER | FK → usuarios.id, NOT NULL |
-| created_at | TEXT (ISO-8601) | NOT NULL, default now |
+| created_at | TEXT (ISO-8601) | NOT NULL, default SQL `strftime` ISO-8601 |
 
-Índices: `idx_escaneos_escuela_id` sobre `escuela_id`.
+Índices: `idx_escaneos_escuela_id`; UNIQUE `uq_escaneos_escuela_tomo_folio` sobre `(escuela_id, numero_tomo, numero_folio)`.
 
 > Control de acceso: `POST /api/escaneos` exige nivel mínimo 4 (Staff), con la misma restricción de ámbito por escuela descrita para `actas` (nivel 2 validado contra la región de la escuela objetivo; fuera de ámbito responde `403`). `GET` y `DELETE` por id sobre un escaneo fuera del ámbito responden `404`.
 
@@ -245,16 +241,16 @@ erDiagram
 | acta_id | INTEGER | FK → actas.id, NOT NULL |
 | escaneo_id | INTEGER | FK → escaneos.id, NOT NULL |
 
+Índices: UNIQUE `uq_acta_escaneos_acta_escaneo` sobre `(acta_id, escaneo_id)`.
+
 ### Funcionarios, firmantes y usuarios
 
 **funcionarios**
 | Columna | Tipo | Restricciones |
 |---|---|---|
 | id | INTEGER | PK, auto-incremental |
-| persona_id | INTEGER | FK → personas.id, NOT NULL |
+| persona_id | INTEGER | FK → personas.id, NOT NULL, UNIQUE |
 | puesto | TEXT | NOT NULL |
-
-Índices: `idx_funcionarios_persona_id` sobre `persona_id`.
 
 **funcionario_escuela** (un funcionario puede pertenecer a varias escuelas)
 | Columna | Tipo | Restricciones |
@@ -263,7 +259,7 @@ erDiagram
 | funcionario_id | INTEGER | FK → funcionarios.id, NOT NULL |
 | escuela_id | INTEGER | FK → escuelas.id, NOT NULL |
 
-Índices: `idx_funcionario_escuela_funcionario_id` sobre `funcionario_id` e `idx_funcionario_escuela_escuela_id` sobre `escuela_id`.
+Índices: `idx_funcionario_escuela_funcionario_id`, `idx_funcionario_escuela_escuela_id`; UNIQUE `uq_funcionario_escuela_par` sobre `(funcionario_id, escuela_id)`.
 
 > Control de acceso: un funcionario está en el ámbito según las escuelas que tiene asignadas en esta tabla; sin asignación solo lo ve el nivel 1.
 
@@ -275,20 +271,20 @@ erDiagram
 | funcionario_id | INTEGER | FK → funcionarios.id, NOT NULL |
 | rol_firma | TEXT | NOT NULL |
 
-Índices: `idx_acta_firmantes_acta_id` sobre `acta_id` e `idx_acta_firmantes_funcionario_id` sobre `funcionario_id`.
+Índices: `idx_acta_firmantes_acta_id`, `idx_acta_firmantes_funcionario_id`; UNIQUE `uq_acta_firmantes_acta_funcionario_rol` sobre `(acta_id, funcionario_id, rol_firma)`.
 
 **roles**
 | Columna | Tipo | Restricciones |
 |---|---|---|
 | id | INTEGER | PK, auto-incremental |
-| nombre | TEXT | NOT NULL |
-| nivel | INTEGER | NOT NULL (1=País, 2=Regional, 3=Escuela, 4=Staff) |
+| nombre | TEXT | NOT NULL, UNIQUE |
+| nivel | INTEGER | NOT NULL, UNIQUE, CHECK entre 1 y 4 (1=País, 2=Regional, 3=Escuela, 4=Staff) |
 
 **usuarios**
 | Columna | Tipo | Restricciones |
 |---|---|---|
 | id | INTEGER | PK, auto-incremental |
-| funcionario_id | INTEGER | FK → funcionarios.id, NOT NULL |
+| funcionario_id | INTEGER | FK → funcionarios.id, NOT NULL, UNIQUE |
 | rol_id | INTEGER | FK → roles.id, NOT NULL |
 | email | TEXT | NOT NULL, UNIQUE |
 | password_hash | TEXT | NOT NULL (bcrypt) |
@@ -310,7 +306,7 @@ erDiagram
 | datos_nuevos | TEXT (JSON) | Nullable |
 | escuela_id | INTEGER | FK → escuelas.id, nullable |
 | region_id | INTEGER | FK → regiones.id, nullable |
-| created_at | TEXT (ISO-8601) | NOT NULL, default now |
+| created_at | TEXT (ISO-8601) | NOT NULL, default SQL `strftime` ISO-8601 |
 
 Índices: `idx_auditoria_escuela_id` sobre `escuela_id` e `idx_auditoria_region_id` sobre `region_id`.
 
@@ -324,6 +320,6 @@ Toda lectura y toda escritura sobre recursos existentes se limita al ámbito del
 
 - **Fechas**: formato ISO-8601 (texto) — `2025-06-24T12:00:00.000Z`
 - **Booleanos**: INTEGER 0/1 (SQLite no tiene boolean nativo)
-- **Claves foráneas**: declaradas explícitamente en el esquema Drizzle
-- **Índices**: en columnas de búsqueda frecuente (`identificacion`, `escuela_id`) y en las usadas por las condiciones de ámbito (`region_id`, claves de las tablas puente)
+- **Claves foráneas**: declaradas explícitamente en el esquema Drizzle; el cliente activa `PRAGMA foreign_keys = ON`
+- **Índices**: UNIQUE en claves de negocio (`codigo_mep`, pares puente, catálogos) e índices de apoyo en columnas de ámbito (`region_id`, claves de tablas puente)
 - **Auto-incremental**: SQLite asigna automáticamente para columnas INTEGER PK

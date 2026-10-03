@@ -119,14 +119,12 @@ describe("Funcionarios e2e", () => {
 
     const servicio = crearServicioFuncionariosDesdeDb(db);
 
-    const funcionario = await servicio.crearFuncionario(
-      { personaId: personaId || 1, puesto: "Profesor" },
-      sesion
-    );
-    idsFuncionario.push(funcionario.id);
+    expect(personaId).toBeGreaterThan(0);
+    const funcionarioId = idsFuncionario[0];
+    expect(funcionarioId).toBeDefined();
 
     const asignacion = await servicio.asignarFuncionarioAEscuela(
-      funcionario.id,
+      funcionarioId!,
       escuela.id,
       sesion
     );
@@ -136,6 +134,6 @@ describe("Funcionarios e2e", () => {
       { escuelaId: escuela.id },
       { tipo: "pais" }
     );
-    expect(filtrados.some((f) => f.id === funcionario.id)).toBe(true);
+    expect(filtrados.some((f) => f.id === funcionarioId)).toBe(true);
   });
 });

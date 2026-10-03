@@ -31,6 +31,7 @@ describe("listarConUrlLectura", () => {
         },
       ]),
       obtenerEscaneoPorId: vi.fn(),
+      obtenerEscaneoPorEscuelaTomoFolio: vi.fn(),
       crearEscaneo: vi.fn(),
       eliminarEscaneo: vi.fn(),
     };
@@ -50,6 +51,7 @@ describe("escaneos con ámbito", () => {
     const repositorio = {
       listarEscaneos: vi.fn().mockResolvedValue([]),
       obtenerEscaneoPorId: vi.fn().mockResolvedValue(undefined),
+      obtenerEscaneoPorEscuelaTomoFolio: vi.fn(),
       crearEscaneo: vi.fn(),
       eliminarEscaneo: vi.fn(),
     };
@@ -101,11 +103,15 @@ describe("prepararSubida", () => {
     const repositorio = {
       listarEscaneos: vi.fn(),
       obtenerEscaneoPorId: vi.fn(),
+      obtenerEscaneoPorEscuelaTomoFolio: vi.fn().mockResolvedValue(undefined),
       crearEscaneo: vi.fn().mockResolvedValue({ id: 9, escuelaId: 5 }),
       eliminarEscaneo: vi.fn(),
     };
     mockGenerarUrlSubida.mockReset().mockResolvedValue("/api/almacenamiento-local/x");
-    return crearServicioEscaneos(repositorio, vi.fn(), almacenamiento);
+    return {
+      servicio: crearServicioEscaneos(repositorio, vi.fn(), almacenamiento),
+      repositorio,
+    };
   }
 
   it.each([
@@ -114,7 +120,7 @@ describe("prepararSubida", () => {
     ["jpg", "image/jpeg"],
     ["jpeg", "image/jpeg"],
   ])("pide la URL de subida con el tipo de contenido de %s", async (formato, tipo) => {
-    const servicio = crearServicio();
+    const { servicio } = crearServicio();
     const resultado = await servicio.prepararSubida(
       { escuelaId: 5, numeroTomo: 2, numeroFolio: 3, formato },
       sesion
@@ -124,9 +130,32 @@ describe("prepararSubida", () => {
   });
 
   it("rechaza formatos no permitidos", async () => {
-    const servicio = crearServicio();
+    const { servicio } = crearServicio();
     await expect(
       servicio.prepararSubida({ escuelaId: 5, numeroTomo: 2, numeroFolio: 3, formato: "exe" }, sesion)
     ).rejects.toThrow(/no permitido/i);
+  });
+
+  it("reutiliza el escaneo existente sin insertar otra fila", async () => {
+    const { servicio, repositorio } = crearServicio();
+    const existente = {
+      id: 3,
+      escuelaId: 5,
+      numeroTomo: 2,
+      numeroFolio: 3,
+      url: "escaneos/5/2/3.jpg",
+      formato: "jpg",
+      uploadedBy: 1,
+      createdAt: "2026-01-01",
+    };
+    repositorio.obtenerEscaneoPorEscuelaTomoFolio.mockResolvedValue(existente);
+
+    const resultado = await servicio.prepararSubida(
+      { escuelaId: 5, numeroTomo: 2, numeroFolio: 3, formato: "jpg" },
+      sesion
+    );
+
+    expect(resultado.escaneo).toEqual(existente);
+    expect(repositorio.crearEscaneo).not.toHaveBeenCalled();
   });
 });

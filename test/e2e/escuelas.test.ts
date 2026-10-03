@@ -83,6 +83,8 @@ describe("Escuelas e2e", () => {
           repositorioEscuelas.listarEscuelas(db, filtros),
         obtenerEscuelaPorId: (id) =>
           repositorioEscuelas.obtenerEscuelaPorId(db, id),
+        obtenerEscuelaPorCodigoMep: (codigoMep) =>
+          repositorioEscuelas.obtenerEscuelaPorCodigoMep(db, codigoMep),
         crearEscuela: (datos) => repositorioEscuelas.crearEscuela(db, datos),
         actualizarEscuela: (id, datos) =>
           repositorioEscuelas.actualizarEscuela(db, id, datos),
@@ -166,6 +168,8 @@ describe("Escuelas e2e", () => {
           repositorioEscuelas.listarEscuelas(db, filtros),
         obtenerEscuelaPorId: (id) =>
           repositorioEscuelas.obtenerEscuelaPorId(db, id),
+        obtenerEscuelaPorCodigoMep: (codigoMep) =>
+          repositorioEscuelas.obtenerEscuelaPorCodigoMep(db, codigoMep),
         crearEscuela: (datos) => repositorioEscuelas.crearEscuela(db, datos),
         actualizarEscuela: (id, datos) =>
           repositorioEscuelas.actualizarEscuela(db, id, datos),

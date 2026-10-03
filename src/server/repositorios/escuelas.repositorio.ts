@@ -42,6 +42,19 @@ export async function obtenerEscuelaPorId(
   return resultado[0];
 }
 
+export async function obtenerEscuelaPorCodigoMep(
+  db: ConexionDb,
+  codigoMep: string
+): Promise<FilaEscuela | undefined> {
+  const resultado = (await db
+    .select()
+    .from(escuelas)
+    .where(eq(escuelas.codigoMep, codigoMep))
+    .all()) as unknown as FilaEscuela[];
+
+  return resultado[0];
+}
+
 export type AmbitoDeEscuela = { escuelaId: number; regionId: number };
 
 export async function resolverAmbitoDeEscuela(

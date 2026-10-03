@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "eb55c79c-633a-4b5f-89a5-e01787e3866e",
+  "id": "28bf4c28-6123-4b79-bb7c-a4df9f885a10",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "acta_escaneos": {
@@ -29,7 +29,16 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uq_acta_escaneos_acta_escaneo": {
+          "name": "uq_acta_escaneos_acta_escaneo",
+          "columns": [
+            "acta_id",
+            "escaneo_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "acta_escaneos_acta_id_actas_id_fk": {
           "name": "acta_escaneos_acta_id_actas_id_fk",
@@ -108,6 +117,14 @@
             "estudiante_id"
           ],
           "isUnique": false
+        },
+        "uq_acta_estudiantes_acta_estudiante": {
+          "name": "uq_acta_estudiantes_acta_estudiante",
+          "columns": [
+            "acta_id",
+            "estudiante_id"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {
@@ -188,6 +205,15 @@
             "funcionario_id"
           ],
           "isUnique": false
+        },
+        "uq_acta_firmantes_acta_funcionario_rol": {
+          "name": "uq_acta_firmantes_acta_funcionario_rol",
+          "columns": [
+            "acta_id",
+            "funcionario_id",
+            "rol_firma"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {
@@ -293,7 +319,8 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
         }
       },
       "indexes": {
@@ -331,11 +358,37 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "actas_acta_referencia_id_actas_id_fk": {
+          "name": "actas_acta_referencia_id_actas_id_fk",
+          "tableFrom": "actas",
+          "tableTo": "actas",
+          "columnsFrom": [
+            "acta_referencia_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "chk_actas_numero_tomo": {
+          "name": "chk_actas_numero_tomo",
+          "value": "\"actas\".\"numero_tomo\" > 0"
+        },
+        "chk_actas_folio_inicio": {
+          "name": "chk_actas_folio_inicio",
+          "value": "\"actas\".\"folio_inicio\" > 0"
+        },
+        "chk_actas_rango_folios": {
+          "name": "chk_actas_rango_folios",
+          "value": "\"actas\".\"folio_fin\" >= \"actas\".\"folio_inicio\""
+        }
+      }
     },
     "auditoria": {
       "name": "auditoria",
@@ -408,7 +461,8 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
         }
       },
       "indexes": {
@@ -529,7 +583,8 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
         }
       },
       "indexes": {
@@ -539,6 +594,15 @@
             "escuela_id"
           ],
           "isUnique": false
+        },
+        "uq_escaneos_escuela_tomo_folio": {
+          "name": "uq_escaneos_escuela_tomo_folio",
+          "columns": [
+            "escuela_id",
+            "numero_tomo",
+            "numero_folio"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {
@@ -571,7 +635,16 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "chk_escaneos_numero_tomo": {
+          "name": "chk_escaneos_numero_tomo",
+          "value": "\"escaneos\".\"numero_tomo\" > 0"
+        },
+        "chk_escaneos_numero_folio": {
+          "name": "chk_escaneos_numero_folio",
+          "value": "\"escaneos\".\"numero_folio\" > 0"
+        }
+      }
     },
     "escuelas": {
       "name": "escuelas",
@@ -614,6 +687,13 @@
         }
       },
       "indexes": {
+        "escuelas_codigo_mep_unique": {
+          "name": "escuelas_codigo_mep_unique",
+          "columns": [
+            "codigo_mep"
+          ],
+          "isUnique": true
+        },
         "idx_escuelas_region_id": {
           "name": "idx_escuelas_region_id",
           "columns": [
@@ -660,12 +740,12 @@
         }
       },
       "indexes": {
-        "idx_estudiantes_persona_id": {
-          "name": "idx_estudiantes_persona_id",
+        "estudiantes_persona_id_unique": {
+          "name": "estudiantes_persona_id_unique",
           "columns": [
             "persona_id"
           ],
-          "isUnique": false
+          "isUnique": true
         }
       },
       "foreignKeys": {
@@ -726,6 +806,14 @@
             "escuela_id"
           ],
           "isUnique": false
+        },
+        "uq_funcionario_escuela_par": {
+          "name": "uq_funcionario_escuela_par",
+          "columns": [
+            "funcionario_id",
+            "escuela_id"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {
@@ -786,12 +874,12 @@
         }
       },
       "indexes": {
-        "idx_funcionarios_persona_id": {
-          "name": "idx_funcionarios_persona_id",
+        "funcionarios_persona_id_unique": {
+          "name": "funcionarios_persona_id_unique",
           "columns": [
             "persona_id"
           ],
-          "isUnique": false
+          "isUnique": true
         }
       },
       "foreignKeys": {
@@ -852,13 +940,6 @@
             "identificacion"
           ],
           "isUnique": true
-        },
-        "idx_personas_identificacion": {
-          "name": "idx_personas_identificacion",
-          "columns": [
-            "identificacion"
-          ],
-          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -892,7 +973,15 @@
           "default": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "regiones_nombre_unique": {
+          "name": "regiones_nombre_unique",
+          "columns": [
+            "nombre"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -923,11 +1012,31 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "roles_nombre_unique": {
+          "name": "roles_nombre_unique",
+          "columns": [
+            "nombre"
+          ],
+          "isUnique": true
+        },
+        "roles_nivel_unique": {
+          "name": "roles_nivel_unique",
+          "columns": [
+            "nivel"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {}
+      "checkConstraints": {
+        "chk_roles_nivel": {
+          "name": "chk_roles_nivel",
+          "value": "\"roles\".\"nivel\" >= 1 AND \"roles\".\"nivel\" <= 4"
+        }
+      }
     },
     "tipos_acta": {
       "name": "tipos_acta",
@@ -955,7 +1064,15 @@
           "default": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "tipos_acta_nombre_unique": {
+          "name": "tipos_acta_nombre_unique",
+          "columns": [
+            "nombre"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -1009,6 +1126,13 @@
         }
       },
       "indexes": {
+        "usuarios_funcionario_id_unique": {
+          "name": "usuarios_funcionario_id_unique",
+          "columns": [
+            "funcionario_id"
+          ],
+          "isUnique": true
+        },
         "usuarios_email_unique": {
           "name": "usuarios_email_unique",
           "columns": [

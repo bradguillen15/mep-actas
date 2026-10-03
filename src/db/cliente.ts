@@ -34,6 +34,8 @@ export function clienteDb() {
     authToken,
   });
 
+  void clienteSql.execute("PRAGMA foreign_keys = ON");
+
   instancia = drizzle(clienteSql, { schema: esquema });
   return instancia;
 }
