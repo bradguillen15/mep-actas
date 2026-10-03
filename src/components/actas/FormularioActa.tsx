@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { Plus } from "lucide-react";
 
 import { Alerta } from "@/components/ui/Alerta";
@@ -148,13 +148,26 @@ export function FormularioActa({
     <form onSubmit={handleSubmit(enviar)} className="flex flex-col gap-6">
       <Seccion titulo="Datos del acta">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Selector
-            label="Tipo de acta"
-            requerido
-            opciones={tiposActa.map((t) => ({ valor: t.id, etiqueta: t.nombre }))}
-            placeholder="Seleccione un tipo"
-            error={errors.tipoActaId?.message}
-            {...register("tipoActaId", { required: "El tipo es requerido" })}
+          <Controller
+            name="tipoActaId"
+            control={control}
+            rules={{ required: "El tipo es requerido" }}
+            render={({ field }) => (
+              <Selector
+                label="Tipo de acta"
+                requerido
+                opciones={tiposActa.map((t) => ({
+                  valor: t.id,
+                  etiqueta: t.nombre,
+                }))}
+                placeholder="Seleccione un tipo"
+                error={errors.tipoActaId?.message}
+                name={field.name}
+                value={field.value}
+                onBlur={field.onBlur}
+                onChange={(evento) => field.onChange(evento.target.value)}
+              />
+            )}
           />
 
           <Campo
@@ -166,16 +179,26 @@ export function FormularioActa({
           />
 
           {puedeElegirEscuela && (
-            <Selector
-              label="Escuela"
-              requerido
-              opciones={escuelas.map((e) => ({
-                valor: String(e.id),
-                etiqueta: e.nombre,
-              }))}
-              placeholder="Seleccione una escuela"
-              error={errors.escuelaId?.message}
-              {...register("escuelaId", { required: "La escuela es requerida" })}
+            <Controller
+              name="escuelaId"
+              control={control}
+              rules={{ required: "La escuela es requerida" }}
+              render={({ field }) => (
+                <Selector
+                  label="Escuela"
+                  requerido
+                  opciones={escuelas.map((e) => ({
+                    valor: String(e.id),
+                    etiqueta: e.nombre,
+                  }))}
+                  placeholder="Seleccione una escuela"
+                  error={errors.escuelaId?.message}
+                  name={field.name}
+                  value={field.value}
+                  onBlur={field.onBlur}
+                  onChange={(evento) => field.onChange(evento.target.value)}
+                />
+              )}
             />
           )}
 

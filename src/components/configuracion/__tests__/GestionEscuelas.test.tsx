@@ -119,9 +119,9 @@ describe("GestionEscuelas", () => {
     render(<GestionEscuelas />);
 
     await userEvent.click(screen.getByRole("button", { name: /nueva escuela/i }));
-    const selector = screen.getByLabelText(/^Región/) as HTMLSelectElement;
+    const selector = screen.getByRole("combobox", { name: /^Región/ });
     expect(selector).toBeDisabled();
-    expect(selector.value).toBe("2");
+    expect(selector).toHaveTextContent("Chorotega");
 
     await userEvent.type(screen.getByLabelText(/^Código MEP/), "E-003");
     await userEvent.type(screen.getByLabelText(/^Nombre/), "Escuela Tres");

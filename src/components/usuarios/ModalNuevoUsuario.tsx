@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Campo, CampoContrasena, ModalFormulario, Selector, toast } from "@/components/ui";
 import { enviarJson } from "@/lib/api-cliente";
 
@@ -44,9 +44,10 @@ export function ModalNuevoUsuario({
   roles,
   funcionarios,
 }: ModalNuevoUsuarioProps) {
-  const { register, handleSubmit, reset, formState } = useForm<DatosNuevoUsuario>({
-    defaultValues: { funcionarioId: "", rolId: "", email: "", password: "" },
-  });
+  const { register, control, handleSubmit, reset, formState } =
+    useForm<DatosNuevoUsuario>({
+      defaultValues: { funcionarioId: "", rolId: "", email: "", password: "" },
+    });
 
   const cerrar = () => {
     reset();
@@ -77,27 +78,45 @@ export function ModalNuevoUsuario({
       textoEnviar="Crear usuario"
       onEnviar={() => handleSubmit(crearUsuario)()}
     >
-      <Selector
-        label="Funcionario"
-        requerido
-        autoFocus
-        placeholder="Seleccione un funcionario"
-        opciones={funcionarios.map((f) => ({
-          valor: f.id,
-          etiqueta: `${f.nombres} ${f.apellidos}`,
-        }))}
-        error={formState.errors.funcionarioId?.message}
-        {...register("funcionarioId", {
-          validate: requerido("El funcionario es requerido"),
-        })}
+      <Controller
+        name="funcionarioId"
+        control={control}
+        rules={{ validate: requerido("El funcionario es requerido") }}
+        render={({ field }) => (
+          <Selector
+            label="Funcionario"
+            requerido
+            autoFocus
+            placeholder="Seleccione un funcionario"
+            opciones={funcionarios.map((f) => ({
+              valor: f.id,
+              etiqueta: `${f.nombres} ${f.apellidos}`,
+            }))}
+            error={formState.errors.funcionarioId?.message}
+            name={field.name}
+            value={field.value}
+            onBlur={field.onBlur}
+            onChange={(evento) => field.onChange(evento.target.value)}
+          />
+        )}
       />
-      <Selector
-        label="Rol"
-        requerido
-        placeholder="Seleccione un rol"
-        opciones={roles.map((r) => ({ valor: r.id, etiqueta: r.nombre }))}
-        error={formState.errors.rolId?.message}
-        {...register("rolId", { validate: requerido("El rol es requerido") })}
+      <Controller
+        name="rolId"
+        control={control}
+        rules={{ validate: requerido("El rol es requerido") }}
+        render={({ field }) => (
+          <Selector
+            label="Rol"
+            requerido
+            placeholder="Seleccione un rol"
+            opciones={roles.map((r) => ({ valor: r.id, etiqueta: r.nombre }))}
+            error={formState.errors.rolId?.message}
+            name={field.name}
+            value={field.value}
+            onBlur={field.onBlur}
+            onChange={(evento) => field.onChange(evento.target.value)}
+          />
+        )}
       />
       <Campo
         label="Correo electrónico"

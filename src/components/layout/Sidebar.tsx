@@ -35,19 +35,19 @@ interface SidebarProps {
 
 function Marca({ onNavegar, accionCabecera }: SidebarProps) {
   return (
-    <div className="flex items-center gap-2 border-b border-white/10 px-4 py-5">
+    <div className="flex items-center gap-2 px-4 py-5">
       <Link
         href="/consultar"
         onClick={onNavegar}
-        className={cn("flex min-w-0 flex-1 items-center gap-3 rounded-lg", ANILLO_FOCO)}
+        className={cn("flex min-w-0 flex-1 flex-col gap-2 rounded-lg", ANILLO_FOCO)}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/icon.svg"
-          alt=""
-          className="size-10 shrink-0 rounded-lg ring-1 ring-white/20"
+          src="/logo-mep-blanco.svg"
+          alt="Ministerio de Educación Pública — Gobierno de Costa Rica"
+          className="h-auto w-full max-w-52"
         />
-        <span className="text-balance text-sm font-semibold leading-snug">
+        <span className="text-xs font-medium tracking-wide text-white/70">
           Sistema de Consulta de Títulos
         </span>
       </Link>

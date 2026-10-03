@@ -13,6 +13,20 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-unused-vars": ["warn", { varsIgnorePattern: "^_" }],
     },
   },
+  {
+    files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
+    ignores: ["src/components/ui/**"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXOpeningElement[name.name='select']",
+          message:
+            "Use el wrapper Selector (@/components/ui) en lugar de <select> nativo.",
+        },
+      ],
+    },
+  },
   globalIgnores([
     ".next/**",
     "out/**",

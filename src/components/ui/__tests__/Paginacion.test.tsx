@@ -20,8 +20,9 @@ describe("Paginacion", () => {
     );
 
     const selector = screen.getByRole("combobox", { name: "Registros por página" });
-    expect(selector).toHaveValue("20");
-    await userEvent.selectOptions(selector, "50");
+    expect(selector).toHaveTextContent("20");
+    await userEvent.click(selector);
+    await userEvent.click(await screen.findByRole("option", { name: "50" }));
     expect(onLimiteChange).toHaveBeenCalledWith(50);
   });
 

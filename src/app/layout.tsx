@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   title: "Sistema de Consulta de Títulos — MEP",
   description:
     "Consulta y gestión digital de actas de títulos de educación del Ministerio de Educación Pública de Costa Rica.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#172B54",
 };
 
 export default function RootLayout({

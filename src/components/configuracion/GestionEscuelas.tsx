@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import useSWR from "swr";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Ban, Pencil, Plus } from "lucide-react";
 import {
@@ -62,7 +62,7 @@ export function GestionEscuelas() {
   const regionFija = nivel === NIVEL_ADMIN_REGIONAL ? usuario?.regionId : undefined;
   const editando = escuelaEdicion !== null;
 
-  const { register, handleSubmit, reset, formState } = useForm<DatosEscuela>({
+  const { register, control, handleSubmit, reset, formState } = useForm<DatosEscuela>({
     defaultValues: {
       regionId: regionFija ? String(regionFija) : "",
       codigoMep: "",
@@ -262,17 +262,25 @@ export function GestionEscuelas() {
         onEnviar={() => handleSubmit(guardarEscuela)()}
       >
         {!editando && (
-          <Selector
-            label="Región"
-            requerido
-            autoFocus={regionFija === undefined}
-            placeholder="Seleccione una región"
-            opciones={opcionesRegion}
-            disabled={regionFija !== undefined}
-            error={formState.errors.regionId?.message}
-            {...register("regionId", {
-              validate: requerido("La región es requerida"),
-            })}
+          <Controller
+            name="regionId"
+            control={control}
+            rules={{ validate: requerido("La región es requerida") }}
+            render={({ field }) => (
+              <Selector
+                label="Región"
+                requerido
+                autoFocus={regionFija === undefined}
+                placeholder="Seleccione una región"
+                opciones={opcionesRegion}
+                disabled={regionFija !== undefined}
+                error={formState.errors.regionId?.message}
+                name={field.name}
+                value={field.value}
+                onBlur={field.onBlur}
+                onChange={(evento) => field.onChange(evento.target.value)}
+              />
+            )}
           />
         )}
         <Campo

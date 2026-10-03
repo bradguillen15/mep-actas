@@ -130,10 +130,10 @@ describe("Tabla", () => {
     expect(screen.getByText("Persona 1")).toBeInTheDocument();
     expect(screen.queryByText("Persona 21")).not.toBeInTheDocument();
 
-    await userEvent.selectOptions(
-      screen.getByRole("combobox", { name: "Registros por página" }),
-      "50"
+    await userEvent.click(
+      screen.getByRole("combobox", { name: "Registros por página" })
     );
+    await userEvent.click(await screen.findByRole("option", { name: "50" }));
 
     expect(screen.getByText("Persona 21")).toBeInTheDocument();
   });

@@ -1,17 +1,61 @@
-import { useId, type SelectHTMLAttributes } from "react";
-import { ChevronDown } from "lucide-react";
+"use client";
+
+import { useId } from "react";
 
 import { cn } from "@/lib/utils";
-import { clasesCampoBase } from "./estilos-campo";
 import { Label } from "./label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./select";
 
-interface SelectorProps extends SelectHTMLAttributes<HTMLSelectElement> {
+const VALOR_VACIO = "__vacio__";
+
+export interface OpcionSelector {
+  valor: string | number;
+  etiqueta: string;
+}
+
+export interface CambioSelector {
+  target: { value: string; name: string };
+}
+
+interface SelectorProps {
   label?: string;
   error?: string;
   ayuda?: string;
   requerido?: boolean;
-  opciones: { valor: string | number; etiqueta: string }[];
+  opciones: OpcionSelector[];
   placeholder?: string;
+  value?: string | number;
+  name?: string;
+  disabled?: boolean;
+  autoFocus?: boolean;
+  className?: string;
+  id?: string;
+  "aria-label"?: string;
+  onChange?: (evento: CambioSelector) => void;
+  onBlur?: () => void;
+}
+
+function aValorRadix(
+  valor: string | number,
+  opciones: OpcionSelector[]
+): string | undefined {
+  const texto = String(valor);
+  if (texto === "") {
+    return opciones.some((opcion) => String(opcion.valor) === "")
+      ? VALOR_VACIO
+      : undefined;
+  }
+  return texto;
+}
+
+function desdeValorRadix(valor: string): string {
+  return valor === VALOR_VACIO ? "" : valor;
 }
 
 export function Selector({
@@ -21,9 +65,15 @@ export function Selector({
   requerido,
   opciones,
   placeholder,
+  value,
+  name = "",
+  disabled,
+  autoFocus,
   className,
   id,
-  ...props
+  "aria-label": ariaLabel,
+  onChange,
+  onBlur,
 }: SelectorProps) {
   const idGenerado = useId();
   const idReal = id ?? idGenerado;
@@ -31,6 +81,10 @@ export function Selector({
   const idError = `${idReal}-error`;
   const descritoPor =
     [ayuda && idAyuda, error && idError].filter(Boolean).join(" ") || undefined;
+
+  const controlado = value !== undefined;
+  const valorRadix = controlado ? aValorRadix(value, opciones) : undefined;
+
   return (
     <div className="flex flex-col gap-1">
       {label && (
@@ -43,31 +97,39 @@ export function Selector({
           )}
         </Label>
       )}
-      <div className="relative">
-        <select
+      <Select
+        value={controlado ? (valorRadix ?? "") : undefined}
+        onValueChange={(siguiente) => {
+          onChange?.({
+            target: { value: desdeValorRadix(siguiente), name },
+          });
+        }}
+        disabled={disabled}
+        name={name}
+      >
+        <SelectTrigger
           id={idReal}
+          autoFocus={autoFocus}
+          aria-label={ariaLabel}
           aria-invalid={error ? true : undefined}
           aria-required={requerido || undefined}
           aria-describedby={descritoPor}
-          className={cn(clasesCampoBase, "appearance-none pr-9", className)}
-          {...props}
+          onBlur={onBlur}
+          className={cn("w-full", className)}
         >
-          {placeholder && (
-            <option value="" disabled>
-              {placeholder}
-            </option>
-          )}
-          {opciones.map((op) => (
-            <option key={op.valor} value={op.valor}>
-              {op.etiqueta}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          aria-hidden
-          className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-texto-suave"
-        />
-      </div>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {opciones.map((opcion) => {
+            const valorItem = aValorRadix(opcion.valor, opciones) ?? VALOR_VACIO;
+            return (
+              <SelectItem key={valorItem} value={valorItem}>
+                {opcion.etiqueta}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
       {ayuda && (
         <p id={idAyuda} className="text-xs text-texto-suave">
           {ayuda}

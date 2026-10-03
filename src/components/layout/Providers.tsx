@@ -16,7 +16,7 @@ function EsqueletoShell() {
     <div role="status" aria-label="Cargando" className="flex h-dvh overflow-hidden">
       <div className="hidden w-64 shrink-0 bg-primario md:block" />
       <div className="flex flex-1 flex-col">
-        <div className="h-14 shrink-0 border-b border-borde bg-white" />
+        <div className="h-16 shrink-0 bg-primario" />
         <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <Esqueleto className="h-8 w-48" />
           <Esqueleto className="h-4 w-full max-w-md" />

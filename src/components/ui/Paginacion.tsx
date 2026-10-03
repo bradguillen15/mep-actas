@@ -7,6 +7,7 @@ import {
   OPCIONES_LIMITE_PAGINA,
 } from "@/lib/paginacion";
 import { Boton } from "./Boton";
+import { Selector } from "./Selector";
 
 interface PaginacionProps {
   pagina: number;
@@ -61,21 +62,20 @@ export function Paginacion({
       </p>
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         {onLimiteChange && (
-          <label className="flex items-center gap-2 text-xs text-texto-suave sm:text-sm">
+          <div className="flex items-center gap-2 text-xs text-texto-suave sm:text-sm">
             <span className="whitespace-nowrap">Por página</span>
-            <select
+            <Selector
+              id="limite-pagina"
               aria-label="Registros por página"
-              value={limite}
+              value={String(limite)}
               onChange={(evento) => onLimiteChange(Number(evento.target.value))}
-              className="h-9 rounded-lg border border-borde bg-white px-2 text-sm text-texto outline-none transition-[border-color,box-shadow] duration-150 focus-visible:border-primario focus-visible:ring-2 focus-visible:ring-primario/20"
-            >
-              {limites.map((opcion) => (
-                <option key={opcion} value={opcion}>
-                  {opcion}
-                </option>
-              ))}
-            </select>
-          </label>
+              opciones={limites.map((opcion) => ({
+                valor: String(opcion),
+                etiqueta: String(opcion),
+              }))}
+              className="h-9 w-auto min-w-20"
+            />
+          </div>
         )}
         {totalPaginas > 1 && (
           <div className="flex flex-1 items-center justify-between gap-2 sm:flex-none">

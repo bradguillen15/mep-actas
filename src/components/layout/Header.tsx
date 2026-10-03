@@ -18,7 +18,7 @@ export function Header({ menuAbierto, onAbrirMenu }: HeaderProps) {
   const descripcion = encabezado.descripcion;
 
   return (
-    <header className="sticky top-0 z-30 flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-borde bg-white/80 px-4 pt-8 pb-3 backdrop-blur supports-[backdrop-filter]:bg-white/70 sm:px-6 sm:pt-6 sm:pb-3 lg:px-8">
+    <header className="sticky top-0 z-30 flex min-h-14 shrink-0 items-center gap-3 border-b border-primario-hover bg-primario px-4 py-3 text-white sm:px-6 lg:px-8">
       <div className="flex min-w-0 items-center gap-2">
         <BotonIcono
           etiqueta="Abrir menú"
@@ -26,30 +26,24 @@ export function Header({ menuAbierto, onAbrirMenu }: HeaderProps) {
           onClick={onAbrirMenu}
           aria-expanded={menuAbierto}
           aria-controls="cajon-navegacion"
-          className="size-10 shrink-0 md:hidden"
+          className="size-10 shrink-0 text-white/75 hover-fino:bg-white/5 hover-fino:text-white focus-visible:ring-acento/60 focus-visible:ring-offset-0 md:hidden"
         />
         {titulo && (
-          <div className="flex min-w-0 flex-col gap-0.5">
+          <div className="flex min-w-0 flex-col gap-0">
             <h1
               data-testid="titulo-seccion"
-              className="truncate text-lg font-semibold tracking-tight leading-snug text-texto"
+              className="truncate text-base font-semibold tracking-tight leading-tight text-white"
             >
               {titulo}
             </h1>
             {descripcion && (
-              <p className="hidden text-xs leading-snug text-texto-suave sm:line-clamp-1 sm:block sm:truncate">
+              <p className="hidden text-xs leading-tight text-white/70 sm:line-clamp-1 sm:block sm:truncate">
                 {descripcion}
               </p>
             )}
           </div>
         )}
       </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/logo-mep.svg"
-        alt="Ministerio de Educación Pública — Gobierno de Costa Rica"
-        className="hidden h-7 w-auto shrink-0 sm:block md:h-8"
-      />
     </header>
   );
 }

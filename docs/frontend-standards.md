@@ -28,12 +28,40 @@ alwaysApply: true
 ```
 app/                       # rutas (page.tsx, layout.tsx)
 components/                # componentes reutilizables
-components/ui/             # primitivos de UI
+components/ui/             # primitivos shadcn + wrappers en español
 src/hooks/                 # hooks personalizados (useXxx)
 src/servicios/             # fetchers hacia app/api (cliente)
 src/contextos/             # Context de sesión/usuario
 app/globals.css            # tokens de diseño (variables CSS del MEP)
 ```
+
+### Capa UI (shadcn + wrappers)
+
+La UI base usa **shadcn/ui** (estilo new-york, Radix, CVA, Lucide) con una capa dual:
+
+| Capa | Dónde | Quién importa |
+| --- | --- | --- |
+| Primitivos shadcn (`button.tsx`, `select.tsx`, `dialog.tsx`, …) | Solo `src/components/ui/` | Solo wrappers u otros archivos dentro de `ui/` |
+| Wrappers en español (`Boton`, `Selector`, `Modal`, …) | `src/components/ui/` + barrel `index.ts` | Páginas (`src/app/**`) y features (`actas`, `usuarios`, `configuracion`, `ayuda`, `layout`, …) |
+
+Mapeo actual:
+
+| Primitivo | Wrapper / API pública |
+| --- | --- |
+| `button` | `Boton`, `BotonIcono` |
+| `select` | `Selector` |
+| `dialog` | `Modal`, `ModalFormulario`, `DialogoConfirmacion` |
+| `input` / `label` | `Campo`, `CampoContrasena` |
+| `table` | `Tabla` |
+| `card` | `Tarjeta` |
+| `tooltip` | `BotonIcono` (y exports de tooltip) |
+
+Reglas:
+
+- No uses `<select>` nativo fuera de `src/components/ui/` (ESLint lo prohíbe). Usa `Selector`.
+- No importes primitivos shadcn desde páginas o features; importa el wrapper o `@/components/ui`.
+- Para agregar un control nuevo: añadir el primitivo shadcn (si falta) → wrapper en español → export en `index.ts` → pruebas con Vitest/Testing Library.
+- En formularios con React Hook Form, integra `Selector` con `Controller` (Radix no es un `<select>` nativo).
 
 ## 3. Datos con SWR
 
