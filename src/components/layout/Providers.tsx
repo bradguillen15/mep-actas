@@ -1,64 +1,57 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { SesionProvider, useSesionContext } from "@/contextos/SesionContext";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
-import { Cargando } from "../ui/Cargando";
+import { CajonNavegacion } from "./CajonNavegacion";
+import { Esqueleto } from "../ui/Esqueleto";
+import { Notificador } from "../ui/Notificaciones";
+
+function EsqueletoShell() {
+  return (
+    <div role="status" aria-label="Cargando" className="flex h-dvh overflow-hidden">
+      <div className="hidden w-64 shrink-0 bg-primario md:block" />
+      <div className="flex flex-1 flex-col">
+        <div className="h-14 shrink-0 border-b border-borde bg-white" />
+        <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <Esqueleto className="h-8 w-48" />
+          <Esqueleto className="h-4 w-full max-w-md" />
+          <Esqueleto className="h-40 w-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ContenidoLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { cargando } = useSesionContext();
-  const [menuAbierto, setMenuAbierto] = useState(false);
-
-  useEffect(() => {
-    if (!menuAbierto) return;
-    const cerrarConEscape = (evento: KeyboardEvent) => {
-      if (evento.key === "Escape") setMenuAbierto(false);
-    };
-    window.addEventListener("keydown", cerrarConEscape);
-    return () => window.removeEventListener("keydown", cerrarConEscape);
-  }, [menuAbierto]);
+  const [abiertoEn, setAbiertoEn] = useState<string | null>(null);
+  const menuAbierto = abiertoEn === pathname;
+  const cerrarMenu = useCallback(() => setAbiertoEn(null), []);
 
   if (pathname === "/iniciar-sesion") {
     return <>{children}</>;
   }
 
   if (cargando) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Cargando />
-      </div>
-    );
+    return <EsqueletoShell />;
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <div className="hidden md:flex">
+    <div className="flex h-dvh overflow-hidden">
+      <div className="hidden w-64 shrink-0 md:block">
         <Sidebar />
       </div>
-      {menuAbierto && (
-        <div
-          role="dialog"
-          aria-label="Menú de navegación"
-          className="fixed inset-0 z-50 flex md:hidden"
-        >
-          <button
-            type="button"
-            aria-label="Cerrar menú de navegación"
-            onClick={() => setMenuAbierto(false)}
-            className="absolute inset-0 bg-black/50"
-          />
-          <div className="relative z-10 shadow-xl">
-            <Sidebar onNavegar={() => setMenuAbierto(false)} />
+      <CajonNavegacion abierto={menuAbierto} onCerrar={cerrarMenu} />
+      <div inert={menuAbierto} className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <Header menuAbierto={menuAbierto} onAbrirMenu={() => setAbiertoEn(pathname)} />
+        <main className="flex-1 overflow-y-auto bg-superficie">
+          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            {children}
           </div>
-        </div>
-      )}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header onAbrirMenu={() => setMenuAbierto(true)} />
-        <main className="flex-1 overflow-y-auto bg-superficie p-4 md:p-8">
-          {children}
         </main>
       </div>
     </div>
@@ -69,6 +62,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <SesionProvider>
       <ContenidoLayout>{children}</ContenidoLayout>
+      <Notificador />
     </SesionProvider>
   );
 }

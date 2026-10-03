@@ -1,29 +1,40 @@
 "use client";
 
 import { Menu } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { BotonIcono } from "../ui/BotonIcono";
+import { tituloDeRuta } from "./navegacion";
 
 interface HeaderProps {
-  onAbrirMenu?: () => void;
+  menuAbierto: boolean;
+  onAbrirMenu: () => void;
 }
 
-export function Header({ onAbrirMenu }: HeaderProps) {
+export function Header({ menuAbierto, onAbrirMenu }: HeaderProps) {
+  const titulo = tituloDeRuta(usePathname());
+
   return (
-    <header className="relative flex h-16 flex-shrink-0 items-center justify-center border-b border-borde bg-white px-4 sm:px-6">
-      {onAbrirMenu && (
-        <button
-          type="button"
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-borde bg-white/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-white/70 sm:px-6 lg:px-8">
+      <div className="flex min-w-0 items-center gap-2">
+        <BotonIcono
+          etiqueta="Abrir menú"
+          icono={<Menu aria-hidden="true" />}
           onClick={onAbrirMenu}
-          aria-label="Abrir menú de navegación"
-          className="absolute left-4 rounded-lg p-2 text-texto transition-colors hover:bg-superficie md:hidden"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-      )}
+          aria-expanded={menuAbierto}
+          aria-controls="cajon-navegacion"
+          className="size-10 md:hidden"
+        />
+        {titulo && (
+          <p data-testid="titulo-seccion" className="hidden truncate text-sm font-semibold text-texto sm:block">
+            {titulo}
+          </p>
+        )}
+      </div>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/logo-mep.svg"
         alt="Ministerio de Educación Pública — Gobierno de Costa Rica"
-        className="h-8 w-auto"
+        className="h-7 w-auto shrink-0 md:h-8"
       />
     </header>
   );
