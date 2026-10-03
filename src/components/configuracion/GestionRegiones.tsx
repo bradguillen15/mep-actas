@@ -5,9 +5,11 @@ import { useForm } from "react-hook-form";
 import { useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
-import { Badge, Boton, Campo, Cargando, ModalFormulario, Tabla } from "@/components/ui";
+import { Badge, Boton, Campo, ModalFormulario, Tabla, toast } from "@/components/ui";
 import { useSesion } from "@/hooks/useSesion";
-import { enviarJson, obtenerJson } from "@/lib/api-cliente";
+import { enviarJson, obtenerJsonEstricto } from "@/lib/api-cliente";
+import { ErrorCarga } from "./ErrorCarga";
+import { BarraSeccion, textoConteo } from "./BarraSeccion";
 import type { Region } from "./tipos";
 
 interface DatosRegion {
@@ -15,7 +17,11 @@ interface DatosRegion {
 }
 
 const columnas: ColumnDef<Region>[] = [
-  { header: "ID", accessorKey: "id" },
+  {
+    header: "ID",
+    accessorKey: "id",
+    meta: { className: "w-16 text-texto-suave tabular-nums" },
+  },
   { header: "Nombre", accessorKey: "nombre", enableSorting: true },
   {
     header: "Estado",
@@ -27,7 +33,12 @@ const columnas: ColumnDef<Region>[] = [
 
 export function GestionRegiones() {
   const { usuario } = useSesion();
-  const { data: regiones, isLoading } = useSWR<Region[]>("/api/regiones", obtenerJson);
+  const {
+    data: regiones,
+    isLoading,
+    error,
+    mutate: refrescarRegiones,
+  } = useSWR<Region[]>("/api/regiones", obtenerJsonEstricto);
   const [modalAbierto, setModalAbierto] = useState(false);
   const { register, handleSubmit, reset, formState } = useForm<DatosRegion>({
     defaultValues: { nombre: "" },
@@ -44,19 +55,30 @@ export function GestionRegiones() {
     await enviarJson("/api/regiones", { nombre: nombre.trim() }, "No se pudo crear la región");
     await mutate("/api/regiones");
     cerrarModal();
+    toast.success("Región creada");
   };
 
   return (
     <div className="flex flex-col gap-4">
-      {puedeCrear && (
-        <div className="flex justify-end">
-          <Boton tamano="sm" onClick={() => setModalAbierto(true)}>
-            <Plus className="h-4 w-4" />
-            Nueva región
-          </Boton>
-        </div>
+      <BarraSeccion
+        texto={regiones && textoConteo(regiones.length, "región", "regiones")}
+        accion={
+          puedeCrear && (
+            <Boton tamano="sm" onClick={() => setModalAbierto(true)}>
+              <Plus className="h-4 w-4" />
+              Nueva región
+            </Boton>
+          )
+        }
+      />
+      {error ? (
+        <ErrorCarga
+          mensaje="No se pudieron cargar las regiones"
+          onReintentar={() => void refrescarRegiones()}
+        />
+      ) : (
+        <Tabla columnas={columnas} datos={regiones ?? []} cargando={isLoading} />
       )}
-      {isLoading ? <Cargando /> : <Tabla columnas={columnas} datos={regiones ?? []} />}
 
       <ModalFormulario
         abierto={modalAbierto}
@@ -67,6 +89,8 @@ export function GestionRegiones() {
       >
         <Campo
           label="Nombre"
+          requerido
+          autoFocus
           error={formState.errors.nombre?.message}
           {...register("nombre", {
             validate: (valor) => valor.trim() !== "" || "El nombre es requerido",

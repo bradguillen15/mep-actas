@@ -1,21 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import useSWR from "swr";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import { Tabla } from "@/components/ui/Tabla";
 import { Campo } from "@/components/ui/Campo";
 import { Selector } from "@/components/ui/Selector";
 import { Modal } from "@/components/ui/Modal";
-import { Cargando } from "@/components/ui/Cargando";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import { Badge } from "@/components/ui/Badge";
 import { Boton } from "@/components/ui/Boton";
+import { BotonIcono } from "@/components/ui/BotonIcono";
+import { EncabezadoPagina } from "@/components/ui/EncabezadoPagina";
+import { ListaDefiniciones } from "@/components/ui/ListaDefiniciones";
 import { Paginacion } from "@/components/ui/Paginacion";
 import { useEscuelaActual } from "@/hooks/useEscuelaActual";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { obtenerJsonEstricto } from "@/lib/api-cliente";
 import { LIMITE_GRADUACIONES_POR_PAGINA } from "@/lib/graduaciones";
+import { cn } from "@/lib/utils";
 
 interface Graduacion {
   id: number;
@@ -41,10 +46,19 @@ interface RespuestaGraduaciones {
   limite: number;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const ID_PANEL_AVANZADO = "panel-busqueda-avanzada";
+
+function CeldaTruncada({ texto }: { texto: string }) {
+  return (
+    <span className="block max-w-[16rem] truncate" title={texto}>
+      {texto}
+    </span>
+  );
+}
 
 export default function Consultar() {
   const { escuelaId, escuelas, puedeElegirEscuela } = useEscuelaActual();
+  const campoBusquedaRef = useRef<HTMLInputElement>(null);
   const [busqueda, setBusqueda] = useState("");
   const [tipoFiltro, setTipoFiltro] = useState<"identificacion" | "nombre">(
     "identificacion"
@@ -83,7 +97,10 @@ export default function Consultar() {
     setPagina(1);
   }
 
-  const { data: tiposActa } = useSWR<TipoActa[]>("/api/tipos-acta", fetcher);
+  const { data: tiposActa } = useSWR<TipoActa[]>(
+    "/api/tipos-acta",
+    obtenerJsonEstricto
+  );
 
   const urlConsulta = useMemo(() => {
     const params = new URLSearchParams();
@@ -131,10 +148,15 @@ export default function Consultar() {
     pagina,
   ]);
 
-  const { data: respuesta, isLoading, isValidating } = useSWR<RespuestaGraduaciones>(
-    urlConsulta,
-    fetcher
-  );
+  const {
+    data: respuesta,
+    error,
+    isLoading,
+    isValidating,
+    mutate,
+  } = useSWR<RespuestaGraduaciones>(urlConsulta, obtenerJsonEstricto, {
+    keepPreviousData: true,
+  });
 
   const resultados = respuesta?.datos ?? [];
   const cargaInicial = isLoading && !respuesta;
@@ -146,6 +168,17 @@ export default function Consultar() {
     fechaHasta !== fechaHastaDebounced ||
     numeroCertificado !== numeroCertificadoDebounced ||
     tituloActa !== tituloActaDebounced;
+  const actualizando = isValidating || buscando;
+
+  const filtrosAvanzadosActivos = [
+    tipoActaFiltro,
+    fechaDesde,
+    fechaHasta,
+    numeroCertificado,
+    tituloActa,
+  ].filter(Boolean).length;
+  const hayFiltros =
+    busqueda !== "" || escuelaFiltro !== "" || filtrosAvanzadosActivos > 0;
 
   const columnas: ColumnDef<Graduacion>[] = useMemo(() => {
     const indiceBase = respuesta
@@ -153,53 +186,57 @@ export default function Consultar() {
       : 0;
 
     return [
-    {
-      id: "indice",
-      header: "#",
-      enableSorting: false,
-      size: 48,
-      cell: ({ row }) => (
-        <span className="tabular-nums text-gray-500">
-          {indiceBase + row.index + 1}
-        </span>
-      ),
-    },
-    {
-      header: "Nombre completo",
-      accessorKey: "nombreCompleto",
-      enableSorting: true,
-    },
-    {
-      header: "Identificación",
-      accessorKey: "identificacion",
-      enableSorting: true,
-    },
-    {
-      header: "Escuela",
-      accessorKey: "escuela",
-      enableSorting: true,
-    },
-    {
-      header: "Tipo",
-      accessorKey: "tipoActa",
-      enableSorting: true,
-      cell: ({ getValue }) => (
-        <Badge variante="info">{getValue() as string}</Badge>
-      ),
-    },
-    {
-      header: "Fecha",
-      accessorKey: "fecha",
-      enableSorting: true,
-      cell: ({ getValue }) =>
-        new Date(getValue() as string).toLocaleDateString("es-CR"),
-    },
-    {
-      header: "N° certificado",
-      accessorKey: "numeroCertificado",
-      enableSorting: true,
-    },
-  ];
+      {
+        id: "indice",
+        header: "#",
+        enableSorting: false,
+        size: 48,
+        meta: { className: "tabular-nums" },
+        cell: ({ row }) => (
+          <span className="text-texto-suave">{indiceBase + row.index + 1}</span>
+        ),
+      },
+      {
+        header: "Nombre completo",
+        accessorKey: "nombreCompleto",
+        enableSorting: true,
+        cell: ({ getValue }) => <CeldaTruncada texto={getValue() as string} />,
+      },
+      {
+        header: "Identificación",
+        accessorKey: "identificacion",
+        enableSorting: true,
+        meta: { className: "tabular-nums" },
+      },
+      {
+        header: "Escuela",
+        accessorKey: "escuela",
+        enableSorting: true,
+        cell: ({ getValue }) => <CeldaTruncada texto={getValue() as string} />,
+      },
+      {
+        header: "Tipo",
+        accessorKey: "tipoActa",
+        enableSorting: true,
+        cell: ({ getValue }) => (
+          <Badge variante="info">{getValue() as string}</Badge>
+        ),
+      },
+      {
+        header: "Fecha",
+        accessorKey: "fecha",
+        enableSorting: true,
+        meta: { className: "tabular-nums" },
+        cell: ({ getValue }) =>
+          new Date(getValue() as string).toLocaleDateString("es-CR"),
+      },
+      {
+        header: "N° certificado",
+        accessorKey: "numeroCertificado",
+        enableSorting: true,
+        meta: { className: "text-right tabular-nums [&>button]:justify-end" },
+      },
+    ];
   }, [respuesta]);
 
   const escuelaOpciones = escuelas.map((e) => ({
@@ -221,42 +258,95 @@ export default function Consultar() {
     setTituloActa("");
   };
 
-  return (
-    <div className="flex h-[calc(100dvh-8rem)] flex-col gap-4 overflow-hidden">
-      <div className="flex-shrink-0">
-        <h1 className="text-2xl font-semibold text-texto">Consultar graduados</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Vea los graduados registrados recientemente o busque por identificación,
-          nombre u otros criterios.
-        </p>
-      </div>
+  const limpiarTodo = () => {
+    setBusqueda("");
+    setEscuelaFiltro("");
+    limpiarAvanzados();
+  };
 
-      <div className="flex-shrink-0 space-y-3">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="min-w-[280px] flex-1">
-            <Campo
-              placeholder={
-                tipoFiltro === "identificacion"
-                  ? "Buscar por cédula (coincidencias parciales)..."
-                  : "Buscar por nombre o apellido..."
-              }
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
+  const limpiarBusqueda = () => {
+    setBusqueda("");
+    campoBusquedaRef.current?.focus();
+  };
+
+  const estadoVacio = (
+    <EstadoVacio
+      mensaje="Sin registros encontrados"
+      descripcion={
+        hayFiltros
+          ? "No se encontraron graduaciones con los criterios ingresados."
+          : "No hay graduados registrados todavía."
+      }
+      accion={
+        hayFiltros ? (
+          <Boton type="button" variante="secundario" onClick={limpiarTodo}>
+            Limpiar filtros
+          </Boton>
+        ) : undefined
+      }
+    />
+  );
+
+  return (
+    <div className="flex flex-col gap-6">
+      <EncabezadoPagina
+        titulo="Consultar graduados"
+        descripcion="Vea los graduados registrados recientemente o busque por identificación, nombre u otros criterios."
+      />
+
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex h-10 min-w-[280px] flex-1 items-stretch rounded-lg border border-borde bg-white transition-[border-color,box-shadow] duration-150 focus-within:border-primario focus-within:ring-2 focus-within:ring-primario/20">
+            <div className="relative">
+              <select
+                aria-label="Criterio de búsqueda"
+                value={tipoFiltro}
+                onChange={(e) =>
+                  setTipoFiltro(e.target.value as "identificacion" | "nombre")
+                }
+                className="h-full appearance-none rounded-l-lg bg-transparent pr-8 pl-3 text-sm text-texto outline-none"
+              >
+                <option value="identificacion">Cédula</option>
+                <option value="nombre">Nombre</option>
+              </select>
+              <ChevronDown
+                aria-hidden
+                className="pointer-events-none absolute top-1/2 right-2 size-4 -translate-y-1/2 text-texto-suave"
+              />
+            </div>
+            <div aria-hidden className="my-2 w-px bg-borde" />
+            <div className="relative min-w-0 flex-1">
+              <Search
+                aria-hidden
+                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-texto-suave"
+              />
+              <input
+                ref={campoBusquedaRef}
+                type="text"
+                aria-label="Buscar graduados"
+                placeholder={
+                  tipoFiltro === "identificacion"
+                    ? "Buscar por cédula (coincidencias parciales)..."
+                    : "Buscar por nombre o apellido..."
+                }
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="h-full w-full rounded-r-lg bg-transparent pr-10 pl-9 text-sm text-texto outline-none placeholder:text-texto-suave"
+              />
+              {busqueda && (
+                <BotonIcono
+                  etiqueta="Limpiar búsqueda"
+                  tamano="sm"
+                  onClick={limpiarBusqueda}
+                  icono={<X aria-hidden />}
+                  className="absolute top-1/2 right-1 -translate-y-1/2"
+                />
+              )}
+            </div>
           </div>
-          <Selector
-            opciones={[
-              { valor: "identificacion", etiqueta: "Cédula" },
-              { valor: "nombre", etiqueta: "Nombre" },
-            ]}
-            value={tipoFiltro}
-            onChange={(e) =>
-              setTipoFiltro(e.target.value as "identificacion" | "nombre")
-            }
-            className="w-36"
-          />
           {puedeElegirEscuela && (
             <Selector
+              aria-label="Escuela"
               opciones={[
                 { valor: "", etiqueta: "Todas las escuelas" },
                 ...escuelaOpciones,
@@ -269,104 +359,123 @@ export default function Consultar() {
           <Boton
             type="button"
             variante="secundario"
+            aria-expanded={avanzadaAbierta}
+            aria-controls={ID_PANEL_AVANZADO}
             onClick={() => setAvanzadaAbierta((abierta) => !abierta)}
             className="gap-2"
           >
-            <Search className="h-4 w-4" />
+            <SlidersHorizontal aria-hidden className="size-4" />
             Búsqueda avanzada
-            {avanzadaAbierta ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
+            {filtrosAvanzadosActivos > 0 && (
+              <Badge variante="info">{String(filtrosAvanzadosActivos)}</Badge>
             )}
+            <ChevronDown
+              aria-hidden
+              className={cn(
+                "size-4 transition-transform duration-150 ease-out",
+                avanzadaAbierta && "rotate-180"
+              )}
+            />
           </Boton>
         </div>
 
         {avanzadaAbierta && (
-          <div className="grid gap-3 rounded-xl border border-borde bg-white p-4 md:grid-cols-2 xl:grid-cols-3">
-            <Selector
-              label="Tipo de acta"
-              opciones={[
-                { valor: "", etiqueta: "Todos los tipos" },
-                ...tipoActaOpciones,
-              ]}
-              value={tipoActaFiltro}
-              onChange={(e) => setTipoActaFiltro(e.target.value)}
-            />
-            <Campo
-              label="Fecha desde"
-              type="date"
-              value={fechaDesde}
-              onChange={(e) => setFechaDesde(e.target.value)}
-            />
-            <Campo
-              label="Fecha hasta"
-              type="date"
-              value={fechaHasta}
-              onChange={(e) => setFechaHasta(e.target.value)}
-            />
-            <Campo
-              label="N° certificado"
-              placeholder="Ej. 5001"
-              value={numeroCertificado}
-              onChange={(e) => setNumeroCertificado(e.target.value)}
-            />
-            <Campo
-              label="Título del acta"
-              placeholder="Buscar por título..."
-              value={tituloActa}
-              onChange={(e) => setTituloActa(e.target.value)}
-              className="md:col-span-2"
-            />
-            <div className="flex items-end md:col-span-2 xl:col-span-3">
-              <Boton type="button" variante="secundario" onClick={limpiarAvanzados}>
-                Limpiar filtros avanzados
-              </Boton>
+          <div
+            id={ID_PANEL_AVANZADO}
+            className="animate-in rounded-xl border border-borde bg-white p-4 duration-200 fade-in-0 slide-in-from-top-1"
+          >
+            <div className="mb-3 flex min-h-8 items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold text-texto">
+                Filtros avanzados
+              </h2>
+              {filtrosAvanzadosActivos > 0 && (
+                <Boton
+                  type="button"
+                  variante="ghost"
+                  tamano="sm"
+                  onClick={limpiarAvanzados}
+                >
+                  Limpiar filtros
+                </Boton>
+              )}
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <Selector
+                label="Tipo de acta"
+                opciones={[
+                  { valor: "", etiqueta: "Todos los tipos" },
+                  ...tipoActaOpciones,
+                ]}
+                value={tipoActaFiltro}
+                onChange={(e) => setTipoActaFiltro(e.target.value)}
+              />
+              <Campo
+                label="Fecha desde"
+                type="date"
+                value={fechaDesde}
+                onChange={(e) => setFechaDesde(e.target.value)}
+              />
+              <Campo
+                label="Fecha hasta"
+                type="date"
+                value={fechaHasta}
+                onChange={(e) => setFechaHasta(e.target.value)}
+              />
+              <Campo
+                label="N° certificado"
+                placeholder="Ej. 5001"
+                value={numeroCertificado}
+                onChange={(e) => setNumeroCertificado(e.target.value)}
+              />
+              <div className="md:col-span-2">
+                <Campo
+                  label="Título del acta"
+                  placeholder="Buscar por título..."
+                  value={tituloActa}
+                  onChange={(e) => setTituloActa(e.target.value)}
+                />
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="relative flex min-h-0 flex-1 flex-col">
-        {(cargaInicial || buscando) && <Cargando />}
-
-        {!cargaInicial &&
-          !buscando &&
-          respuesta &&
-          resultados.length === 0 && (
-            <EstadoVacio
-              mensaje="Sin registros encontrados"
-              descripcion={
-                busquedaDebounced ||
-                tipoActaDebounced ||
-                fechaDesdeDebounced ||
-                fechaHastaDebounced ||
-                numeroCertificadoDebounced ||
-                tituloActaDebounced
-                  ? "No se encontraron graduaciones con los criterios ingresados."
-                  : "No hay graduados registrados todavía."
-              }
-            />
+      <div className="relative flex flex-col gap-3">
+        <div
+          aria-hidden
+          className={cn(
+            "absolute inset-x-0 -top-1 h-0.5 animate-pulse rounded-full bg-acento transition-opacity duration-150",
+            actualizando ? "opacity-100" : "opacity-0"
           )}
-
-        {!cargaInicial &&
-          !buscando &&
-          respuesta &&
-          resultados.length > 0 && (
-            <div
-              className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-borde bg-white ${
-                isValidating ? "opacity-60" : ""
-              }`}
-            >
-              <div className="min-h-0 flex-1 overflow-auto">
-                <Tabla
-                  columnas={columnas}
-                  datos={resultados}
-                  onFilaClick={(fila) => setSeleccionado(fila)}
-                  paginacion={false}
-                  className="rounded-none border-0"
-                />
-              </div>
+        />
+        {error ? (
+          <EstadoVacio
+            variante="error"
+            mensaje="No se pudo cargar la información"
+            descripcion="Ocurrió un problema al consultar los graduados. Intente de nuevo."
+            accion={
+              <Boton type="button" variante="secundario" onClick={() => mutate()}>
+                Reintentar
+              </Boton>
+            }
+          />
+        ) : (
+          <div
+            className={cn(
+              "overflow-hidden rounded-xl border border-borde bg-white transition-opacity duration-150",
+              actualizando && !cargaInicial && "opacity-60"
+            )}
+          >
+            <Tabla
+              columnas={columnas}
+              datos={resultados}
+              cargando={cargaInicial}
+              vacio={estadoVacio}
+              onFilaClick={(fila) => setSeleccionado(fila)}
+              paginacion={false}
+              className="rounded-none border-0"
+            />
+            {respuesta && resultados.length > 0 && (
               <Paginacion
                 pagina={respuesta.pagina}
                 totalPaginas={Math.max(
@@ -378,8 +487,9 @@ export default function Consultar() {
                 registrosEnPagina={resultados.length}
                 onChange={setPagina}
               />
-            </div>
-          )}
+            )}
+          </div>
+        )}
       </div>
 
       <Modal
@@ -387,64 +497,35 @@ export default function Consultar() {
         onCerrar={() => setSeleccionado(null)}
         titulo="Detalle de graduación"
         tamano="lg"
+        pie={
+          seleccionado?.actaId ? (
+            <Boton asChild variante="secundario">
+              <Link href={`/actas/${seleccionado.actaId}`}>Ver acta</Link>
+            </Boton>
+          ) : undefined
+        }
       >
         {seleccionado && (
-          <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-medium text-gray-500">
-                  Nombre completo
-                </label>
-                <p className="text-sm text-texto">
-                  {seleccionado.nombreCompleto}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500">
-                  Identificación
-                </label>
-                <p className="text-sm text-texto">
-                  {seleccionado.identificacion}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500">
-                  Escuela
-                </label>
-                <p className="text-sm text-texto">{seleccionado.escuela}</p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500">
-                  Tipo de acta
-                </label>
-                <Badge variante="info">{seleccionado.tipoActa}</Badge>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500">
-                  Fecha
-                </label>
-                <p className="text-sm text-texto">
-                  {new Date(seleccionado.fecha).toLocaleDateString("es-CR")}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500">
-                  N° certificado
-                </label>
-                <p className="text-sm text-texto">
-                  {seleccionado.numeroCertificado}
-                </p>
-              </div>
-              <div className="col-span-2">
-                <label className="text-xs font-medium text-gray-500">
-                  Acta
-                </label>
-                <p className="text-sm text-texto">
-                  {seleccionado.tituloActa}
-                </p>
-              </div>
-            </div>
-          </div>
+          <ListaDefiniciones
+            elementos={[
+              { etiqueta: "Nombre completo", valor: seleccionado.nombreCompleto },
+              { etiqueta: "Identificación", valor: seleccionado.identificacion },
+              { etiqueta: "Escuela", valor: seleccionado.escuela },
+              {
+                etiqueta: "Tipo de acta",
+                valor: <Badge variante="info">{seleccionado.tipoActa}</Badge>,
+              },
+              {
+                etiqueta: "Fecha",
+                valor: new Date(seleccionado.fecha).toLocaleDateString("es-CR"),
+              },
+              {
+                etiqueta: "N° certificado",
+                valor: seleccionado.numeroCertificado,
+              },
+              { etiqueta: "Acta", valor: seleccionado.tituloActa },
+            ]}
+          />
         )}
       </Modal>
     </div>

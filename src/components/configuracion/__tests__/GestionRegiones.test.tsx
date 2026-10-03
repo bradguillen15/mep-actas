@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { GestionRegiones } from "../GestionRegiones";
 
 let nivel = 1;
+let falla = false;
 const mutarMock = vi.fn();
 
 vi.mock("@/hooks/useSesion", () => ({
@@ -14,10 +15,12 @@ vi.mock("@/hooks/useSesion", () => ({
 vi.mock("swr", () => ({
   default: (clave: string) => ({
     data:
-      clave === "/api/regiones"
+      clave === "/api/regiones" && !falla
         ? [{ id: 1, nombre: "Central", activo: true }]
         : undefined,
+    error: falla ? new Error("Error 403") : undefined,
     isLoading: false,
+    mutate: mutarMock,
   }),
   mutate: (...argumentos: unknown[]) => mutarMock(...argumentos),
 }));
@@ -26,12 +29,24 @@ const fetchMock = vi.fn();
 
 beforeEach(() => {
   nivel = 1;
+  falla = false;
   mutarMock.mockReset();
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
 });
 
 describe("GestionRegiones", () => {
+  it("muestra un estado de error con Reintentar cuando la carga falla", async () => {
+    falla = true;
+    render(<GestionRegiones />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("No se pudieron cargar las regiones");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Reintentar" }));
+    expect(mutarMock).toHaveBeenCalled();
+  });
+
   it("lista las regiones existentes", () => {
     render(<GestionRegiones />);
     expect(screen.getByText("Central")).toBeInTheDocument();
@@ -52,7 +67,7 @@ describe("GestionRegiones", () => {
     render(<GestionRegiones />);
 
     await userEvent.click(screen.getByRole("button", { name: /nueva región/i }));
-    await userEvent.type(screen.getByLabelText("Nombre"), "Chorotega");
+    await userEvent.type(screen.getByLabelText(/^Nombre/), "Chorotega");
     await userEvent.click(screen.getByRole("button", { name: "Crear región" }));
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -84,7 +99,7 @@ describe("GestionRegiones", () => {
     render(<GestionRegiones />);
 
     await userEvent.click(screen.getByRole("button", { name: /nueva región/i }));
-    await userEvent.type(screen.getByLabelText("Nombre"), "Central");
+    await userEvent.type(screen.getByLabelText(/^Nombre/), "Central");
     await userEvent.click(screen.getByRole("button", { name: "Crear región" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("La región ya existe");

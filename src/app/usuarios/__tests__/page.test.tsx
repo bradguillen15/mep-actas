@@ -1,18 +1,18 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Usuarios from "../page";
 
 const { sesion, mutarMock } = vi.hoisted(() => ({
-  sesion: { nivel: 1 },
+  sesion: { nivel: 1, usuarioId: 99 },
   mutarMock: vi.fn(),
 }));
 
 vi.mock("@/hooks/useSesion", () => ({
   useSesion: () => ({
     usuario: {
-      usuarioId: 1,
+      usuarioId: sesion.usuarioId,
       email: "pais@mep.go.cr",
       nivel: sesion.nivel,
       rolId: 1,
@@ -23,6 +23,7 @@ vi.mock("@/hooks/useSesion", () => ({
 
 beforeEach(() => {
   sesion.nivel = 1;
+  sesion.usuarioId = 99;
   mutarMock.mockReset();
 });
 
@@ -94,10 +95,10 @@ describe("Pantalla de usuarios — responsividad", () => {
       within(lista).getAllByRole("button", { name: /contraseña/i })
     ).toHaveLength(2);
     expect(
-      within(lista).getByRole("button", { name: "Desactivar" })
+      within(lista).getByRole("button", { name: /^Desactivar/ })
     ).toBeInTheDocument();
     expect(
-      within(lista).getByRole("button", { name: "Activar" })
+      within(lista).getByRole("button", { name: /^Activar/ })
     ).toBeInTheDocument();
   });
 
@@ -120,32 +121,142 @@ describe("Pantalla de usuarios — responsividad", () => {
   });
 });
 
-describe("Pantalla de usuarios — manejo de 403", () => {
+describe("Pantalla de usuarios — cambio de estado", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const botonDesactivar = () =>
+    within(screen.getByRole("list", { name: "Lista de usuarios" })).getByRole("button", {
+      name: /^Desactivar/,
+    });
+
+  it("pide confirmación al desactivar y no llama a la API hasta confirmar", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    vi.stubGlobal("fetch", fetchMock);
+    const usuaria = userEvent.setup();
+    render(<Usuarios />);
+
+    await usuaria.click(botonDesactivar());
+
+    const dialogo = await screen.findByRole("dialog", { name: "Desactivar usuario" });
+    expect(dialogo).toHaveTextContent("activa@mep.go.cr");
+    expect(dialogo).toHaveTextContent("no podrá iniciar sesión");
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await usuaria.click(within(dialogo).getByRole("button", { name: "Desactivar" }));
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const [url, opciones] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/usuarios/1");
+    expect(opciones.method).toBe("PATCH");
+    expect(JSON.parse(opciones.body)).toEqual({ activo: false });
+    await vi.waitFor(() => expect(mutarMock).toHaveBeenCalled());
+  });
+
+  it("no desactiva si se cancela la confirmación", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const usuaria = userEvent.setup();
+    render(<Usuarios />);
+
+    await usuaria.click(botonDesactivar());
+    const dialogo = await screen.findByRole("dialog");
+    await usuaria.click(within(dialogo).getByRole("button", { name: "Cancelar" }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("activa un usuario inactivo sin pedir confirmación", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    vi.stubGlobal("fetch", fetchMock);
+    const usuaria = userEvent.setup();
+    render(<Usuarios />);
+
+    await usuaria.click(
+      within(screen.getByRole("list", { name: "Lista de usuarios" })).getByRole("button", {
+        name: /^Activar/,
+      })
+    );
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ activo: true });
+  });
+
   it("muestra un mensaje claro cuando cambiar el estado responde 403", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 403 }));
+    const usuaria = userEvent.setup();
+    render(<Usuarios />);
+
+    await usuaria.click(botonDesactivar());
+    const dialogo = await screen.findByRole("dialog");
+    await usuaria.click(within(dialogo).getByRole("button", { name: "Desactivar" }));
+
+    expect(
+      await screen.findByText("No tiene permisos para cambiar el estado de este usuario.")
+    ).toBeInTheDocument();
+  });
+
+  it("no ofrece desactivar la propia cuenta", () => {
+    sesion.usuarioId = 1;
+    render(<Usuarios />);
+
+    const lista = screen.getByRole("list", { name: "Lista de usuarios" });
+    expect(within(lista).queryByRole("button", { name: /^Desactivar/ })).not.toBeInTheDocument();
+    expect(within(lista).getByRole("button", { name: /^Activar/ })).toBeInTheDocument();
+  });
+});
+
+describe("Pantalla de usuarios — restablecer contraseña", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("envía la nueva contraseña con Enter y cierra el modal", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    vi.stubGlobal("fetch", fetchMock);
+    const usuaria = userEvent.setup();
+    render(<Usuarios />);
+
+    const lista = screen.getByRole("list", { name: "Lista de usuarios" });
+    await usuaria.click(
+      within(lista).getByRole("button", { name: /Restablecer contraseña de activa@mep.go.cr/ })
+    );
+    const dialogo = await screen.findByRole("dialog", { name: "Restablecer contraseña" });
+    expect(within(dialogo).getByText(/Mínimo 12 caracteres/)).toBeInTheDocument();
+    await usuaria.type(within(dialogo).getByLabelText(/^Nueva contraseña/), "Clave-Segura-123{Enter}");
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      password: "Clave-Segura-123",
+    });
+    await vi.waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("muestra en el modal el error de la API", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: false, status: 403 })
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: "La contraseña debe tener al menos 12 caracteres" }),
+      })
     );
     const usuaria = userEvent.setup();
     render(<Usuarios />);
 
     const lista = screen.getByRole("list", { name: "Lista de usuarios" });
     await usuaria.click(
-      within(lista).getByRole("button", { name: "Desactivar" })
+      within(lista).getByRole("button", { name: /Restablecer contraseña de activa@mep.go.cr/ })
     );
+    const dialogo = await screen.findByRole("dialog");
+    await usuaria.type(within(dialogo).getByLabelText(/^Nueva contraseña/), "corta{Enter}");
 
     expect(
-      await screen.findByText(
-        "No tiene permisos para cambiar el estado de este usuario."
-      )
+      await within(dialogo).findByText("La contraseña debe tener al menos 12 caracteres")
     ).toBeInTheDocument();
-    vi.unstubAllGlobals();
   });
 });
 
-describe("Pantalla de usuarios — Invitar usuario", () => {
+describe("Pantalla de usuarios — Nuevo usuario", () => {
   const abrirModal = async (usuaria: ReturnType<typeof userEvent.setup>) => {
-    await usuaria.click(screen.getByRole("button", { name: /invitar usuario/i }));
+    await usuaria.click(screen.getByRole("button", { name: /^nuevo usuario$/i }));
     return screen.getByRole("dialog");
   };
 
@@ -158,11 +269,11 @@ describe("Pantalla de usuarios — Invitar usuario", () => {
     render(<Usuarios />);
 
     const dialogo = await abrirModal(usuaria);
-    await usuaria.selectOptions(within(dialogo).getByLabelText("Funcionario"), "7");
-    await usuaria.selectOptions(within(dialogo).getByLabelText("Rol"), "4");
-    await usuaria.type(within(dialogo).getByLabelText("Correo electrónico"), "nuevo@mep.go.cr");
-    await usuaria.type(within(dialogo).getByLabelText("Contraseña temporal"), "Clave-Segura-1");
-    await usuaria.click(within(dialogo).getByRole("button", { name: "Crear" }));
+    await usuaria.selectOptions(within(dialogo).getByLabelText(/Funcionario/), "7");
+    await usuaria.selectOptions(within(dialogo).getByLabelText(/Rol/), "4");
+    await usuaria.type(within(dialogo).getByLabelText(/Correo electrónico/), "nuevo@mep.go.cr");
+    await usuaria.type(within(dialogo).getByLabelText(/Contraseña temporal/), "Clave-Segura-1");
+    await usuaria.click(within(dialogo).getByRole("button", { name: "Crear usuario" }));
 
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const [url, opciones] = fetchMock.mock.calls[0];
@@ -192,11 +303,11 @@ describe("Pantalla de usuarios — Invitar usuario", () => {
     render(<Usuarios />);
 
     const dialogo = await abrirModal(usuaria);
-    await usuaria.selectOptions(within(dialogo).getByLabelText("Funcionario"), "7");
-    await usuaria.selectOptions(within(dialogo).getByLabelText("Rol"), "4");
-    await usuaria.type(within(dialogo).getByLabelText("Correo electrónico"), "nuevo@mep.go.cr");
-    await usuaria.type(within(dialogo).getByLabelText("Contraseña temporal"), "corta");
-    await usuaria.click(within(dialogo).getByRole("button", { name: "Crear" }));
+    await usuaria.selectOptions(within(dialogo).getByLabelText(/Funcionario/), "7");
+    await usuaria.selectOptions(within(dialogo).getByLabelText(/Rol/), "4");
+    await usuaria.type(within(dialogo).getByLabelText(/Correo electrónico/), "nuevo@mep.go.cr");
+    await usuaria.type(within(dialogo).getByLabelText(/Contraseña temporal/), "corta");
+    await usuaria.click(within(dialogo).getByRole("button", { name: "Crear usuario" }));
 
     expect(
       await within(dialogo).findByText("La contraseña debe tener al menos 12 caracteres")
@@ -212,10 +323,28 @@ describe("Pantalla de usuarios — Invitar usuario", () => {
     render(<Usuarios />);
 
     const dialogo = await abrirModal(usuaria);
-    await usuaria.click(within(dialogo).getByRole("button", { name: "Crear" }));
+    await usuaria.click(within(dialogo).getByRole("button", { name: "Crear usuario" }));
 
     expect(await within(dialogo).findByText("El funcionario es requerido")).toBeInTheDocument();
     expect(within(dialogo).getByText("El rol es requerido")).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  it("valida el formato del correo antes de enviar", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const usuaria = userEvent.setup();
+    render(<Usuarios />);
+
+    const dialogo = await abrirModal(usuaria);
+    await usuaria.selectOptions(within(dialogo).getByLabelText(/Funcionario/), "7");
+    await usuaria.selectOptions(within(dialogo).getByLabelText(/Rol/), "4");
+    await usuaria.type(within(dialogo).getByLabelText(/Correo electrónico/), "no-es-correo");
+    await usuaria.type(within(dialogo).getByLabelText(/Contraseña temporal/), "Clave-Segura-1");
+    await usuaria.click(within(dialogo).getByRole("button", { name: "Crear usuario" }));
+
+    expect(await within(dialogo).findByText("Ingrese un correo válido")).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
   });
@@ -225,7 +354,7 @@ describe("Pantalla de usuarios — Invitar usuario", () => {
     render(<Usuarios />);
 
     const dialogo = await abrirModal(usuaria);
-    const etiquetas = within(within(dialogo).getByLabelText("Rol"))
+    const etiquetas = within(within(dialogo).getByLabelText(/Rol/))
       .getAllByRole("option")
       .map((o) => o.textContent);
     expect(etiquetas).toEqual(["Seleccione un rol", "Admin País", "Admin Regional", "Staff"]);
@@ -237,7 +366,7 @@ describe("Pantalla de usuarios — Invitar usuario", () => {
     render(<Usuarios />);
 
     const dialogo = await abrirModal(usuaria);
-    const etiquetas = within(within(dialogo).getByLabelText("Rol"))
+    const etiquetas = within(within(dialogo).getByLabelText(/Rol/))
       .getAllByRole("option")
       .map((o) => o.textContent);
     expect(etiquetas).toEqual(["Seleccione un rol", "Admin Regional", "Staff"]);

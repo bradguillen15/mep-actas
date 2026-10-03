@@ -5,21 +5,38 @@ import useSWR from "swr";
 import { useForm } from "react-hook-form";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Plus, Trash2 } from "lucide-react";
-import { Boton, Campo, Cargando, ModalFormulario, Tabla } from "@/components/ui";
-import { enviarJson, obtenerJson } from "@/lib/api-cliente";
+import {
+  Alerta,
+  Boton,
+  BotonIcono,
+  Campo,
+  DialogoConfirmacion,
+  ModalFormulario,
+  Tabla,
+  toast,
+} from "@/components/ui";
+import { useValorRetenido } from "@/hooks/useValorRetenido";
+import { enviarJson, obtenerJsonEstricto } from "@/lib/api-cliente";
+import { ErrorCarga } from "./ErrorCarga";
+import { BarraSeccion, textoConteo } from "./BarraSeccion";
 import type { TipoActa } from "./tipos";
 
 interface DatosTipoActa {
   nombre: string;
 }
 
+const MENSAJE_ERROR_ELIMINAR = "Error al eliminar el tipo de acta";
+
 export function GestionTiposActa() {
-  const { data: tipos, isLoading, mutate: refrescarTipos } = useSWR<TipoActa[]>(
-    "/api/tipos-acta",
-    obtenerJson
-  );
+  const {
+    data: tipos,
+    isLoading,
+    error: errorCarga,
+    mutate: refrescarTipos,
+  } = useSWR<TipoActa[]>("/api/tipos-acta", obtenerJsonEstricto);
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [eliminandoId, setEliminandoId] = useState<number | null>(null);
+  const [tipoAEliminar, setTipoAEliminar] = useState<TipoActa | null>(null);
+  const tipoAEliminarMostrado = useValorRetenido(tipoAEliminar);
   const [error, setError] = useState("");
   const { register, handleSubmit, reset, formState } = useForm<DatosTipoActa>({
     defaultValues: { nombre: "" },
@@ -38,73 +55,82 @@ export function GestionTiposActa() {
     );
     await refrescarTipos();
     cerrarModal();
+    toast.success("Tipo de acta creado");
   };
 
-  const eliminarTipo = async (tipo: TipoActa) => {
-    const confirmado = window.confirm(
-      `¿Eliminar el tipo de acta "${tipo.nombre}"?`
-    );
-    if (!confirmado) return;
-
-    setEliminandoId(tipo.id);
+  const eliminarTipo = async () => {
+    if (!tipoAEliminar) return;
     setError("");
     try {
-      const res = await fetch(`/api/tipos-acta/${tipo.id}`, {
+      const res = await fetch(`/api/tipos-acta/${tipoAEliminar.id}`, {
         method: "DELETE",
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({
-          error: "Error al eliminar el tipo de acta",
-        }));
-        throw new Error(err.error ?? "Error al eliminar el tipo de acta");
+        const detalle = await res.json().catch(() => ({}));
+        throw new Error(detalle.error ?? MENSAJE_ERROR_ELIMINAR);
       }
-      refrescarTipos();
+      await refrescarTipos();
+      toast.success("Tipo de acta eliminado");
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Error al eliminar el tipo de acta"
-      );
+      setError(e instanceof Error ? e.message : MENSAJE_ERROR_ELIMINAR);
     } finally {
-      setEliminandoId(null);
+      setTipoAEliminar(null);
     }
   };
 
   const columnas: ColumnDef<TipoActa>[] = [
-    { header: "ID", accessorKey: "id" },
+    {
+      header: "ID",
+      accessorKey: "id",
+      meta: { className: "w-16 text-texto-suave tabular-nums" },
+    },
     { header: "Nombre", accessorKey: "nombre", enableSorting: true },
     {
       header: "",
       id: "acciones",
       enableSorting: false,
+      meta: { className: "w-14 text-right" },
       cell: ({ row }) => (
-        <button
-          type="button"
-          onClick={() => eliminarTipo(row.original)}
-          disabled={eliminandoId === row.original.id}
-          title="Eliminar tipo de acta"
-          aria-label="Eliminar tipo de acta"
-          className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-error/10 hover:text-error disabled:opacity-50"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <BotonIcono
+          variante="peligro"
+          etiqueta={`Eliminar tipo de acta ${row.original.nombre}`}
+          icono={<Trash2 aria-hidden />}
+          onClick={() => setTipoAEliminar(row.original)}
+        />
       ),
     },
   ];
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Boton tamano="sm" onClick={() => setModalAbierto(true)}>
-          <Plus className="h-4 w-4" />
-          Nuevo tipo de acta
-        </Boton>
-      </div>
-      {error && (
-        <div className="rounded-lg bg-error/10 px-3 py-2 text-sm text-error">
-          {error}
-        </div>
+      <BarraSeccion
+        texto={tipos && textoConteo(tipos.length, "tipo de acta", "tipos de acta")}
+        accion={
+          <Boton tamano="sm" onClick={() => setModalAbierto(true)}>
+            <Plus className="h-4 w-4" />
+            Nuevo tipo de acta
+          </Boton>
+        }
+      />
+      {error && <Alerta variante="error">{error}</Alerta>}
+      {errorCarga ? (
+        <ErrorCarga
+          mensaje="No se pudieron cargar los tipos de acta"
+          onReintentar={() => void refrescarTipos()}
+        />
+      ) : (
+        <Tabla columnas={columnas} datos={tipos ?? []} cargando={isLoading} />
       )}
-      {isLoading && <Cargando />}
-      {tipos && <Tabla columnas={columnas} datos={tipos} />}
+
+      <DialogoConfirmacion
+        abierto={tipoAEliminar !== null}
+        onCerrar={() => setTipoAEliminar(null)}
+        onConfirmar={eliminarTipo}
+        titulo="Eliminar tipo de acta"
+        descripcion={`Se eliminará el tipo de acta "${tipoAEliminarMostrado?.nombre ?? ""}". Esta acción no se puede deshacer.`}
+        etiquetaConfirmar="Eliminar"
+        variante="peligro"
+      />
 
       <ModalFormulario
         abierto={modalAbierto}
@@ -115,6 +141,8 @@ export function GestionTiposActa() {
       >
         <Campo
           label="Nombre"
+          requerido
+          autoFocus
           error={formState.errors.nombre?.message}
           {...register("nombre", {
             validate: (valor) => valor.trim() !== "" || "El nombre es requerido",

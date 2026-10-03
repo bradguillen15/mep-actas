@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { Campo, ModalFormulario, Selector } from "@/components/ui";
+import { Campo, CampoContrasena, ModalFormulario, Selector, toast } from "@/components/ui";
 import { enviarJson } from "@/lib/api-cliente";
 
 export interface RolDisponible {
@@ -29,6 +29,10 @@ interface ModalNuevoUsuarioProps {
   roles: RolDisponible[];
   funcionarios: FuncionarioDisponible[];
 }
+
+const PATRON_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export const AYUDA_CONTRASENA = "Mínimo 12 caracteres.";
 
 const requerido = (mensaje: string) => (valor: string) =>
   valor.trim() !== "" || mensaje;
@@ -62,18 +66,21 @@ export function ModalNuevoUsuario({
     );
     onCreado();
     cerrar();
+    toast.success("Usuario creado");
   };
 
   return (
     <ModalFormulario
       abierto={abierto}
       onCerrar={cerrar}
-      titulo="Invitar usuario"
-      textoEnviar="Crear"
+      titulo="Nuevo usuario"
+      textoEnviar="Crear usuario"
       onEnviar={() => handleSubmit(crearUsuario)()}
     >
       <Selector
         label="Funcionario"
+        requerido
+        autoFocus
         placeholder="Seleccione un funcionario"
         opciones={funcionarios.map((f) => ({
           valor: f.id,
@@ -86,6 +93,7 @@ export function ModalNuevoUsuario({
       />
       <Selector
         label="Rol"
+        requerido
         placeholder="Seleccione un rol"
         opciones={roles.map((r) => ({ valor: r.id, etiqueta: r.nombre }))}
         error={formState.errors.rolId?.message}
@@ -94,15 +102,20 @@ export function ModalNuevoUsuario({
       <Campo
         label="Correo electrónico"
         type="email"
+        requerido
         placeholder="correo@mep.go.cr"
         error={formState.errors.email?.message}
         {...register("email", {
-          validate: requerido("El correo electrónico es requerido"),
+          validate: (valor) =>
+            valor.trim() === ""
+              ? "El correo electrónico es requerido"
+              : PATRON_CORREO.test(valor.trim()) || "Ingrese un correo válido",
         })}
       />
-      <Campo
+      <CampoContrasena
         label="Contraseña temporal"
-        type="password"
+        requerido
+        ayuda={AYUDA_CONTRASENA}
         error={formState.errors.password?.message}
         {...register("password", {
           validate: requerido("La contraseña es requerida"),

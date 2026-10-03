@@ -1,6 +1,3 @@
-export const obtenerJson = <T>(url: string): Promise<T> =>
-  fetch(url).then((respuesta) => respuesta.json());
-
 export async function enviarJson(
   url: string,
   cuerpo: unknown,
@@ -15,4 +12,12 @@ export async function enviarJson(
     const detalle = await respuesta.json().catch(() => ({}));
     throw new Error(detalle.error ?? mensajeError);
   }
+}
+
+export async function obtenerJsonEstricto<T>(url: string): Promise<T> {
+  const respuesta = await fetch(url);
+  if (!respuesta.ok) {
+    throw new Error(`Error ${respuesta.status} al consultar ${url}`);
+  }
+  return respuesta.json();
 }

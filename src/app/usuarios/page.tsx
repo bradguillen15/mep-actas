@@ -3,16 +3,27 @@
 import { useState } from "react";
 import useSWR from "swr";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus, KeyRound } from "lucide-react";
-import { Tabla } from "@/components/ui/Tabla";
-import { Campo } from "@/components/ui/Campo";
-import { Modal } from "@/components/ui/Modal";
-import { Boton } from "@/components/ui/Boton";
-import { Cargando } from "@/components/ui/Cargando";
-import { EstadoVacio } from "@/components/ui/EstadoVacio";
-import { Badge } from "@/components/ui/Badge";
-import { ModalNuevoUsuario } from "@/components/usuarios/ModalNuevoUsuario";
+import { KeyRound, Plus, UserCheck, UserX } from "lucide-react";
+import {
+  Alerta,
+  Badge,
+  Boton,
+  BotonIcono,
+  CampoContrasena,
+  DialogoConfirmacion,
+  EncabezadoPagina,
+  EstadoVacio,
+  ModalFormulario,
+  Tabla,
+  toast,
+} from "@/components/ui";
+import {
+  AYUDA_CONTRASENA,
+  ModalNuevoUsuario,
+} from "@/components/usuarios/ModalNuevoUsuario";
 import { useSesion } from "@/hooks/useSesion";
+import { useValorRetenido } from "@/hooks/useValorRetenido";
+import { obtenerJsonEstricto } from "@/lib/api-cliente";
 
 interface Usuario {
   id: number;
@@ -38,42 +49,137 @@ interface Funcionario {
   apellidos: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+interface AccionesUsuarioProps {
+  usuario: Usuario;
+  esPropio: boolean;
+  procesando: boolean;
+  conEtiquetas: boolean;
+  onRestablecer: (usuario: Usuario) => void;
+  onDesactivar: (usuario: Usuario) => void;
+  onActivar: (usuario: Usuario) => void;
+}
+
+function AccionesUsuario({
+  usuario,
+  esPropio,
+  procesando,
+  conEtiquetas,
+  onRestablecer,
+  onDesactivar,
+  onActivar,
+}: AccionesUsuarioProps) {
+  const etiquetaReset = `Restablecer contraseña de ${usuario.email}`;
+  const etiquetaDesactivar = `Desactivar ${usuario.email}`;
+  const etiquetaActivar = `Activar ${usuario.email}`;
+
+  if (conEtiquetas) {
+    return (
+      <div className="flex flex-wrap gap-2">
+        <Boton
+          variante="secundario"
+          tamano="sm"
+          aria-label={etiquetaReset}
+          onClick={() => onRestablecer(usuario)}
+        >
+          <KeyRound aria-hidden className="size-4" />
+          Contraseña
+        </Boton>
+        {usuario.activo && !esPropio && (
+          <Boton
+            variante="secundario"
+            tamano="sm"
+            aria-label={etiquetaDesactivar}
+            cargando={procesando}
+            onClick={() => onDesactivar(usuario)}
+            className="text-error hover-fino:bg-error/10"
+          >
+            <UserX aria-hidden className="size-4" />
+            Desactivar
+          </Boton>
+        )}
+        {!usuario.activo && (
+          <Boton
+            variante="secundario"
+            tamano="sm"
+            aria-label={etiquetaActivar}
+            cargando={procesando}
+            onClick={() => onActivar(usuario)}
+          >
+            <UserCheck aria-hidden className="size-4" />
+            Activar
+          </Boton>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      <BotonIcono
+        etiqueta={etiquetaReset}
+        icono={<KeyRound aria-hidden />}
+        onClick={() => onRestablecer(usuario)}
+      />
+      {usuario.activo && !esPropio && (
+        <BotonIcono
+          variante="peligro"
+          etiqueta={etiquetaDesactivar}
+          icono={<UserX aria-hidden />}
+          disabled={procesando}
+          onClick={() => onDesactivar(usuario)}
+        />
+      )}
+      {!usuario.activo && (
+        <BotonIcono
+          etiqueta={etiquetaActivar}
+          icono={<UserCheck aria-hidden />}
+          disabled={procesando}
+          onClick={() => onActivar(usuario)}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function Usuarios() {
   const { usuario: sesion } = useSesion();
-  const { data: usuarios, isLoading, mutate } = useSWR<Usuario[]>(
-    "/api/usuarios",
-    fetcher
-  );
-  const { data: roles } = useSWR<Rol[]>("/api/roles", fetcher);
+  const {
+    data: usuarios,
+    error: errorUsuarios,
+    isLoading,
+    mutate,
+  } = useSWR<Usuario[]>("/api/usuarios", obtenerJsonEstricto);
+  const { data: roles } = useSWR<Rol[]>("/api/roles", obtenerJsonEstricto);
   const { data: funcionarios } = useSWR<Funcionario[]>(
     "/api/funcionarios",
-    fetcher
+    obtenerJsonEstricto
   );
 
   const [modalCrear, setModalCrear] = useState(false);
-
   const [usuarioReset, setUsuarioReset] = useState<Usuario | null>(null);
   const [nuevaPassword, setNuevaPassword] = useState("");
-  const [errorReset, setErrorReset] = useState("");
-  const [reseteando, setReseteando] = useState(false);
+  const [usuarioADesactivar, setUsuarioADesactivar] = useState<Usuario | null>(null);
+  const [procesandoId, setProcesandoId] = useState<number | null>(null);
   const [errorEstado, setErrorEstado] = useState("");
+  const usuarioADesactivarMostrado = useValorRetenido(usuarioADesactivar);
+  const usuarioResetMostrado = useValorRetenido(usuarioReset);
 
   const nivelActor = sesion?.nivel ?? 4;
-
   const rolesPermitidos = (roles ?? []).filter((r) => r.nivel >= nivelActor);
 
   const nombreRol = (nivel: number) =>
     (roles ?? []).find((r) => r.nivel === nivel)?.nombre ?? `Nivel ${nivel}`;
 
-  const manejarCambioEstado = async (u: Usuario) => {
+  const esPropio = (u: Usuario) => u.id === sesion?.usuarioId;
+
+  const cambiarEstado = async (u: Usuario, activo: boolean) => {
     setErrorEstado("");
+    setProcesandoId(u.id);
     try {
       const res = await fetch(`/api/usuarios/${u.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activo: !u.activo }),
+        body: JSON.stringify({ activo }),
       });
       if (res.status === 403) {
         setErrorEstado("No tiene permisos para cambiar el estado de este usuario.");
@@ -83,45 +189,66 @@ export default function Usuarios() {
         setErrorEstado("No se pudo cambiar el estado del usuario.");
         return;
       }
-      mutate();
+      await mutate();
+      toast.success(activo ? "Usuario activado" : "Usuario desactivado");
     } catch {
       setErrorEstado("Error de conexión.");
+    } finally {
+      setProcesandoId(null);
     }
   };
 
-  const manejarReset = async () => {
-    if (!usuarioReset) return;
-    setErrorReset("");
-    setReseteando(true);
-    try {
-      const res = await fetch(`/api/usuarios/${usuarioReset.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: nuevaPassword }),
-      });
-      if (res.status === 403) {
-        setErrorReset("No tiene permisos para restablecer la contraseña de este usuario.");
-        return;
-      }
-      if (!res.ok) {
-        setErrorReset("No se pudo restablecer la contraseña.");
-        return;
-      }
-      setUsuarioReset(null);
-      setNuevaPassword("");
-    } catch {
-      setErrorReset("Error de conexión.");
-    } finally {
-      setReseteando(false);
-    }
+  const confirmarDesactivacion = async () => {
+    if (!usuarioADesactivar) return;
+    const objetivo = usuarioADesactivar;
+    await cambiarEstado(objetivo, false);
+    setUsuarioADesactivar(null);
   };
+
+  const cerrarReset = () => {
+    setUsuarioReset(null);
+    setNuevaPassword("");
+  };
+
+  const restablecerPassword = async () => {
+    if (!usuarioReset) return;
+    const res = await fetch(`/api/usuarios/${usuarioReset.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: nuevaPassword }),
+    });
+    if (res.status === 403) {
+      throw new Error("No tiene permisos para restablecer la contraseña de este usuario.");
+    }
+    if (!res.ok) {
+      const detalle = await res.json().catch(() => ({}));
+      throw new Error(detalle.error ?? "No se pudo restablecer la contraseña.");
+    }
+    cerrarReset();
+    toast.success("Contraseña restablecida");
+  };
+
+  const accionesDe = (u: Usuario, conEtiquetas: boolean) => (
+    <AccionesUsuario
+      usuario={u}
+      esPropio={esPropio(u)}
+      procesando={procesandoId === u.id}
+      conEtiquetas={conEtiquetas}
+      onRestablecer={setUsuarioReset}
+      onDesactivar={setUsuarioADesactivar}
+      onActivar={(objetivo) => cambiarEstado(objetivo, true)}
+    />
+  );
+
+  const badgeEstado = (activo: boolean) =>
+    activo ? (
+      <Badge variante="exito">Activo</Badge>
+    ) : (
+      <Badge variante="error">Inactivo</Badge>
+    );
 
   const columnas: ColumnDef<Usuario>[] = [
-    {
-      header: "Correo",
-      accessorKey: "email",
-      enableSorting: true,
-    },
+    { header: "Correo", accessorKey: "email", enableSorting: true },
     {
       header: "Funcionario",
       enableSorting: false,
@@ -140,109 +267,66 @@ export default function Usuarios() {
       header: "Estado",
       accessorKey: "activo",
       enableSorting: true,
-      cell: ({ getValue }) =>
-        getValue() ? (
-          <Badge variante="exito">Activo</Badge>
-        ) : (
-          <Badge variante="error">Inactivo</Badge>
-        ),
+      cell: ({ getValue }) => badgeEstado(getValue() as boolean),
     },
     {
       header: "Acciones",
       enableSorting: false,
-      cell: ({ row }) => (
-        <div className="flex gap-2">
-          <Boton
-            variante="secundario"
-            tamano="sm"
-            onClick={() => setUsuarioReset(row.original)}
-          >
-            <KeyRound className="h-4 w-4" />
-            Contraseña
-          </Boton>
-          <Boton
-            variante={row.original.activo ? "peligro" : "secundario"}
-            tamano="sm"
-            onClick={() => manejarCambioEstado(row.original)}
-          >
-            {row.original.activo ? "Desactivar" : "Activar"}
-          </Boton>
-        </div>
-      ),
+      meta: { className: "w-32" },
+      cell: ({ row }) => accionesDe(row.original, false),
     },
   ];
 
+  const sinUsuarios = !isLoading && !errorUsuarios && (usuarios?.length ?? 0) === 0;
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-texto">Usuarios</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Gestione las cuentas de acceso. Solo puede crear o modificar cuentas
-            de su mismo nivel o inferior, dentro de su ámbito.
-          </p>
-        </div>
-        <Boton onClick={() => setModalCrear(true)}>
-          <Plus className="h-4 w-4" />
-          Invitar usuario
-        </Boton>
-      </div>
+      <EncabezadoPagina
+        titulo="Usuarios"
+        descripcion="Gestione las cuentas de acceso. Solo puede crear o modificar cuentas de su mismo nivel o inferior, dentro de su ámbito."
+        acciones={
+          <Boton onClick={() => setModalCrear(true)}>
+            <Plus className="h-4 w-4" />
+            Nuevo usuario
+          </Boton>
+        }
+      />
 
-      {errorEstado && (
-        <div className="rounded-lg bg-error/10 px-3 py-2 text-sm text-error">
-          {errorEstado}
-        </div>
+      {errorEstado && <Alerta variante="error">{errorEstado}</Alerta>}
+
+      {errorUsuarios && (
+        <EstadoVacio
+          variante="error"
+          mensaje="No se pudieron cargar los usuarios"
+          descripcion="Revise su conexión e intente de nuevo."
+          accion={
+            <Boton variante="secundario" onClick={() => mutate()}>
+              Reintentar
+            </Boton>
+          }
+        />
       )}
 
-      {isLoading && <Cargando />}
-
-      {!isLoading && (usuarios?.length ?? 0) === 0 && (
+      {sinUsuarios && (
         <EstadoVacio mensaje="Sin usuarios" descripcion="Aún no hay cuentas registradas." />
       )}
+
+      {isLoading && <Tabla columnas={columnas} datos={[]} cargando />}
 
       {usuarios && usuarios.length > 0 && (
         <>
           <ul aria-label="Lista de usuarios" className="flex flex-col gap-3 md:hidden">
             {usuarios.map((u) => (
-              <li
-                key={u.id}
-                className="rounded-xl border border-borde bg-white p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-texto">
-                      {u.email}
-                    </p>
-                    <p className="truncate text-sm text-gray-500">
-                      {u.funcionarioNombres} {u.funcionarioApellidos}
-                    </p>
-                  </div>
-                  {u.activo ? (
-                    <Badge variante="exito">Activo</Badge>
-                  ) : (
-                    <Badge variante="error">Inactivo</Badge>
-                  )}
-                </div>
-                <div className="mt-2">
+              <li key={u.id} className="rounded-xl border border-borde bg-white p-4">
+                <p className="truncate text-sm font-medium text-texto">{u.email}</p>
+                <p className="truncate text-sm text-texto-suave">
+                  {u.funcionarioNombres} {u.funcionarioApellidos}
+                </p>
+                <div className="mt-2 flex flex-nowrap items-center gap-2">
                   <Badge variante="info">{nombreRol(u.nivel)}</Badge>
+                  {badgeEstado(u.activo)}
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Boton
-                    variante="secundario"
-                    tamano="sm"
-                    onClick={() => setUsuarioReset(u)}
-                  >
-                    <KeyRound className="h-4 w-4" />
-                    Contraseña
-                  </Boton>
-                  <Boton
-                    variante={u.activo ? "peligro" : "secundario"}
-                    tamano="sm"
-                    onClick={() => manejarCambioEstado(u)}
-                  >
-                    {u.activo ? "Desactivar" : "Activar"}
-                  </Boton>
-                </div>
+                <div className="mt-3">{accionesDe(u, true)}</div>
               </li>
             ))}
           </ul>
@@ -260,52 +344,37 @@ export default function Usuarios() {
         funcionarios={funcionarios ?? []}
       />
 
-      <Modal
+      <DialogoConfirmacion
+        abierto={usuarioADesactivar !== null}
+        onCerrar={() => setUsuarioADesactivar(null)}
+        onConfirmar={confirmarDesactivacion}
+        titulo="Desactivar usuario"
+        descripcion={`${usuarioADesactivarMostrado?.email ?? "El usuario"} no podrá iniciar sesión mientras la cuenta esté desactivada. Puede volver a activarla en cualquier momento.`}
+        etiquetaConfirmar="Desactivar"
+        variante="peligro"
+      />
+
+      <ModalFormulario
         abierto={usuarioReset !== null}
-        onCerrar={() => {
-          setUsuarioReset(null);
-          setNuevaPassword("");
-          setErrorReset("");
-        }}
+        onCerrar={cerrarReset}
         titulo="Restablecer contraseña"
-        tamano="sm"
+        textoEnviar="Restablecer"
+        deshabilitado={!nuevaPassword}
+        onEnviar={restablecerPassword}
       >
-        <div className="flex flex-col gap-4">
-          <p className="text-sm text-gray-500">
-            Nueva contraseña para{" "}
-            <span className="font-medium text-texto">{usuarioReset?.email}</span>.
-          </p>
-          <Campo
-            label="Nueva contraseña"
-            type="password"
-            value={nuevaPassword}
-            onChange={(e) => setNuevaPassword(e.target.value)}
-          />
-          {errorReset && (
-            <div className="rounded-lg bg-error/10 px-3 py-2 text-sm text-error">
-              {errorReset}
-            </div>
-          )}
-          <div className="flex justify-end gap-2">
-            <Boton
-              variante="secundario"
-              onClick={() => {
-                setUsuarioReset(null);
-                setNuevaPassword("");
-              }}
-            >
-              Cancelar
-            </Boton>
-            <Boton
-              onClick={manejarReset}
-              cargando={reseteando}
-              disabled={!nuevaPassword}
-            >
-              Restablecer
-            </Boton>
-          </div>
-        </div>
-      </Modal>
+        <p className="text-sm text-texto-suave">
+          Nueva contraseña para{" "}
+          <span className="font-medium text-texto">{usuarioResetMostrado?.email}</span>.
+        </p>
+        <CampoContrasena
+          label="Nueva contraseña"
+          requerido
+          autoFocus
+          ayuda={AYUDA_CONTRASENA}
+          value={nuevaPassword}
+          onChange={(e) => setNuevaPassword(e.target.value)}
+        />
+      </ModalFormulario>
     </div>
   );
 }

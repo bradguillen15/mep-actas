@@ -1,49 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { GestionEscuelas } from "@/components/configuracion/GestionEscuelas";
 import { GestionRegiones } from "@/components/configuracion/GestionRegiones";
 import { GestionTiposActa } from "@/components/configuracion/GestionTiposActa";
+import { EncabezadoPagina, Pestanas } from "@/components/ui";
 
-type Pestana = "tipos-acta" | "regiones" | "escuelas";
+type IdPestana = "tipos-acta" | "regiones" | "escuelas";
 
-const pestanas: { id: Pestana; etiqueta: string }[] = [
+const pestanas: { id: IdPestana; etiqueta: string }[] = [
   { id: "tipos-acta", etiqueta: "Tipos de acta" },
   { id: "regiones", etiqueta: "Regiones" },
   { id: "escuelas", etiqueta: "Escuelas" },
 ];
 
-export default function Configuracion() {
-  const [pestanaActiva, setPestanaActiva] = useState<Pestana>("tipos-acta");
+const PESTANA_POR_DEFECTO: IdPestana = "tipos-acta";
+
+const esPestanaValida = (valor: string | null): valor is IdPestana =>
+  pestanas.some((p) => p.id === valor);
+
+function ContenidoConfiguracion() {
+  const router = useRouter();
+  const ruta = usePathname();
+  const parametros = useSearchParams();
+  const valorTab = parametros.get("tab");
+  const pestanaActiva = esPestanaValida(valorTab) ? valorTab : PESTANA_POR_DEFECTO;
+
+  const cambiarPestana = (id: string) => {
+    router.replace(`${ruta}?tab=${id}`, { scroll: false });
+  };
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-texto">Configuración</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Administración del sistema.
-        </p>
-      </div>
+      <EncabezadoPagina
+        titulo="Configuración"
+        descripcion="Administración del sistema."
+      />
 
-      <div className="flex gap-1 rounded-lg bg-superficie p-1 border border-borde w-fit">
-        {pestanas.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => setPestanaActiva(p.id)}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-              pestanaActiva === p.id
-                ? "bg-white text-texto shadow-sm"
-                : "text-gray-500 hover:text-texto"
-            }`}
-          >
-            {p.etiqueta}
-          </button>
-        ))}
-      </div>
-
-      {pestanaActiva === "tipos-acta" && <GestionTiposActa />}
-      {pestanaActiva === "regiones" && <GestionRegiones />}
-      {pestanaActiva === "escuelas" && <GestionEscuelas />}
+      <Pestanas
+        etiqueta="Secciones de configuración"
+        pestanas={pestanas}
+        activa={pestanaActiva}
+        onCambiar={cambiarPestana}
+      >
+        {pestanaActiva === "tipos-acta" && <GestionTiposActa />}
+        {pestanaActiva === "regiones" && <GestionRegiones />}
+        {pestanaActiva === "escuelas" && <GestionEscuelas />}
+      </Pestanas>
     </div>
+  );
+}
+
+export default function Configuracion() {
+  return (
+    <Suspense>
+      <ContenidoConfiguracion />
+    </Suspense>
   );
 }

@@ -9,13 +9,15 @@ import {
   Badge,
   Boton,
   Campo,
-  Cargando,
   ModalFormulario,
   Selector,
   Tabla,
+  toast,
 } from "@/components/ui";
 import { useSesion } from "@/hooks/useSesion";
-import { enviarJson, obtenerJson } from "@/lib/api-cliente";
+import { enviarJson, obtenerJsonEstricto } from "@/lib/api-cliente";
+import { ErrorCarga } from "./ErrorCarga";
+import { BarraSeccion, textoConteo } from "./BarraSeccion";
 import type { Escuela, Region } from "./tipos";
 
 interface DatosEscuela {
@@ -24,13 +26,20 @@ interface DatosEscuela {
   nombre: string;
 }
 
+type EscuelaConRegion = Escuela & { nombreRegion: string };
+
 const NIVEL_ADMIN_PAIS = 1;
 const NIVEL_ADMIN_REGIONAL = 2;
 
 export function GestionEscuelas() {
   const { usuario } = useSesion();
-  const { data: escuelas, isLoading } = useSWR<Escuela[]>("/api/escuelas", obtenerJson);
-  const { data: regiones } = useSWR<Region[]>("/api/regiones", obtenerJson);
+  const {
+    data: escuelas,
+    isLoading,
+    error,
+    mutate: refrescarEscuelas,
+  } = useSWR<Escuela[]>("/api/escuelas", obtenerJsonEstricto);
+  const { data: regiones } = useSWR<Region[]>("/api/regiones", obtenerJsonEstricto);
   const [modalAbierto, setModalAbierto] = useState(false);
 
   const nivel = usuario?.nivel;
@@ -58,14 +67,26 @@ export function GestionEscuelas() {
     [regiones]
   );
 
-  const columnas: ColumnDef<Escuela>[] = [
-    { header: "ID", accessorKey: "id" },
+  const filas = useMemo<EscuelaConRegion[]>(
+    () =>
+      (escuelas ?? []).map((escuela) => ({
+        ...escuela,
+        nombreRegion: nombrePorRegion.get(escuela.regionId) ?? "",
+      })),
+    [escuelas, nombrePorRegion]
+  );
+
+  const columnas: ColumnDef<EscuelaConRegion>[] = [
+    {
+      header: "ID",
+      accessorKey: "id",
+      meta: { className: "w-16 text-texto-suave tabular-nums" },
+    },
     { header: "Nombre", accessorKey: "nombre", enableSorting: true },
     { header: "Código MEP", accessorKey: "codigoMep" },
     {
       header: "Región",
-      id: "region",
-      accessorFn: (escuela) => nombrePorRegion.get(escuela.regionId) ?? "",
+      accessorKey: "nombreRegion",
     },
     {
       header: "Estado",
@@ -92,6 +113,7 @@ export function GestionEscuelas() {
     );
     await mutate("/api/escuelas");
     cerrarModal();
+    toast.success("Escuela creada");
   };
 
   const requerido = (mensaje: string) => (valor: string) =>
@@ -99,15 +121,25 @@ export function GestionEscuelas() {
 
   return (
     <div className="flex flex-col gap-4">
-      {puedeCrear && (
-        <div className="flex justify-end">
-          <Boton tamano="sm" onClick={() => setModalAbierto(true)}>
-            <Plus className="h-4 w-4" />
-            Nueva escuela
-          </Boton>
-        </div>
+      <BarraSeccion
+        texto={escuelas && textoConteo(escuelas.length, "escuela", "escuelas")}
+        accion={
+          puedeCrear && (
+            <Boton tamano="sm" onClick={() => setModalAbierto(true)}>
+              <Plus className="h-4 w-4" />
+              Nueva escuela
+            </Boton>
+          )
+        }
+      />
+      {error ? (
+        <ErrorCarga
+          mensaje="No se pudieron cargar las escuelas"
+          onReintentar={() => void refrescarEscuelas()}
+        />
+      ) : (
+        <Tabla columnas={columnas} datos={filas} cargando={isLoading} />
       )}
-      {isLoading ? <Cargando /> : <Tabla columnas={columnas} datos={escuelas ?? []} />}
 
       <ModalFormulario
         abierto={modalAbierto}
@@ -118,6 +150,8 @@ export function GestionEscuelas() {
       >
         <Selector
           label="Región"
+          requerido
+          autoFocus={regionFija === undefined}
           placeholder="Seleccione una región"
           opciones={opcionesRegion}
           disabled={regionFija !== undefined}
@@ -128,6 +162,8 @@ export function GestionEscuelas() {
         />
         <Campo
           label="Código MEP"
+          requerido
+          autoFocus={regionFija !== undefined}
           error={formState.errors.codigoMep?.message}
           {...register("codigoMep", {
             validate: requerido("El código MEP es requerido"),
@@ -135,6 +171,7 @@ export function GestionEscuelas() {
         />
         <Campo
           label="Nombre"
+          requerido
           error={formState.errors.nombre?.message}
           {...register("nombre", {
             validate: requerido("El nombre es requerido"),

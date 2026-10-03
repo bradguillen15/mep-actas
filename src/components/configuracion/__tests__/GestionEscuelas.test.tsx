@@ -6,6 +6,7 @@ import { GestionEscuelas } from "../GestionEscuelas";
 
 let usuario: { nivel: number; regionId?: number } = { nivel: 1 };
 const mutarMock = vi.fn();
+let falla = false;
 
 vi.mock("@/hooks/useSesion", () => ({
   useSesion: () => ({ usuario }),
@@ -23,7 +24,12 @@ const datos = new Map<string, unknown>([
 ]);
 
 vi.mock("swr", () => ({
-  default: (clave: string) => ({ data: datos.get(clave), isLoading: false }),
+  default: (clave: string) => ({
+    data: falla ? undefined : datos.get(clave),
+    error: falla && clave === "/api/escuelas" ? new Error("Error 403") : undefined,
+    isLoading: false,
+    mutate: mutarMock,
+  }),
   mutate: (...argumentos: unknown[]) => mutarMock(...argumentos),
 }));
 
@@ -31,17 +37,41 @@ const fetchMock = vi.fn();
 
 beforeEach(() => {
   usuario = { nivel: 1 };
+  falla = false;
   mutarMock.mockReset();
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
 });
 
 describe("GestionEscuelas", () => {
+  it("muestra un estado de error con Reintentar cuando la carga falla", async () => {
+    falla = true;
+    render(<GestionEscuelas />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("No se pudieron cargar las escuelas");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Reintentar" }));
+    expect(mutarMock).toHaveBeenCalled();
+  });
+
   it("muestra el nombre de la región en lugar de su ID", () => {
     render(<GestionEscuelas />);
     expect(screen.getByText("Escuela Uno")).toBeInTheDocument();
     expect(screen.getByText("Chorotega")).toBeInTheDocument();
     expect(screen.queryByText("Región ID")).not.toBeInTheDocument();
+  });
+
+  it("muestra el nombre de la región aunque las regiones carguen después que las escuelas", () => {
+    const regiones = datos.get("/api/regiones");
+    datos.delete("/api/regiones");
+    const { rerender } = render(<GestionEscuelas />);
+    expect(screen.queryByText("Chorotega")).not.toBeInTheDocument();
+
+    datos.set("/api/regiones", regiones);
+    rerender(<GestionEscuelas />);
+
+    expect(screen.getByText("Chorotega")).toBeInTheDocument();
   });
 
   it("muestra Nueva escuela a nivel 1 y 2, y la oculta a nivel 3 y 4", () => {
@@ -64,13 +94,13 @@ describe("GestionEscuelas", () => {
     render(<GestionEscuelas />);
 
     await userEvent.click(screen.getByRole("button", { name: /nueva escuela/i }));
-    const selector = screen.getByLabelText("Región");
+    const selector = screen.getByLabelText(/^Región/);
     expect(selector).toBeEnabled();
     expect(screen.queryByRole("option", { name: "Antigua" })).not.toBeInTheDocument();
 
     await userEvent.selectOptions(selector, "Chorotega");
-    await userEvent.type(screen.getByLabelText("Código MEP"), "E-002");
-    await userEvent.type(screen.getByLabelText("Nombre"), "Escuela Dos");
+    await userEvent.type(screen.getByLabelText(/^Código MEP/), "E-002");
+    await userEvent.type(screen.getByLabelText(/^Nombre/), "Escuela Dos");
     await userEvent.click(screen.getByRole("button", { name: "Crear escuela" }));
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -89,12 +119,12 @@ describe("GestionEscuelas", () => {
     render(<GestionEscuelas />);
 
     await userEvent.click(screen.getByRole("button", { name: /nueva escuela/i }));
-    const selector = screen.getByLabelText("Región") as HTMLSelectElement;
+    const selector = screen.getByLabelText(/^Región/) as HTMLSelectElement;
     expect(selector).toBeDisabled();
     expect(selector.value).toBe("2");
 
-    await userEvent.type(screen.getByLabelText("Código MEP"), "E-003");
-    await userEvent.type(screen.getByLabelText("Nombre"), "Escuela Tres");
+    await userEvent.type(screen.getByLabelText(/^Código MEP/), "E-003");
+    await userEvent.type(screen.getByLabelText(/^Nombre/), "Escuela Tres");
     await userEvent.click(screen.getByRole("button", { name: "Crear escuela" }));
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -124,9 +154,9 @@ describe("GestionEscuelas", () => {
     render(<GestionEscuelas />);
 
     await userEvent.click(screen.getByRole("button", { name: /nueva escuela/i }));
-    await userEvent.selectOptions(screen.getByLabelText("Región"), "Central");
-    await userEvent.type(screen.getByLabelText("Código MEP"), "E-001");
-    await userEvent.type(screen.getByLabelText("Nombre"), "Duplicada");
+    await userEvent.selectOptions(screen.getByLabelText(/^Región/), "Central");
+    await userEvent.type(screen.getByLabelText(/^Código MEP/), "E-001");
+    await userEvent.type(screen.getByLabelText(/^Nombre/), "Duplicada");
     await userEvent.click(screen.getByRole("button", { name: "Crear escuela" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("El código MEP ya existe");
