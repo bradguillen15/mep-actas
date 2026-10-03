@@ -61,6 +61,7 @@ app/globals.css            # tokens de diseño (variables CSS del MEP)
 - Paleta base: azul marino `#172B54` (primario), dorado `#CFAC65` (acento), dorado oscuro `#7A5F22` (`acento-texto`, solo para texto sobre fondo claro; contraste AA), blanco `#FFFFFF`, grises de superficie/borde, texto `#1F2937` y texto suave `#6B7280`. Estados: éxito `#1E7E45`, error `#C0392B` (hover `#A93226`). Cada valor se define una sola vez en `src/app/globals.css`.
 - Tipografía sans-serif legible (p. ej. Inter). Tono sobrio e institucional; espaciado generoso; sin sombras fuertes ni degradados.
 - **Accesibilidad WCAG AA**: contraste suficiente, foco visible, etiquetas en formularios, navegación por teclado.
+- Los botones solo-ícono usan `BotonIcono`: la prop `etiqueta` alimenta el `aria-label` y el tooltip (Radix). No uses `title` nativo ni botones ícono ad hoc.
 - Logo oficial del MEP (SVG) en la barra superior.
 
 ### Movimiento

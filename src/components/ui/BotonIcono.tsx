@@ -1,7 +1,14 @@
+"use client";
+
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "./tooltip";
 
 const botonIconoVariantes = cva(
   "inline-flex shrink-0 items-center justify-center rounded-lg text-texto-suave outline-none transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primario focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
@@ -34,17 +41,31 @@ export function BotonIcono({
   tamano,
   className,
   type = "button",
+  disabled,
   ...props
 }: BotonIconoProps) {
-  return (
+  const boton = (
     <button
       type={type}
       aria-label={etiqueta}
-      title={etiqueta}
+      disabled={disabled}
       className={cn(botonIconoVariantes({ variante, tamano }), className)}
       {...props}
     >
       {icono}
     </button>
+  );
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {disabled ? (
+          <span className="inline-flex cursor-not-allowed">{boton}</span>
+        ) : (
+          boton
+        )}
+      </TooltipTrigger>
+      <TooltipContent>{etiqueta}</TooltipContent>
+    </Tooltip>
   );
 }

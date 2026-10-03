@@ -11,6 +11,12 @@ export { EstadoVacio } from "./EstadoVacio";
 export { Paginacion } from "./Paginacion";
 export { Tabla } from "./Tabla";
 export { BotonIcono } from "./BotonIcono";
+export {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./tooltip";
 export { Alerta } from "./Alerta";
 export { DialogoConfirmacion } from "./DialogoConfirmacion";
 export { EncabezadoPagina } from "./EncabezadoPagina";

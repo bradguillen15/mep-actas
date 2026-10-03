@@ -8,6 +8,7 @@ import { Header } from "./Header";
 import { CajonNavegacion } from "./CajonNavegacion";
 import { Esqueleto } from "../ui/Esqueleto";
 import { Notificador } from "../ui/Notificaciones";
+import { TooltipProvider } from "../ui/tooltip";
 
 function EsqueletoShell() {
   return (
@@ -61,8 +62,10 @@ function ContenidoLayout({ children }: { children: ReactNode }) {
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <SesionProvider>
-      <ContenidoLayout>{children}</ContenidoLayout>
-      <Notificador />
+      <TooltipProvider delayDuration={300}>
+        <ContenidoLayout>{children}</ContenidoLayout>
+        <Notificador />
+      </TooltipProvider>
     </SesionProvider>
   );
 }

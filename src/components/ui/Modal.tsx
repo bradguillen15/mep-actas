@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { BotonIcono } from "./BotonIcono";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
@@ -52,9 +51,12 @@ export function Modal({
           <DialogTitle className="text-lg font-semibold text-texto">
             {titulo}
           </DialogTitle>
-          <DialogClose asChild>
-            <BotonIcono etiqueta="Cerrar" icono={<X />} disabled={bloquearCierre} />
-          </DialogClose>
+          <BotonIcono
+            etiqueta="Cerrar"
+            icono={<X />}
+            disabled={bloquearCierre}
+            onClick={onCerrar}
+          />
         </div>
         {descripcion && (
           <DialogDescription className="px-6 pt-4 text-texto-suave">
