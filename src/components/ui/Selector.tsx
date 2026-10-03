@@ -1,11 +1,15 @@
-import type { SelectHTMLAttributes } from "react";
+import { useId, type SelectHTMLAttributes } from "react";
+import { ChevronDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { clasesCampoBase } from "./estilos-campo";
 import { Label } from "./label";
 
 interface SelectorProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
+  ayuda?: string;
+  requerido?: boolean;
   opciones: { valor: string | number; etiqueta: string }[];
   placeholder?: string;
 }
@@ -13,41 +17,67 @@ interface SelectorProps extends SelectHTMLAttributes<HTMLSelectElement> {
 export function Selector({
   label,
   error,
+  ayuda,
+  requerido,
   opciones,
   placeholder,
   className,
   id,
   ...props
 }: SelectorProps) {
-  const idReal = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+  const idGenerado = useId();
+  const idReal = id ?? idGenerado;
+  const idAyuda = `${idReal}-ayuda`;
+  const idError = `${idReal}-error`;
+  const descritoPor =
+    [ayuda && idAyuda, error && idError].filter(Boolean).join(" ") || undefined;
   return (
     <div className="flex flex-col gap-1">
       {label && (
         <Label htmlFor={idReal} className="text-texto">
           {label}
+          {requerido && (
+            <span aria-hidden="true" className="text-error">
+              *
+            </span>
+          )}
         </Label>
       )}
-      <select
-        id={idReal}
-        className={cn(
-          "h-10 rounded-lg border border-input bg-white px-3 text-sm text-texto outline-none transition-colors focus-visible:border-primario focus-visible:ring-2 focus-visible:ring-primario/40 disabled:bg-superficie disabled:opacity-60",
-          error && "border-error",
-          className
-        )}
-        {...props}
-      >
-        {placeholder && (
-          <option value="" disabled>
-            {placeholder}
-          </option>
-        )}
-        {opciones.map((op) => (
-          <option key={op.valor} value={op.valor}>
-            {op.etiqueta}
-          </option>
-        ))}
-      </select>
-      {error && <span className="text-xs text-error">{error}</span>}
+      <div className="relative">
+        <select
+          id={idReal}
+          aria-invalid={error ? true : undefined}
+          aria-required={requerido || undefined}
+          aria-describedby={descritoPor}
+          className={cn(clasesCampoBase, "appearance-none pr-9", className)}
+          {...props}
+        >
+          {placeholder && (
+            <option value="" disabled>
+              {placeholder}
+            </option>
+          )}
+          {opciones.map((op) => (
+            <option key={op.valor} value={op.valor}>
+              {op.etiqueta}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-texto-suave"
+        />
+      </div>
+      {ayuda && (
+        <p id={idAyuda} className="text-xs text-texto-suave">
+          {ayuda}
+        </p>
+      )}
+      {error && (
+        <p id={idError} role="alert" className="text-xs text-error">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

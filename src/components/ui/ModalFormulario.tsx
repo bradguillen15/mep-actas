@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useId, useState, type FormEvent, type ReactNode } from "react";
 
+import { Alerta } from "./Alerta";
 import { Boton } from "./Boton";
 import { Modal } from "./Modal";
 
@@ -15,20 +16,24 @@ interface ModalFormularioProps {
   deshabilitado?: boolean;
 }
 
-type PropiedadesFormulario = Pick<
-  ModalFormularioProps,
-  "onCerrar" | "children" | "onEnviar" | "textoEnviar" | "deshabilitado"
->;
-
-function Formulario({
+export function ModalFormulario({
+  abierto,
   onCerrar,
+  titulo,
   children,
   onEnviar,
   textoEnviar = "Guardar",
   deshabilitado = false,
-}: PropiedadesFormulario) {
+}: ModalFormularioProps) {
+  const idFormulario = useId();
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
+  const [abiertoPrevio, setAbiertoPrevio] = useState(abierto);
+
+  if (abierto !== abiertoPrevio) {
+    setAbiertoPrevio(abierto);
+    if (!abierto) setError("");
+  }
 
   const manejarEnvio = async (evento: FormEvent<HTMLFormElement>) => {
     evento.preventDefault();
@@ -44,37 +49,40 @@ function Formulario({
   };
 
   return (
-    <form onSubmit={manejarEnvio} className="flex flex-col gap-4" noValidate>
-      {children}
-      {error && (
-        <div
-          role="alert"
-          className="rounded-lg bg-error/10 px-3 py-2 text-sm text-error"
-        >
-          {error}
-        </div>
-      )}
-      <div className="flex justify-end gap-2">
-        <Boton type="button" variante="secundario" onClick={onCerrar}>
-          Cancelar
-        </Boton>
-        <Boton type="submit" cargando={enviando} disabled={deshabilitado}>
-          {textoEnviar}
-        </Boton>
-      </div>
-    </form>
-  );
-}
-
-export function ModalFormulario({
-  abierto,
-  onCerrar,
-  titulo,
-  ...propiedades
-}: ModalFormularioProps) {
-  return (
-    <Modal abierto={abierto} onCerrar={onCerrar} titulo={titulo}>
-      <Formulario onCerrar={onCerrar} {...propiedades} />
+    <Modal
+      abierto={abierto}
+      onCerrar={onCerrar}
+      titulo={titulo}
+      pie={
+        <>
+          <Boton
+            type="button"
+            variante="secundario"
+            onClick={onCerrar}
+            disabled={enviando}
+          >
+            Cancelar
+          </Boton>
+          <Boton
+            type="submit"
+            form={idFormulario}
+            cargando={enviando}
+            disabled={deshabilitado}
+          >
+            {textoEnviar}
+          </Boton>
+        </>
+      }
+    >
+      <form
+        id={idFormulario}
+        onSubmit={manejarEnvio}
+        className="flex flex-col gap-4"
+        noValidate
+      >
+        {children}
+        {error && <Alerta variante="error">{error}</Alerta>}
+      </form>
     </Modal>
   );
 }

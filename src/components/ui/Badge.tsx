@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-type VarianteBadge = "info" | "exito" | "advertencia" | "error" | "neutral";
+type VarianteBadge = "info" | "exito" | "advertencia" | "error" | "neutral" | "neutro";
 
 interface BadgeProps {
   variante?: VarianteBadge;
@@ -16,9 +16,10 @@ const badgeVariants = cva(
       variante: {
         info: "bg-primario/10 text-primario",
         exito: "bg-exito/10 text-exito",
-        advertencia: "bg-acento/10 text-acento",
+        advertencia: "bg-acento/10 text-acento-texto",
         error: "bg-error/10 text-error",
         neutral: "bg-superficie text-texto",
+        neutro: "bg-superficie text-texto",
       },
     },
     defaultVariants: {

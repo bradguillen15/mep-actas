@@ -11,7 +11,9 @@ interface TarjetaProps {
 
 export function Tarjeta({ children, className, padding = true }: TarjetaProps) {
   return (
-    <Card className={cn("gap-0 bg-white", padding && "p-6", className)}>
+    <Card
+      className={cn("gap-0 rounded-xl border-borde bg-white", padding && "p-6", className)}
+    >
       {children}
     </Card>
   );

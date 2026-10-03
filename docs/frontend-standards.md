@@ -58,10 +58,19 @@ app/globals.css            # tokens de diseño (variables CSS del MEP)
 ## 6. Identidad visual y accesibilidad (MEP)
 
 - Define la paleta como **variables CSS / tokens** (`--color-primario`, `--color-acento`, …). **Nunca** colores embebidos (`#0B3C8C`, `bg-blue-700`) en componentes.
-- Paleta base: azul `#0B3C8C` (primario), dorado `#D4A017` (acento), blanco `#FFFFFF`, grises de superficie/borde, texto `#1F2733`. Estados: éxito `#1E7E45`, error `#C0392B`. Confirmar valores exactos contra el Manual de Imagen Institucional del MEP.
+- Paleta base: azul marino `#172B54` (primario), dorado `#CFAC65` (acento), dorado oscuro `#7A5F22` (`acento-texto`, solo para texto sobre fondo claro; contraste AA), blanco `#FFFFFF`, grises de superficie/borde, texto `#1F2937` y texto suave `#6B7280`. Estados: éxito `#1E7E45`, error `#C0392B` (hover `#A93226`). Cada valor se define una sola vez en `src/app/globals.css`.
 - Tipografía sans-serif legible (p. ej. Inter). Tono sobrio e institucional; espaciado generoso; sin sombras fuertes ni degradados.
 - **Accesibilidad WCAG AA**: contraste suficiente, foco visible, etiquetas en formularios, navegación por teclado.
 - Logo oficial del MEP (SVG) en la barra superior.
+
+### Movimiento
+
+- Curvas (tokens en `globals.css`): `ease-out` `cubic-bezier(0.23, 1, 0.32, 1)` para entradas y feedback, `ease-in-out` `cubic-bezier(0.77, 0, 0.175, 1)` para movimientos en pantalla y `ease-drawer` `cubic-bezier(0.32, 0.72, 0, 1)` para paneles laterales e inferiores.
+- Duraciones: 150 ms para feedback y hover, 200 ms para entradas; la salida es más rápida que la entrada y nada en la UI dura más de 300 ms.
+- Se anima solo `transform` y `opacity`.
+- El hover va bajo la variante `hover-fino` (`(hover: hover) and (pointer: fine)`) para evitar hovers pegados en pantallas táctiles.
+- Los elementos presionables usan `active:scale-[0.97]` (utilidad `presionable`).
+- Se respeta `prefers-reduced-motion`: `globals.css` reduce animaciones y transiciones a casi cero.
 
 ## 7. Calidad
 
@@ -76,3 +85,21 @@ app/globals.css            # tokens de diseño (variables CSS del MEP)
 - Vitest (con jsdom y Testing Library) para lógica de UI, hooks y páginas; la lógica extraíble de las páginas (p. ej. `src/lib/personas.ts`) se prueba como función pura. Los E2E corren con Vitest contra SQLite (`pnpm test:e2e`); los flujos clave (consulta, registro de actas, gestión de escaneos) se verifican además en el navegador con `pnpm dev:local`.
 - Actualiza las pruebas E2E cuando cambie un flujo de usuario, los `data-testid` o los diálogos.
 - Cobertura pragmática, sin umbral fijo.
+
+## 9. Manual de usuario (`/ayuda`)
+
+El manual vive en `src/contenido/ayuda/`, fuera del árbol de rutas. Cada tema es un archivo `.mdx` y se registra en tres lugares.
+
+Para agregar un tema:
+
+1. Agregue la entrada en el catálogo `src/contenido/ayuda/temas.ts`: `slug`, `titulo`, `descripcion`, `niveles`, `orden` y `palabrasClave` (incluya sinónimos que las personas usuarias escribirían).
+2. Agregue el `slug` a `slugsConContenido` en `src/contenido/ayuda/slugs.ts`.
+3. Agregue su cargador en `src/contenido/ayuda/contenido.ts` (`import("./<slug>.mdx")`).
+4. Cree `src/contenido/ayuda/<slug>.mdx`. Empiece con encabezados `##` (el título de la página ya es el `titulo` del catálogo) y use solo los elementos que estilizan `src/mdx-components.tsx`.
+
+Reglas:
+
+- `niveles` controla la visibilidad (1 Admin País, 2 Admin Regional, 3 Admin Escuela, 4 Staff) y se aplica **en el servidor**: el índice y la página de cada tema consultan la sesión. No filtre en el cliente.
+- La prueba `src/contenido/ayuda/__tests__/temas.test.ts` falla si el catálogo y la lista de slugs no coinciden. Escríbala en rojo primero: agregue la entrada al catálogo y luego el contenido.
+- Escriba solo lo que la aplicación hace hoy y use las etiquetas reales de la interfaz. Cuando cambie una funcionalidad, actualice su tema en el mismo cambio.
+- Redacte en español de Costa Rica, con trato de «usted» y lenguaje sencillo para personal no técnico.

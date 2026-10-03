@@ -2,8 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { Button, type buttonVariants } from "./button";
-import type { VariantProps } from "class-variance-authority";
+import { Button } from "./button";
 
 type Variante = "primario" | "secundario" | "peligro" | "ghost" | "acento";
 type Tamano = "sm" | "md" | "lg";
@@ -12,56 +11,52 @@ interface BotonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variante?: Variante;
   tamano?: Tamano;
   cargando?: boolean;
+  asChild?: boolean;
   children: ReactNode;
 }
 
-type VarianteShadcn = NonNullable<VariantProps<typeof buttonVariants>["variant"]>;
-
-const varianteBase: Record<Variante, VarianteShadcn> = {
+const varianteBase = {
   primario: "default",
   secundario: "outline",
   peligro: "destructive",
   ghost: "ghost",
-  acento: "default",
-};
-
-const varianteClases: Record<Variante, string> = {
-  primario: "hover:bg-primario-hover",
-  secundario: "border-borde bg-white text-texto hover:bg-superficie hover:text-texto",
-  peligro: "hover:bg-red-700",
-  ghost: "text-texto hover:bg-superficie hover:text-texto",
-  acento: "bg-acento text-primario hover:bg-acento-suave",
-};
-
-const tamanoClases: Record<Tamano, string> = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-10 px-4 text-sm",
-  lg: "h-11 px-8 text-base",
-};
+  acento: "acento",
+} as const;
 
 export function Boton({
   variante = "primario",
   tamano = "md",
   cargando = false,
+  asChild = false,
   children,
-  className,
   disabled,
   ...props
 }: BotonProps) {
+  if (asChild) {
+    return (
+      <Button asChild variant={varianteBase[variante as keyof typeof varianteBase]} size={tamano} {...props}>
+        {children}
+      </Button>
+    );
+  }
+
   return (
     <Button
       variant={varianteBase[variante as keyof typeof varianteBase]}
-      className={cn(
-        "focus-visible:ring-primario focus-visible:ring-offset-2",
-        varianteClases[variante as keyof typeof varianteClases],
-        tamanoClases[tamano as keyof typeof tamanoClases],
-        className
-      )}
+      size={tamano}
       disabled={disabled || cargando}
+      aria-busy={cargando || undefined}
       {...props}
     >
-      {cargando && <Loader2 className="size-4 animate-spin" />}
-      {children}
+      <span className={cn("inline-flex items-center gap-2", cargando && "opacity-0")}>
+        {children}
+      </span>
+      {cargando && (
+        <Loader2
+          aria-hidden
+          className="absolute size-4 animate-[spin_0.7s_linear_infinite]"
+        />
+      )}
     </Button>
   );
 }
