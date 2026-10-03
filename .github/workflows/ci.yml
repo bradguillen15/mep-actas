@@ -8,6 +8,14 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      NEXTAUTH_SECRET: placeholder
+      TURSO_DATABASE_URL: file:./temp-ci.db
+      TURSO_AUTH_TOKEN: placeholder
+      R2_ACCOUNT_ID: placeholder
+      R2_ACCESS_KEY_ID: placeholder
+      R2_SECRET_ACCESS_KEY: placeholder
+      R2_BUCKET: placeholder
     steps:
       - uses: actions/checkout@v4
 
@@ -20,28 +28,4 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm lint
-
-      - run: pnpm typecheck
-
-      - run: pnpm test -- --reporter=verbose
-
-      - run: pnpm db:sembrar
-        env:
-          TURSO_DATABASE_URL: file:./temp-ci.db
-
-      - run: pnpm build
-        env:
-          NEXTAUTH_SECRET: placeholder
-          TURSO_DATABASE_URL: file:./temp-ci.db
-          TURSO_AUTH_TOKEN: placeholder
-          R2_ACCOUNT_ID: placeholder
-          R2_ACCESS_KEY_ID: placeholder
-          R2_SECRET_ACCESS_KEY: placeholder
-          R2_BUCKET: placeholder
-
-      - run: pnpm test:e2e -- --reporter=verbose
-        env:
-          NEXTAUTH_SECRET: placeholder
-          TURSO_DATABASE_URL: file:./temp-ci-e2e.db
-          TURSO_AUTH_TOKEN: placeholder
+      - run: pnpm verify:ci
