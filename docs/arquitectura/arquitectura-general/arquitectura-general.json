@@ -8,7 +8,7 @@
     "repository": {
       "url": "git@github.com:bradguillen15/mep-actas.git",
       "link_mode": "local-only",
-      "revision": "3193a44624865177b91ee4c6b6ebec9185afeb13"
+      "revision": "9abd45d3e0c2b816cdb9192d3fc152f87d3da16d"
     },
     "locale": "es",
     "translations": {
@@ -495,7 +495,7 @@
       "sublabel": "App Router + SWR",
       "pos": [
         500,
-        150
+        50
       ],
       "size": [
         140,
@@ -609,7 +609,7 @@
       "sublabel": "URLs prefirmadas",
       "pos": [
         730,
-        150
+        190
       ],
       "size": [
         140,
@@ -635,7 +635,7 @@
       "sublabel": "Escaneos de actas",
       "pos": [
         1190,
-        150
+        190
       ],
       "size": [
         140,
@@ -658,8 +658,8 @@
       "label": "NextAuth",
       "sublabel": "Credenciales + JWT",
       "pos": [
-        270,
-        440
+        500,
+        570
       ],
       "size": [
         140,
@@ -752,6 +752,26 @@
         "sesion",
         "auditoria"
       ]
+    },
+    {
+      "kind": "region",
+      "label": "Frontend · src/app + components",
+      "wraps": [
+        "paginas"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Backend · src/app/api + src/server",
+      "wraps": [
+        "handlers",
+        "servicios",
+        "repositorios",
+        "r2util",
+        "nextauth",
+        "sesion",
+        "auditoria"
+      ]
     }
   ],
   "connections": [
@@ -780,7 +800,7 @@
       "id": "paginas-a-handlers",
       "from": "paginas",
       "to": "handlers",
-      "label": "fetch",
+      "label": "fetch /api",
       "fromSide": "bottom",
       "toSide": "top"
     },
@@ -791,7 +811,7 @@
       "label": "valida JWT",
       "variant": "security",
       "fromSide": "bottom",
-      "toSide": "top"
+      "toSide": "left"
     },
     {
       "id": "handlers-a-sesion",
@@ -808,8 +828,8 @@
       "to": "nextauth",
       "label": "auth()",
       "variant": "security",
-      "fromSide": "left",
-      "toSide": "right"
+      "fromSide": "bottom",
+      "toSide": "top"
     },
     {
       "id": "handlers-a-servicios",
@@ -870,16 +890,12 @@
       "to": "repositorios",
       "label": "busca usuario",
       "variant": "security",
-      "fromSide": "bottom",
+      "fromSide": "right",
       "toSide": "bottom",
       "via": [
         [
-          340,
-          545
-        ],
-        [
           1030,
-          545
+          600
         ]
       ]
     }
