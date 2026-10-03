@@ -42,3 +42,4 @@ Admin País puede crear regiones y escuelas desde la UI, y Admin Regional escuel
 ## Progreso
 
 - Rama: `feat/gestion-usuarios-jerarquia`.
+- T1 (ea3115a): `ModalFormulario` sobre `Modal`, 9 pruebas (RED observado: módulo inexistente; GREEN).
