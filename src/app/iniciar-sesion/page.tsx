@@ -35,7 +35,7 @@ export default function IniciarSesion() {
 
         if (res.error === "Configuration") {
           setError(
-            "Error de configuración del servidor. Verifique que la base de datos local esté inicializada (pnpm run dev:local)."
+            "Error de configuración del servidor. Verifique que la base de datos local esté inicializada (pnpm db:sembrar)."
           );
           return;
         }

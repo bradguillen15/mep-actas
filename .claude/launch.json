@@ -4,7 +4,7 @@
     {
       "name": "mep-local",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev:local"],
+      "runtimeArgs": ["dev"],
       "port": 3000
     }
   ]

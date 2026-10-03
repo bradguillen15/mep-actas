@@ -29,7 +29,7 @@ El entorno local siempre arranca con datos de prueba completos (mock) para explo
 
 - [x] T1 — Módulo de seed unificado + scripts `dev`/`db:sembrar`/`db:reiniciar` + borrar scripts viejos (ruta: delegado, disparador: 2+ archivos no triviales)
 - [ ] T2 — `globalSetup` E2E usa el dataset compartido; ajustar pruebas E2E que asuman BD vacía; prueba de humo por rol (ruta: delegado)
-- [ ] T3 — Actualizar docs, CI, launch.json y referencias (ruta: delegado)
+- [x] T3 — Actualizar docs, CI, launch.json y referencias (ruta: delegado)
 
 ## Verificación
 
@@ -39,3 +39,7 @@ El entorno local siempre arranca con datos de prueba completos (mock) para explo
 ## Progreso
 
 - Rama: `feat/gestion-usuarios-jerarquia`.
+- T1 completada: módulo `src/db/semilla/`, scripts `db:sembrar`/`db:reiniciar`, scripts viejos eliminados (commit 6f830a5).
+- T2 completada: `globalSetup` usa la semilla compartida; helpers por correo local; `test/e2e/semilla-por-rol.test.ts` (commits 5627cd5, 2705c66).
+- T3 completada: launch.json, CI, docs, página de inicio de sesión y README actualizados. `.env.example` no se pudo editar (acceso denegado por permisos); pendiente de actualización manual.
+- Verificación: lint, typecheck, `pnpm test` (322), `pnpm test:e2e` (82) en verde; reinicio + doble siembra sin duplicados.

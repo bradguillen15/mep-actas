@@ -66,6 +66,26 @@ Requiere Gentle AI instalado globalmente (`gentle-ai install`). Ver la sección 
 
 ---
 
+## Desarrollo local
+
+`pnpm dev` aplica las migraciones y siembra la base local (`file:./mep-actas-local.db`) antes de iniciar Next.js. La semilla es idempotente (se puede ejecutar en cada arranque) y se niega a correr contra una URL que no sea `file:`. Las pruebas E2E reutilizan el mismo conjunto de datos.
+
+- `pnpm db:sembrar`: migra y siembra sin iniciar la aplicación.
+- `pnpm db:reiniciar`: borra el archivo local y lo regenera desde cero.
+
+Usuarios locales (contraseña `password`):
+
+| Correo | Rol | Ámbito |
+|---|---|---|
+| `admin@pais.local` | Admin País | Todo el país |
+| `admin@regional.local` | Admin Regional | Región Central |
+| `admin@escuela.local` | Admin Escuela | Escuela Central |
+| `staff@local` | Staff | Escuela Central |
+
+La semilla incluye más usuarios por región y escuela; `pnpm db:sembrar` imprime la lista completa.
+
+---
+
 ## Estado
 
 En arranque. La estructura de la aplicación (`app/`, `src/`, esquema Drizzle, etc.) aún no está creada — ver **[docs/initialize-project.md](docs/initialize-project.md)**.

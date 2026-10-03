@@ -28,7 +28,7 @@ jobs:
 
       - run: pnpm test -- --reporter=verbose
 
-      - run: pnpm db:init-local
+      - run: pnpm db:sembrar
         env:
           TURSO_DATABASE_URL: file:./temp-ci.db
 

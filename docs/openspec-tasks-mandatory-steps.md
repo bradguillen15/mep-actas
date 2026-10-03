@@ -46,7 +46,7 @@ Aplica cuando el cambio afecta la persistencia, las consultas SQL o un flujo de 
 1. Ejecuta `pnpm test:e2e`: las pruebas de `test/e2e/**/*.test.ts` usan los servicios reales contra `temp-e2e.db`, creada y migrada por `test/e2e/globalSetup.ts`.
 2. Cubre los casos de error/validación y verifica la persistencia cuando el flujo crea o edita.
 3. Limpia en `afterAll` los datos que la prueba creó (incluida la auditoría de sus escuelas y regiones con `limpiarAuditoriaDeAmbito`).
-4. Si cambia la interfaz, verifica además el flujo en el navegador con `pnpm dev:local:demo`.
+4. Si cambia la interfaz, verifica además el flujo en el navegador con `pnpm dev`.
 
 ## 4. Checklist de verificación
 
@@ -88,7 +88,7 @@ Antes de finalizar un `tasks.md`, verifica:
 - [ ] 6.2 Ejecutar `pnpm test:e2e` y dejarlo en verde
 - [ ] 6.3 Probar escenarios de error/validación
 - [ ] 6.4 Limpiar los datos de prueba en `afterAll`
-- [ ] 6.5 Si cambió la interfaz, verificar el flujo en el navegador con `pnpm dev:local:demo`
+- [ ] 6.5 Si cambió la interfaz, verificar el flujo en el navegador con `pnpm dev`
 
 ## 7. Actualizar documentación técnica (OBLIGATORIO)
 - [ ] 7.1 Actualizar docs/data-model.md y/o docs/api-spec.yml según el cambio
