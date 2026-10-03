@@ -1,0 +1,44 @@
+## Ver las actas
+
+En el menú lateral, abra **Actas**. La tabla muestra **N° de acta**, **Tomo / Folios**, **Fecha**, **Folio inicio** y **Folio fin**. Presione una fila para abrir el acta.
+
+Los roles Admin País y Admin Regional pueden filtrar por escuela con el selector **Escuela**. Los demás roles ven siempre las actas de su escuela.
+
+## Registrar una acta nueva
+
+1. En **Actas**, presione **Nueva acta**.
+2. En **A. Datos del acta**, complete:
+   - **Tipo de acta**
+   - **Título / N° de acta** (por ejemplo, Acta 001-2025)
+   - **Escuela** (Admin País y Admin Regional la eligen; para los demás roles ya viene fija)
+   - **N° de tomo**, **Folio inicio** y **Folio fin** (deben ser mayores a 0)
+   - **Fecha** (por defecto es la de hoy)
+3. En **B. Estudiantes**, presione **Agregar estudiante** por cada persona. Complete **Cédula**, **Nombres**, **Apellidos** y **N° certificado**. Para quitar una fila, presione el icono de papelera.
+4. Presione **Guardar acta**. Al terminar, el sistema le lleva a la lista de actas.
+
+Si la cédula ya está registrada en el sistema, se usa esa misma persona y no se crea un duplicado.
+
+> **Tenga en cuenta:** para algunos tipos de acta aparece el campo **Acta de referencia (ID)**. Úselo para indicar el número interno (ID) del acta original. Si no aparece para su tipo de acta, no es necesario.
+
+## Corregir una acta existente
+
+1. En **Actas**, presione la fila del acta. Se abre la pantalla **Editar acta**.
+2. Modifique los datos de **A. Datos del acta**.
+3. En **B. Estudiantes registrados** verá la lista actual (solo lectura). Para sumar personas, use **C. Agregar estudiantes**.
+4. Presione **Guardar cambios**.
+
+Quedan registrados en la auditoría tanto la creación como los cambios de cada acta.
+
+## Quién puede qué
+
+| Acción | Roles |
+|---|---|
+| Registrar actas nuevas y agregar estudiantes | Admin País, Admin Regional, Admin Escuela y Staff |
+| Cambiar los datos de un acta existente | Admin País, Admin Regional y Admin Escuela |
+
+> **Tenga en cuenta:** el rol Staff puede abrir un acta para revisarla, pero no puede guardar cambios sobre sus datos. Si lo intenta, verá el mensaje "No tiene permisos para realizar esta acción". Desde esta pantalla tampoco se pueden quitar ni modificar los estudiantes ya registrados. Si detecta un error en esos datos, comuníquese con la administración de su escuela.
+
+## Si algo falla al guardar
+
+- Los campos requeridos se marcan en la pantalla. Corrija lo indicado y vuelva a guardar.
+- Al registrar un acta nueva, primero se guarda el acta y luego cada estudiante. Si aparece "Error al agregar estudiante", el acta ya existe: ábrala desde la lista y agregue las personas que faltan, para no duplicarla.

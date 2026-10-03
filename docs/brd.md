@@ -155,6 +155,13 @@ Los roles son **jerárquicos por nivel**. Cada nivel puede crear usuarios de su 
 - La auditoría es de solo lectura — ningún usuario puede modificarla o eliminarla.
 - La auditoría es visible por ámbito para los niveles 1 a 4: Admin País ve toda; Admin Regional, la de su región; Admin Escuela y Staff, la de su escuela. Los registros de alcance nacional (sin escuela ni región) solo los ve Admin País.
 
+### 7.6 Ayuda en la aplicación (manual de usuario)
+- La aplicación incluye una sección de ayuda en `/ayuda` con el manual de usuario, accesible desde el menú lateral para los cuatro roles.
+- El manual se organiza en temas por funcionalidad (iniciar sesión, consultar graduados, actas, tomos y escaneos, usuarios, configuración y auditoría). El contenido se escribe en español y se versiona en el repositorio junto con el código.
+- La página `/ayuda` muestra un índice de temas con un buscador por título, descripción y palabras clave (sin distinguir mayúsculas ni tildes).
+- Cada tema declara los niveles de rol a los que aplica. El filtrado se hace **en el servidor**: cada rol ve en el índice y puede abrir solo los temas de su nivel. Un tema inexistente o no permitido se responde como si no existiera (404).
+- Cuando cambia una funcionalidad, se actualiza el tema correspondiente del manual.
+
 ---
 
 ## 8. Requisitos no funcionales

@@ -1,0 +1,68 @@
+import type { TemaAyuda } from "@/lib/ayuda/temas";
+
+export const temasAyuda: TemaAyuda[] = [
+  {
+    slug: "iniciar-sesion",
+    titulo: "Iniciar y cerrar sesión",
+    descripcion: "Cómo ingresar al sistema con su correo y contraseña, y cómo salir de forma segura.",
+    niveles: [1, 2, 3, 4],
+    orden: 1,
+    palabrasClave: ["acceso", "contraseña", "correo", "ingresar", "salir", "sesión"],
+  },
+  {
+    slug: "alcance-y-roles",
+    titulo: "Roles y alcance de su cuenta",
+    descripcion: "Qué puede ver y hacer según su rol, y por qué algunos datos no aparecen.",
+    niveles: [1, 2, 3, 4],
+    orden: 2,
+    palabrasClave: ["rol", "nivel", "permisos", "alcance", "región", "escuela", "administrador", "staff", "no encontrado"],
+  },
+  {
+    slug: "consultar-graduados",
+    titulo: "Consultar graduados",
+    descripcion: "Cómo buscar a una persona graduada por cédula o nombre y revisar el detalle de su graduación.",
+    niveles: [1, 2, 3, 4],
+    orden: 3,
+    palabrasClave: ["buscar", "búsqueda", "cédula", "identificación", "nombre", "apellido", "graduado", "título", "certificado", "filtros"],
+  },
+  {
+    slug: "registrar-actas",
+    titulo: "Registrar y editar actas",
+    descripcion: "Cómo crear un acta de graduación con sus estudiantes y cómo corregir sus datos.",
+    niveles: [1, 2, 3, 4],
+    orden: 4,
+    palabrasClave: ["acta", "nueva acta", "estudiantes", "certificado", "tomo", "folio", "reposición", "corrección", "editar", "cédula"],
+  },
+  {
+    slug: "tomos-y-escaneos",
+    titulo: "Tomos y escaneos de folios",
+    descripcion: "Cómo explorar los folios digitalizados de un tomo y subir nuevas imágenes.",
+    niveles: [1, 2, 3, 4],
+    orden: 5,
+    palabrasClave: ["tomo", "folio", "escaneo", "escáner", "imagen", "pdf", "subir", "digitalizar", "archivo"],
+  },
+  {
+    slug: "gestion-usuarios",
+    titulo: "Gestión de usuarios",
+    descripcion: "Cómo crear cuentas, desactivarlas y restablecer contraseñas dentro de su alcance.",
+    niveles: [1, 2, 3],
+    orden: 6,
+    palabrasClave: ["usuario", "cuenta", "invitar", "crear", "desactivar", "activar", "contraseña", "restablecer", "olvidé", "funcionario"],
+  },
+  {
+    slug: "configuracion",
+    titulo: "Configuración del sistema",
+    descripcion: "Cómo administrar los tipos de acta, las regiones y las escuelas.",
+    niveles: [1, 2, 3],
+    orden: 7,
+    palabrasClave: ["configuración", "tipos de acta", "regiones", "escuelas", "código MEP", "crear escuela", "crear región"],
+  },
+  {
+    slug: "auditoria",
+    titulo: "Auditoría de cambios",
+    descripcion: "Cómo revisar el historial de cambios del sistema: quién hizo qué y cuándo, dentro de su ámbito.",
+    niveles: [1, 2, 3, 4],
+    orden: 8,
+    palabrasClave: ["auditoría", "historial", "bitácora", "cambios", "registro", "quién", "revisión"],
+  },
+];
