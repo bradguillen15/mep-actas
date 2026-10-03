@@ -61,7 +61,7 @@ describe("crearPersona", () => {
         { identificacion: "101230002", nombres: "María", apellidos: "González Ruiz" },
         staff
       )
-    ).rejects.toThrow("Ya existe una persona");
+    ).rejects.toMatchObject({ name: "ConflictError" });
     expect(repositorio.crearPersona).not.toHaveBeenCalled();
     expect(auditor).not.toHaveBeenCalled();
   });

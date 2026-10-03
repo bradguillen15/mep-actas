@@ -1,35 +1,14 @@
 import { NextResponse } from "next/server";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import * as esquema from "@/db/esquema";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
 import { clienteDb } from "@/db/cliente";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioEscuelas } from "@/server/servicios/escuelas.servicio";
-import * as repositorio from "@/server/repositorios/escuelas.repositorio";
+import { crearServicioEscuelasDesdeDb } from "@/server/servicios/escuelas.fabrica";
 import { NIVELES } from "@/server/auth/tipos";
-import { ErrorConflicto, ErrorProhibido } from "@/server/errores";
+import { responderErrorDeRecurso } from "@/server/http/respuestas";
 
-type Db = LibSQLDatabase<typeof esquema>;
 type RouteParams = Promise<{ id: string }>;
 
-function crearServicio(db: Db) {
-  const auditor = crearAuditor(db);
-  return crearServicioEscuelas(
-    {
-      listarEscuelas: (filtros) => repositorio.listarEscuelas(db, filtros),
-      obtenerEscuelaPorId: (id) => repositorio.obtenerEscuelaPorId(db, id),
-      obtenerEscuelaPorCodigoMep: (codigoMep) =>
-        repositorio.obtenerEscuelaPorCodigoMep(db, codigoMep),
-      crearEscuela: (datos) => repositorio.crearEscuela(db, datos),
-      actualizarEscuela: (id, datos) =>
-        repositorio.actualizarEscuela(db, id, datos),
-      desactivarEscuela: (id) => repositorio.desactivarEscuela(db, id),
-      contarActasActivas: (id) => repositorio.contarActasActivas(db, id),
-    },
-    auditor
-  );
-}
+const NO_ENCONTRADA = "Escuela no encontrada";
 
 export async function PATCH(
   request: Request,
@@ -91,29 +70,16 @@ export async function PATCH(
       );
     }
 
-    const db = clienteDb() as Db;
-    const servicio = crearServicio(db);
+    const servicio = crearServicioEscuelasDesdeDb(clienteDb());
     const escuela = await servicio.actualizarEscuela(escuelaId, datos, sesion);
 
     if (!escuela) {
-      return NextResponse.json(
-        { error: "Escuela no encontrada" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: NO_ENCONTRADA }, { status: 404 });
     }
 
     return NextResponse.json(escuela);
   } catch (error) {
-    if (error instanceof ErrorProhibido) {
-      return NextResponse.json({ error: error.message }, { status: 403 });
-    }
-    if (error instanceof ErrorConflicto) {
-      return NextResponse.json({ error: error.message }, { status: 409 });
-    }
-    const mensaje =
-      error instanceof Error ? error.message : "Error al actualizar la escuela";
-    const status = mensaje.includes("no encontrada") ? 404 : 400;
-    return NextResponse.json({ error: mensaje }, { status });
+    return responderErrorDeRecurso(error, NO_ENCONTRADA);
   }
 }
 
@@ -144,30 +110,15 @@ export async function DELETE(
       );
     }
 
-    const db = clienteDb() as Db;
-    const servicio = crearServicio(db);
+    const servicio = crearServicioEscuelasDesdeDb(clienteDb());
     const escuela = await servicio.desactivarEscuela(escuelaId, sesion);
 
     if (!escuela) {
-      return NextResponse.json(
-        { error: "Escuela no encontrada" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: NO_ENCONTRADA }, { status: 404 });
     }
 
     return NextResponse.json(escuela);
   } catch (error) {
-    if (error instanceof ErrorProhibido) {
-      return NextResponse.json({ error: error.message }, { status: 403 });
-    }
-    if (error instanceof ErrorConflicto) {
-      return NextResponse.json({ error: error.message }, { status: 409 });
-    }
-    const mensaje =
-      error instanceof Error
-        ? error.message
-        : "Error al desactivar la escuela";
-    const status = mensaje.includes("no encontrada") ? 404 : 400;
-    return NextResponse.json({ error: mensaje }, { status });
+    return responderErrorDeRecurso(error, NO_ENCONTRADA);
   }
 }

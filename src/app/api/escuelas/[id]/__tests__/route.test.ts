@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { ErrorProhibido } from "@/server/errores";
+import { ErrorConflicto, ErrorNoEncontrado, ErrorProhibido } from "@/server/errores";
 
 const mockObtenerSesion = vi.fn();
 const mockActualizarEscuela = vi.fn();
@@ -8,12 +8,8 @@ const mockDesactivarEscuela = vi.fn();
 
 vi.mock("@/db/cliente", () => ({ clienteDb: () => ({}) }));
 
-vi.mock("@/server/servicios/auditoria.servicio", () => ({
-  crearAuditor: () => vi.fn(),
-}));
-
-vi.mock("@/server/servicios/escuelas.servicio", () => ({
-  crearServicioEscuelas: () => ({
+vi.mock("@/server/servicios/escuelas.fabrica", () => ({
+  crearServicioEscuelasDesdeDb: () => ({
     actualizarEscuela: mockActualizarEscuela,
     desactivarEscuela: mockDesactivarEscuela,
   }),
@@ -167,5 +163,40 @@ describe("PATCH y DELETE /api/escuelas/[id] ante ErrorProhibido", () => {
     expect(await respuesta.json()).toEqual({
       error: "No tiene permisos para desactivar esta escuela",
     });
+  });
+
+  it("DELETE retorna 409 ante ErrorConflicto sin inspeccionar el mensaje", async () => {
+    mockDesactivarEscuela.mockRejectedValue(
+      new ErrorConflicto("No se puede desactivar una escuela con actas activas")
+    );
+
+    const { DELETE } = await import("../route");
+    const respuesta = await DELETE(
+      new Request("http://localhost/api/escuelas/1", { method: "DELETE" }),
+      contexto
+    );
+
+    expect(respuesta.status).toBe(409);
+    expect(await respuesta.json()).toEqual({
+      error: "No se puede desactivar una escuela con actas activas",
+    });
+  });
+
+  it("PATCH retorna 404 ante ErrorNoEncontrado", async () => {
+    mockActualizarEscuela.mockRejectedValue(
+      new ErrorNoEncontrado("Escuela no encontrada")
+    );
+
+    const { PATCH } = await import("../route");
+    const respuesta = await PATCH(
+      new Request("http://localhost/api/escuelas/1", {
+        method: "PATCH",
+        body: JSON.stringify({ nombre: "Nuevo" }),
+      }),
+      contexto
+    );
+
+    expect(respuesta.status).toBe(404);
+    expect(await respuesta.json()).toEqual({ error: "Escuela no encontrada" });
   });
 });

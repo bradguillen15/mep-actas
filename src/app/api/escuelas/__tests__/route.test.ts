@@ -1,18 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { ErrorProhibido } from "@/server/errores";
+import { ErrorProhibido, ErrorValidacion } from "@/server/errores";
 
 const mockObtenerSesion = vi.fn();
 const mockCrearEscuela = vi.fn();
 
 vi.mock("@/db/cliente", () => ({ clienteDb: () => ({}) }));
 
-vi.mock("@/server/servicios/auditoria.servicio", () => ({
-  crearAuditor: () => vi.fn(),
-}));
-
-vi.mock("@/server/servicios/escuelas.servicio", () => ({
-  crearServicioEscuelas: () => ({
+vi.mock("@/server/servicios/escuelas.fabrica", () => ({
+  crearServicioEscuelasDesdeDb: () => ({
     listarEscuelas: vi.fn(),
     crearEscuela: mockCrearEscuela,
   }),
@@ -128,11 +124,16 @@ describe("POST /api/escuelas ante errores del servicio", () => {
   });
 
   it("mantiene 400 para errores de validación del servicio", async () => {
-    mockCrearEscuela.mockRejectedValue(new Error("El código MEP no puede estar vacío"));
+    mockCrearEscuela.mockRejectedValue(
+      new ErrorValidacion("El código MEP no puede estar vacío")
+    );
 
     const { POST } = await import("../route");
     const respuesta = await POST(peticion());
 
     expect(respuesta.status).toBe(400);
+    expect(await respuesta.json()).toEqual({
+      error: "El código MEP no puede estar vacío",
+    });
   });
 });

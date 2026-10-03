@@ -15,6 +15,19 @@ export async function listarTiposActaActivos(
     .all();
 }
 
+export async function crearTipoActa(
+  db: LibSQLDatabase<typeof esquema>,
+  datos: { nombre: string }
+): Promise<FilaTipoActa> {
+  const [tipo] = await db
+    .insert(tiposActas)
+    .values({ nombre: datos.nombre })
+    .returning()
+    .all();
+
+  return tipo;
+}
+
 export async function obtenerTipoActaPorId(
   db: LibSQLDatabase<typeof esquema>,
   id: number

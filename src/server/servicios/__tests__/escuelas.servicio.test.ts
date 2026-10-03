@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import type { Auditor } from "../auditoria.servicio";
 import type { SesionUsuario } from "@/server/auth/tipos";
-import { ErrorProhibido } from "@/server/errores";
+import { ErrorConflicto, ErrorNoEncontrado, ErrorProhibido } from "@/server/errores";
 
 describe("escuelasServicio", () => {
   const auditorMock: Auditor = vi.fn().mockResolvedValue(undefined);
@@ -267,7 +267,7 @@ describe("escuelasServicio", () => {
       ).rejects.toBeInstanceOf(ErrorProhibido);
     });
 
-    it("lanza 404 si la escuela no existe", async () => {
+    it("lanza ErrorNoEncontrado si la escuela no existe", async () => {
       const repos = crearMockRepos();
       repos.obtenerEscuelaPorId.mockResolvedValue(undefined);
 
@@ -276,7 +276,7 @@ describe("escuelasServicio", () => {
 
       await expect(
         servicio.actualizarEscuela(999, { nombre: "Nuevo" }, sesionAdminPais)
-      ).rejects.toThrow("Escuela no encontrada");
+      ).rejects.toBeInstanceOf(ErrorNoEncontrado);
     });
   });
 
@@ -327,7 +327,7 @@ describe("escuelasServicio", () => {
       );
     });
 
-    it("rechaza desactivar escuela con actas activas", async () => {
+    it("rechaza desactivar escuela con actas activas con ErrorConflicto", async () => {
       const repos = crearMockRepos();
       repos.obtenerEscuelaPorId.mockResolvedValue({
         id: 1,
@@ -343,9 +343,7 @@ describe("escuelasServicio", () => {
 
       await expect(
         servicio.desactivarEscuela(1, sesionAdminPais)
-      ).rejects.toThrow(
-        "No se puede desactivar una escuela con actas activas"
-      );
+      ).rejects.toBeInstanceOf(ErrorConflicto);
     });
   });
 });

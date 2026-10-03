@@ -23,7 +23,7 @@ import {
 } from "@/components/usuarios/ModalNuevoUsuario";
 import { useSesion } from "@/hooks/useSesion";
 import { useValorRetenido } from "@/hooks/useValorRetenido";
-import { obtenerJsonEstricto } from "@/lib/api-cliente";
+import { obtenerJsonEstricto, patchJson } from "@/lib/api-cliente";
 
 interface Usuario {
   id: number;
@@ -176,23 +176,17 @@ export default function Usuarios() {
     setErrorEstado("");
     setProcesandoId(u.id);
     try {
-      const res = await fetch(`/api/usuarios/${u.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activo }),
-      });
-      if (res.status === 403) {
-        setErrorEstado("No tiene permisos para cambiar el estado de este usuario.");
-        return;
-      }
-      if (!res.ok) {
-        setErrorEstado("No se pudo cambiar el estado del usuario.");
-        return;
-      }
+      await patchJson(
+        `/api/usuarios/${u.id}`,
+        { activo },
+        "No se pudo cambiar el estado del usuario."
+      );
       await mutate();
       toast.success(activo ? "Usuario activado" : "Usuario desactivado");
-    } catch {
-      setErrorEstado("Error de conexión.");
+    } catch (e) {
+      setErrorEstado(
+        e instanceof Error ? e.message : "Error de conexión."
+      );
     } finally {
       setProcesandoId(null);
     }
@@ -212,18 +206,11 @@ export default function Usuarios() {
 
   const restablecerPassword = async () => {
     if (!usuarioReset) return;
-    const res = await fetch(`/api/usuarios/${usuarioReset.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: nuevaPassword }),
-    });
-    if (res.status === 403) {
-      throw new Error("No tiene permisos para restablecer la contraseña de este usuario.");
-    }
-    if (!res.ok) {
-      const detalle = await res.json().catch(() => ({}));
-      throw new Error(detalle.error ?? "No se pudo restablecer la contraseña.");
-    }
+    await patchJson(
+      `/api/usuarios/${usuarioReset.id}`,
+      { password: nuevaPassword },
+      "No se pudo restablecer la contraseña."
+    );
     cerrarReset();
     toast.success("Contraseña restablecida");
   };

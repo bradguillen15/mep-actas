@@ -4,7 +4,10 @@ import { derivarAmbitoConsulta } from "@/server/auth/ambito";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
-import { respuestaNoAutorizada } from "@/server/http/respuestas";
+import {
+  responderErrorDeRecurso,
+  respuestaNoAutorizada,
+} from "@/server/http/respuestas";
 
 export async function GET(request: NextRequest) {
   const sesion = await obtenerSesion();
@@ -44,8 +47,6 @@ export async function POST(request: NextRequest) {
     const funcionario = await servicio.crearFuncionario(cuerpo, sesion);
     return NextResponse.json(funcionario, { status: 201 });
   } catch (e) {
-    const mensaje =
-      e instanceof Error ? e.message : "Error al crear funcionario";
-    return NextResponse.json({ error: mensaje }, { status: 400 });
+    return responderErrorDeRecurso(e, "Funcionario no encontrado");
   }
 }

@@ -63,11 +63,6 @@ export async function PATCH(
     }
     return NextResponse.json(persona);
   } catch (e) {
-    if (e instanceof Error && e.name === "NotFoundError") {
-      return responderErrorDeRecurso(e, "Persona no encontrada");
-    }
-    const mensaje =
-      e instanceof Error ? e.message : "Error al actualizar persona";
-    return NextResponse.json({ error: mensaje }, { status: 400 });
+    return responderErrorDeRecurso(e, "Persona no encontrada");
   }
 }

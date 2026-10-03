@@ -3,6 +3,11 @@ import type {
   FilaRegion,
   DatosNuevaRegion,
 } from "../repositorios/regiones.repositorio";
+import {
+  ErrorConflicto,
+  ErrorNoEncontrado,
+  ErrorValidacion,
+} from "@/server/errores";
 import type { Auditor } from "./auditoria.servicio";
 
 export interface RepositorioRegiones {
@@ -47,7 +52,7 @@ export function crearServicioRegiones(
 
     async crearRegion(datos, sesion) {
       if (!datos.nombre || datos.nombre.trim().length === 0) {
-        throw new Error("El nombre de la región no puede estar vacío");
+        throw new ErrorValidacion("El nombre de la región no puede estar vacío");
       }
 
       const region = await repositorio.crearRegion({
@@ -69,11 +74,11 @@ export function crearServicioRegiones(
     async actualizarRegion(id, datos, sesion) {
       const existente = await repositorio.obtenerRegionPorId(id);
       if (!existente) {
-        throw new Error("Región no encontrada");
+        throw new ErrorNoEncontrado("Región no encontrada");
       }
 
       if (!datos.nombre || datos.nombre.trim().length === 0) {
-        throw new Error("El nombre de la región no puede estar vacío");
+        throw new ErrorValidacion("El nombre de la región no puede estar vacío");
       }
 
       const datosAnteriores = JSON.stringify({ nombre: existente.nombre });
@@ -98,12 +103,12 @@ export function crearServicioRegiones(
     async desactivarRegion(id, sesion) {
       const existente = await repositorio.obtenerRegionPorId(id);
       if (!existente) {
-        throw new Error("Región no encontrada");
+        throw new ErrorNoEncontrado("Región no encontrada");
       }
 
       const escuelasActivas = await repositorio.contarEscuelasActivas(id);
       if (escuelasActivas > 0) {
-        throw new Error(
+        throw new ErrorConflicto(
           "No se puede desactivar una región con escuelas activas"
         );
       }

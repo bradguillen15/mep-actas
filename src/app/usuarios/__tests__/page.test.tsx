@@ -182,7 +182,16 @@ describe("Pantalla de usuarios — cambio de estado", () => {
   });
 
   it("muestra un mensaje claro cuando cambiar el estado responde 403", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 403 }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        json: async () => ({
+          error: "No tiene permisos para cambiar el estado de este usuario.",
+        }),
+      })
+    );
     const usuaria = userEvent.setup();
     render(<Usuarios />);
 

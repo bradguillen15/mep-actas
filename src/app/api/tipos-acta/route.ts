@@ -2,8 +2,12 @@ import { NextResponse, NextRequest } from "next/server";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
-import { eq } from "drizzle-orm";
-import * as esquema from "@/db/esquema";
+import { NIVELES } from "@/server/auth/tipos";
+import { crearServicioTiposActaDesdeDb } from "@/server/servicios/tipos-acta.fabrica";
+import {
+  responderErrorDeRecurso,
+  respuestaNoAutorizada,
+} from "@/server/http/respuestas";
 
 export async function GET() {
   const sesion = await obtenerSesion();
@@ -11,12 +15,8 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const db = clienteDb();
-  const tipos = await db
-    .select({ id: esquema.tiposActas.id, nombre: esquema.tiposActas.nombre })
-    .from(esquema.tiposActas)
-    .where(eq(esquema.tiposActas.activo, true));
-
+  const servicio = crearServicioTiposActaDesdeDb(clienteDb());
+  const tipos = await servicio.listarTiposActa();
   return NextResponse.json(tipos);
 }
 
@@ -26,22 +26,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const verificacion = verificarRol(sesion, 3);
+  const verificacion = verificarRol(sesion, NIVELES.ADMIN_ESCUELA);
   if (!verificacion.autorizado) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return respuestaNoAutorizada(verificacion);
   }
 
   const { nombre } = await request.json();
-  if (!nombre) {
-    return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 });
+  const servicio = crearServicioTiposActaDesdeDb(clienteDb());
+
+  try {
+    const tipo = await servicio.crearTipoActa({ nombre }, sesion);
+    return NextResponse.json(tipo, { status: 201 });
+  } catch (error) {
+    return responderErrorDeRecurso(error, "Tipo de acta no encontrado");
   }
-
-  const db = clienteDb();
-  const [tipo] = await db
-    .insert(esquema.tiposActas)
-    .values({ nombre })
-    .returning()
-    .all();
-
-  return NextResponse.json(tipo, { status: 201 });
 }

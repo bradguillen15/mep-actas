@@ -1,31 +1,14 @@
 import { NextResponse } from "next/server";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import * as esquema from "@/db/esquema";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
 import { clienteDb } from "@/db/cliente";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioRegiones } from "@/server/servicios/regiones.servicio";
-import * as repositorio from "@/server/repositorios/regiones.repositorio";
+import { crearServicioRegionesDesdeDb } from "@/server/servicios/regiones.fabrica";
 import { NIVELES } from "@/server/auth/tipos";
+import { responderErrorDeRecurso } from "@/server/http/respuestas";
 
-type Db = LibSQLDatabase<typeof esquema>;
 type RouteParams = Promise<{ id: string }>;
 
-function crearServicio(db: Db) {
-  const auditor = crearAuditor(db);
-  return crearServicioRegiones(
-    {
-      listarRegiones: () => repositorio.listarRegiones(db),
-      obtenerRegionPorId: (id: number) => repositorio.obtenerRegionPorId(db, id),
-      crearRegion: (datos) => repositorio.crearRegion(db, datos),
-      actualizarRegion: (id, datos) => repositorio.actualizarRegion(db, id, datos),
-      desactivarRegion: (id) => repositorio.desactivarRegion(db, id),
-      contarEscuelasActivas: (regionId) => repositorio.contarEscuelasActivas(db, regionId),
-    },
-    auditor
-  );
-}
+const NO_ENCONTRADA = "Región no encontrada";
 
 export async function PATCH(
   request: Request,
@@ -64,8 +47,7 @@ export async function PATCH(
       );
     }
 
-    const db = clienteDb() as Db;
-    const servicio = crearServicio(db);
+    const servicio = crearServicioRegionesDesdeDb(clienteDb());
     const region = await servicio.actualizarRegion(
       regionId,
       { nombre: nombre.trim() },
@@ -73,18 +55,12 @@ export async function PATCH(
     );
 
     if (!region) {
-      return NextResponse.json(
-        { error: "Región no encontrada" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: NO_ENCONTRADA }, { status: 404 });
     }
 
     return NextResponse.json(region);
   } catch (error) {
-    const mensaje =
-      error instanceof Error ? error.message : "Error al actualizar la región";
-    const status = mensaje.includes("no encontrada") ? 404 : 400;
-    return NextResponse.json({ error: mensaje }, { status });
+    return responderErrorDeRecurso(error, NO_ENCONTRADA);
   }
 }
 
@@ -115,28 +91,15 @@ export async function DELETE(
       );
     }
 
-    const db = clienteDb() as Db;
-    const servicio = crearServicio(db);
+    const servicio = crearServicioRegionesDesdeDb(clienteDb());
     const region = await servicio.desactivarRegion(regionId, sesion);
 
     if (!region) {
-      return NextResponse.json(
-        { error: "Región no encontrada" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: NO_ENCONTRADA }, { status: 404 });
     }
 
     return NextResponse.json(region);
   } catch (error) {
-    const mensaje =
-      error instanceof Error
-        ? error.message
-        : "Error al desactivar la región";
-    const status = mensaje.includes("no encontrada")
-      ? 404
-      : mensaje.includes("escuelas activas")
-        ? 409
-        : 400;
-    return NextResponse.json({ error: mensaje }, { status });
+    return responderErrorDeRecurso(error, NO_ENCONTRADA);
   }
 }

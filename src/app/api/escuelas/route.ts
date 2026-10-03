@@ -1,34 +1,10 @@
 import { NextResponse } from "next/server";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import * as esquema from "@/db/esquema";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
 import { clienteDb } from "@/db/cliente";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioEscuelas } from "@/server/servicios/escuelas.servicio";
-import * as repositorio from "@/server/repositorios/escuelas.repositorio";
+import { crearServicioEscuelasDesdeDb } from "@/server/servicios/escuelas.fabrica";
 import { NIVELES } from "@/server/auth/tipos";
-import { ErrorConflicto, ErrorProhibido } from "@/server/errores";
-
-type Db = LibSQLDatabase<typeof esquema>;
-
-function crearServicio(db: Db) {
-  const auditor = crearAuditor(db);
-  return crearServicioEscuelas(
-    {
-      listarEscuelas: (filtros) => repositorio.listarEscuelas(db, filtros),
-      obtenerEscuelaPorId: (id) => repositorio.obtenerEscuelaPorId(db, id),
-      obtenerEscuelaPorCodigoMep: (codigoMep) =>
-        repositorio.obtenerEscuelaPorCodigoMep(db, codigoMep),
-      crearEscuela: (datos) => repositorio.crearEscuela(db, datos),
-      actualizarEscuela: (id, datos) =>
-        repositorio.actualizarEscuela(db, id, datos),
-      desactivarEscuela: (id) => repositorio.desactivarEscuela(db, id),
-      contarActasActivas: (id) => repositorio.contarActasActivas(db, id),
-    },
-    auditor
-  );
-}
+import { responderErrorDeRecurso } from "@/server/http/respuestas";
 
 export async function GET(request: Request) {
   const sesion = await obtenerSesion();
@@ -36,8 +12,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const db = clienteDb() as Db;
-  const servicio = crearServicio(db);
+  const servicio = crearServicioEscuelasDesdeDb(clienteDb());
 
   const { searchParams } = new URL(request.url);
   const regionIdParam = searchParams.get("region_id");
@@ -89,8 +64,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = clienteDb() as Db;
-    const servicio = crearServicio(db);
+    const servicio = crearServicioEscuelasDesdeDb(clienteDb());
     const escuela = await servicio.crearEscuela(
       { regionId, codigoMep: codigoMep.trim(), nombre: nombre.trim() },
       sesion
@@ -98,14 +72,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(escuela, { status: 201 });
   } catch (error) {
-    if (error instanceof ErrorProhibido) {
-      return NextResponse.json({ error: error.message }, { status: 403 });
-    }
-    if (error instanceof ErrorConflicto) {
-      return NextResponse.json({ error: error.message }, { status: 409 });
-    }
-    const mensaje =
-      error instanceof Error ? error.message : "Error al crear la escuela";
-    return NextResponse.json({ error: mensaje }, { status: 400 });
+    return responderErrorDeRecurso(error, "Escuela no encontrada");
   }
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import type { Auditor } from "../auditoria.servicio";
 import type { SesionUsuario } from "@/server/auth/tipos";
+import { ErrorConflicto, ErrorNoEncontrado } from "@/server/errores";
 
 describe("regionesServicio", () => {
   const auditorMock: Auditor = vi.fn().mockResolvedValue(undefined);
@@ -85,7 +86,7 @@ describe("regionesServicio", () => {
       expect(auditorMock).toHaveBeenCalled();
     });
 
-    it("lanza 404 si la region no existe", async () => {
+    it("lanza ErrorNoEncontrado si la region no existe", async () => {
       const repos = crearMockRepos();
       repos.obtenerRegionPorId.mockResolvedValue(undefined);
 
@@ -94,7 +95,7 @@ describe("regionesServicio", () => {
 
       await expect(
         servicio.actualizarRegion(999, { nombre: "Nueva" }, sesionAdminPais)
-      ).rejects.toThrow("Región no encontrada");
+      ).rejects.toBeInstanceOf(ErrorNoEncontrado);
     });
   });
 
@@ -113,7 +114,7 @@ describe("regionesServicio", () => {
       expect(auditorMock).toHaveBeenCalled();
     });
 
-    it("rechaza desactivar region con escuelas activas", async () => {
+    it("rechaza desactivar region con escuelas activas con ErrorConflicto", async () => {
       const repos = crearMockRepos();
       repos.obtenerRegionPorId.mockResolvedValue({ id: 1, nombre: "San José", activo: true });
       repos.contarEscuelasActivas.mockResolvedValue(3);
@@ -123,7 +124,7 @@ describe("regionesServicio", () => {
 
       await expect(
         servicio.desactivarRegion(1, sesionAdminPais)
-      ).rejects.toThrow("No se puede desactivar una región con escuelas activas");
+      ).rejects.toBeInstanceOf(ErrorConflicto);
     });
   });
 });

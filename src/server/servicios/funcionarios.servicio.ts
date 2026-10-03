@@ -2,7 +2,7 @@ import type { Auditor } from "./auditoria.servicio";
 import type { FilaFuncionarioConPersona } from "../repositorios/funcionarios.repositorio";
 import type { SesionUsuario } from "@/server/auth/tipos";
 import { derivarAmbitoConsulta, type AmbitoConsulta } from "@/server/auth/ambito";
-import { ErrorNoEncontrado } from "@/server/errores";
+import { ErrorNoEncontrado, ErrorValidacion } from "@/server/errores";
 
 export type FiltrosFuncionarios = { escuelaId?: number };
 
@@ -84,7 +84,7 @@ export function crearServicioFuncionarios(
       sesion: SesionUsuario
     ): Promise<FilaFuncionarioConPersona> {
       if (!datos.puesto || datos.puesto.trim() === "") {
-        throw new Error("El puesto no puede estar vacío");
+        throw new ErrorValidacion("El puesto no puede estar vacío");
       }
 
       const funcionario = await repositorio.crearFuncionario(datos);

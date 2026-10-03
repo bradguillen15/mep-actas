@@ -67,11 +67,6 @@ export async function PATCH(
     }
     return NextResponse.json(funcionario);
   } catch (e) {
-    if (e instanceof Error && e.name === "NotFoundError") {
-      return responderErrorDeRecurso(e, "Funcionario no encontrado");
-    }
-    const mensaje =
-      e instanceof Error ? e.message : "Error al actualizar funcionario";
-    return NextResponse.json({ error: mensaje }, { status: 400 });
+    return responderErrorDeRecurso(e, "Funcionario no encontrado");
   }
 }

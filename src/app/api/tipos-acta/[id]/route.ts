@@ -1,28 +1,17 @@
 import { NextResponse } from "next/server";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import * as esquema from "@/db/esquema";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
+import { NIVELES } from "@/server/auth/tipos";
 import { clienteDb } from "@/db/cliente";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioTiposActa } from "@/server/servicios/tipos-acta.servicio";
-import * as repositorio from "@/server/repositorios/tipos-acta.repositorio";
+import { crearServicioTiposActaDesdeDb } from "@/server/servicios/tipos-acta.fabrica";
+import {
+  responderErrorDeRecurso,
+  respuestaNoAutorizada,
+} from "@/server/http/respuestas";
 
-type Db = LibSQLDatabase<typeof esquema>;
 type RouteParams = Promise<{ id: string }>;
 
-function crearServicio(db: Db) {
-  const auditor = crearAuditor(db);
-  return crearServicioTiposActa(
-    {
-      obtenerTipoActaPorId: (id) => repositorio.obtenerTipoActaPorId(db, id),
-      desactivarTipoActa: (id) => repositorio.desactivarTipoActa(db, id),
-      contarActasPorTipo: (tipoActaId) =>
-        repositorio.contarActasPorTipo(db, tipoActaId),
-    },
-    auditor
-  );
-}
+const NO_ENCONTRADO = "Tipo de acta no encontrado";
 
 export async function DELETE(
   _request: Request,
@@ -33,9 +22,9 @@ export async function DELETE(
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const verificacion = verificarRol(sesion, 3);
+  const verificacion = verificarRol(sesion, NIVELES.ADMIN_ESCUELA);
   if (!verificacion.autorizado) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return respuestaNoAutorizada(verificacion);
   }
 
   try {
@@ -48,28 +37,15 @@ export async function DELETE(
       );
     }
 
-    const db = clienteDb() as Db;
-    const servicio = crearServicio(db);
+    const servicio = crearServicioTiposActaDesdeDb(clienteDb());
     const tipo = await servicio.desactivarTipoActa(tipoActaId, sesion);
 
     if (!tipo) {
-      return NextResponse.json(
-        { error: "Tipo de acta no encontrado" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: NO_ENCONTRADO }, { status: 404 });
     }
 
     return NextResponse.json(tipo);
   } catch (error) {
-    const mensaje =
-      error instanceof Error
-        ? error.message
-        : "Error al eliminar el tipo de acta";
-    const status = mensaje.includes("no encontrado")
-      ? 404
-      : mensaje.includes("actas asociadas")
-        ? 409
-        : 400;
-    return NextResponse.json({ error: mensaje }, { status });
+    return responderErrorDeRecurso(error, NO_ENCONTRADO);
   }
 }

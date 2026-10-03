@@ -1,6 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { ErrorConflicto, ErrorNoEncontrado } from "@/server/errores";
 
 const mockObtenerSesion = vi.fn();
+const mockActualizarRegion = vi.fn();
+const mockDesactivarRegion = vi.fn();
+
+vi.mock("@/db/cliente", () => ({ clienteDb: () => ({}) }));
+
+vi.mock("@/server/servicios/regiones.fabrica", () => ({
+  crearServicioRegionesDesdeDb: () => ({
+    actualizarRegion: mockActualizarRegion,
+    desactivarRegion: mockDesactivarRegion,
+  }),
+}));
 
 vi.mock("@/server/auth/sesion.servicio", () => ({
   obtenerSesion: mockObtenerSesion,
@@ -98,5 +110,51 @@ describe("DELETE /api/regiones/[id]", () => {
     });
 
     expect(respuesta.status).toBe(403);
+  });
+
+  it("retorna 409 ante ErrorConflicto sin inspeccionar el mensaje", async () => {
+    mockObtenerSesion.mockResolvedValue({
+      usuarioId: 1,
+      email: "admin@pais.go.cr",
+      nivel: 1,
+      rolId: 1,
+      funcionarioId: 1,
+    });
+    mockDesactivarRegion.mockRejectedValue(
+      new ErrorConflicto("No se puede desactivar una región con escuelas activas")
+    );
+
+    const { DELETE } = await import("../route");
+    const respuesta = await DELETE(
+      new Request("http://localhost/api/regiones/1", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "1" }) }
+    );
+
+    expect(respuesta.status).toBe(409);
+    expect(await respuesta.json()).toEqual({
+      error: "No se puede desactivar una región con escuelas activas",
+    });
+  });
+
+  it("retorna 404 ante ErrorNoEncontrado", async () => {
+    mockObtenerSesion.mockResolvedValue({
+      usuarioId: 1,
+      email: "admin@pais.go.cr",
+      nivel: 1,
+      rolId: 1,
+      funcionarioId: 1,
+    });
+    mockDesactivarRegion.mockRejectedValue(
+      new ErrorNoEncontrado("Región no encontrada")
+    );
+
+    const { DELETE } = await import("../route");
+    const respuesta = await DELETE(
+      new Request("http://localhost/api/regiones/1", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "1" }) }
+    );
+
+    expect(respuesta.status).toBe(404);
+    expect(await respuesta.json()).toEqual({ error: "Región no encontrada" });
   });
 });

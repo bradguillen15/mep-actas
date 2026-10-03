@@ -1,30 +1,10 @@
 import { NextResponse } from "next/server";
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import * as esquema from "@/db/esquema";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
 import { clienteDb } from "@/db/cliente";
-import { crearAuditor } from "@/server/servicios/auditoria.servicio";
-import { crearServicioRegiones } from "@/server/servicios/regiones.servicio";
-import * as repositorio from "@/server/repositorios/regiones.repositorio";
+import { crearServicioRegionesDesdeDb } from "@/server/servicios/regiones.fabrica";
 import { NIVELES } from "@/server/auth/tipos";
-
-type Db = LibSQLDatabase<typeof esquema>;
-
-function crearServicio(db: Db) {
-  const auditor = crearAuditor(db);
-  return crearServicioRegiones(
-    {
-      listarRegiones: () => repositorio.listarRegiones(db),
-      obtenerRegionPorId: (id: number) => repositorio.obtenerRegionPorId(db, id),
-      crearRegion: (datos) => repositorio.crearRegion(db, datos),
-      actualizarRegion: (id, datos) => repositorio.actualizarRegion(db, id, datos),
-      desactivarRegion: (id) => repositorio.desactivarRegion(db, id),
-      contarEscuelasActivas: (regionId) => repositorio.contarEscuelasActivas(db, regionId),
-    },
-    auditor
-  );
-}
+import { responderErrorDeRecurso } from "@/server/http/respuestas";
 
 export async function GET() {
   const sesion = await obtenerSesion();
@@ -32,8 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const db = clienteDb() as Db;
-  const servicio = crearServicio(db);
+  const servicio = crearServicioRegionesDesdeDb(clienteDb());
   const regiones = await servicio.listarRegiones();
 
   return NextResponse.json(regiones);
@@ -64,8 +43,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = clienteDb() as Db;
-    const servicio = crearServicio(db);
+    const servicio = crearServicioRegionesDesdeDb(clienteDb());
     const region = await servicio.crearRegion(
       { nombre: nombre.trim() },
       sesion
@@ -73,8 +51,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(region, { status: 201 });
   } catch (error) {
-    const mensaje =
-      error instanceof Error ? error.message : "Error al crear la región";
-    return NextResponse.json({ error: mensaje }, { status: 400 });
+    return responderErrorDeRecurso(error, "Región no encontrada");
   }
 }

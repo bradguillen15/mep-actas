@@ -6,7 +6,11 @@ import type {
 } from "../repositorios/personas.repositorio";
 import type { SesionUsuario } from "@/server/auth/tipos";
 import { derivarAmbitoConsulta, type AmbitoConsulta } from "@/server/auth/ambito";
-import { ErrorNoEncontrado } from "@/server/errores";
+import {
+  ErrorConflicto,
+  ErrorNoEncontrado,
+  ErrorValidacion,
+} from "@/server/errores";
 
 export interface RepositorioPersonas {
   listarPersonas: (
@@ -77,20 +81,20 @@ export function crearServicioPersonas(
       sesion: SesionUsuario
     ): Promise<FilaPersona> {
       if (!datos.identificacion || datos.identificacion.trim() === "") {
-        throw new Error("La identificación no puede estar vacía");
+        throw new ErrorValidacion("La identificación no puede estar vacía");
       }
       if (!datos.nombres || datos.nombres.trim() === "") {
-        throw new Error("Los nombres no pueden estar vacíos");
+        throw new ErrorValidacion("Los nombres no pueden estar vacíos");
       }
       if (!datos.apellidos || datos.apellidos.trim() === "") {
-        throw new Error("Los apellidos no pueden estar vacíos");
+        throw new ErrorValidacion("Los apellidos no pueden estar vacíos");
       }
 
       const existente = await repositorio.obtenerPersonaPorIdentificacion(
         datos.identificacion
       );
       if (existente) {
-        throw new Error(
+        throw new ErrorConflicto(
           `Ya existe una persona con la identificación ${datos.identificacion}`
         );
       }
@@ -124,13 +128,13 @@ export function crearServicioPersonas(
 
       if (datos.identificacion !== undefined) {
         if (!datos.identificacion.trim()) {
-          throw new Error("La identificación no puede estar vacía");
+          throw new ErrorValidacion("La identificación no puede estar vacía");
         }
         const existente = await repositorio.obtenerPersonaPorIdentificacion(
           datos.identificacion
         );
         if (existente && existente.id !== id) {
-          throw new Error(
+          throw new ErrorConflicto(
             `Ya existe otra persona con la identificación ${datos.identificacion}`
           );
         }

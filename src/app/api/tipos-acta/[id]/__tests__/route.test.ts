@@ -1,6 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { ErrorConflicto } from "@/server/errores";
 
 const mockObtenerSesion = vi.fn();
+const mockDesactivarTipoActa = vi.fn();
+
+vi.mock("@/db/cliente", () => ({ clienteDb: () => ({}) }));
+
+vi.mock("@/server/servicios/tipos-acta.fabrica", () => ({
+  crearServicioTiposActaDesdeDb: () => ({
+    desactivarTipoActa: mockDesactivarTipoActa,
+  }),
+}));
 
 vi.mock("@/server/auth/sesion.servicio", () => ({
   obtenerSesion: mockObtenerSesion,
@@ -53,5 +63,34 @@ describe("DELETE /api/tipos-acta/[id]", () => {
     });
 
     expect(respuesta.status).toBe(403);
+    expect(await respuesta.json()).toEqual({
+      error: "No tiene permisos para realizar esta acción",
+    });
+  });
+
+  it("retorna 409 ante ErrorConflicto sin inspeccionar el mensaje", async () => {
+    mockObtenerSesion.mockResolvedValue({
+      usuarioId: 1,
+      email: "admin@pais.go.cr",
+      nivel: 1,
+      rolId: 1,
+      funcionarioId: 1,
+    });
+    mockDesactivarTipoActa.mockRejectedValue(
+      new ErrorConflicto(
+        "No se puede eliminar un tipo de acta con actas asociadas"
+      )
+    );
+
+    const { DELETE } = await import("../route");
+    const respuesta = await DELETE(
+      new Request("http://localhost/api/tipos-acta/1", { method: "DELETE" }),
+      { params: Promise.resolve({ id: "1" }) }
+    );
+
+    expect(respuesta.status).toBe(409);
+    expect(await respuesta.json()).toEqual({
+      error: "No se puede eliminar un tipo de acta con actas asociadas",
+    });
   });
 });

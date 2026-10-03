@@ -16,7 +16,11 @@ import {
   toast,
 } from "@/components/ui";
 import { useValorRetenido } from "@/hooks/useValorRetenido";
-import { enviarJson, obtenerJsonEstricto } from "@/lib/api-cliente";
+import {
+  eliminarJson,
+  enviarJson,
+  obtenerJsonEstricto,
+} from "@/lib/api-cliente";
 import { ErrorCarga } from "./ErrorCarga";
 import { BarraSeccion, textoConteo } from "./BarraSeccion";
 import type { TipoActa } from "./tipos";
@@ -62,13 +66,10 @@ export function GestionTiposActa() {
     if (!tipoAEliminar) return;
     setError("");
     try {
-      const res = await fetch(`/api/tipos-acta/${tipoAEliminar.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const detalle = await res.json().catch(() => ({}));
-        throw new Error(detalle.error ?? MENSAJE_ERROR_ELIMINAR);
-      }
+      await eliminarJson(
+        `/api/tipos-acta/${tipoAEliminar.id}`,
+        MENSAJE_ERROR_ELIMINAR
+      );
       await refrescarTipos();
       toast.success("Tipo de acta eliminado");
     } catch (e) {

@@ -5,7 +5,12 @@ import type {
   DatosNuevaEscuela,
   FiltrosEscuelas,
 } from "../repositorios/escuelas.repositorio";
-import { ErrorConflicto, ErrorProhibido } from "@/server/errores";
+import {
+  ErrorConflicto,
+  ErrorNoEncontrado,
+  ErrorProhibido,
+  ErrorValidacion,
+} from "@/server/errores";
 import type { Auditor } from "./auditoria.servicio";
 
 export interface RepositorioEscuelas {
@@ -64,10 +69,10 @@ export function crearServicioEscuelas(
       }
 
       if (!datos.codigoMep || datos.codigoMep.trim().length === 0) {
-        throw new Error("El código MEP no puede estar vacío");
+        throw new ErrorValidacion("El código MEP no puede estar vacío");
       }
       if (!datos.nombre || datos.nombre.trim().length === 0) {
-        throw new Error("El nombre de la escuela no puede estar vacío");
+        throw new ErrorValidacion("El nombre de la escuela no puede estar vacío");
       }
 
       const codigoMep = datos.codigoMep.trim();
@@ -103,7 +108,7 @@ export function crearServicioEscuelas(
     async actualizarEscuela(id, datos, sesion) {
       const existente = await repositorio.obtenerEscuelaPorId(id);
       if (!existente) {
-        throw new Error("Escuela no encontrada");
+        throw new ErrorNoEncontrado("Escuela no encontrada");
       }
 
       const verificacion = verificarRol(sesion, NIVEL_ADMIN_REGIONAL, {
@@ -156,7 +161,7 @@ export function crearServicioEscuelas(
     async desactivarEscuela(id, sesion) {
       const existente = await repositorio.obtenerEscuelaPorId(id);
       if (!existente) {
-        throw new Error("Escuela no encontrada");
+        throw new ErrorNoEncontrado("Escuela no encontrada");
       }
 
       const verificacion = verificarRol(sesion, NIVEL_ADMIN_REGIONAL, {

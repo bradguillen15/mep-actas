@@ -90,11 +90,11 @@ describe("POST /api/personas", () => {
     );
   });
 
-  it("una identificación duplicada responde 400 sin auditar", async () => {
+  it("una identificación duplicada responde 409 sin auditar", async () => {
     mockObtenerSesion.mockResolvedValue(staff);
     mockPersonaPorIdentificacion.mockResolvedValue(personaMinima);
     const respuesta = await crear(datos);
-    expect(respuesta.status).toBe(400);
+    expect(respuesta.status).toBe(409);
     expect(mockCrearPersona).not.toHaveBeenCalled();
     expect(mockAuditor).not.toHaveBeenCalled();
   });

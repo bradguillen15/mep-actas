@@ -15,7 +15,7 @@ import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import { Tarjeta } from "@/components/ui/Tarjeta";
 import { toast } from "@/components/ui/Notificaciones";
 import { useEscuelaActual } from "@/hooks/useEscuelaActual";
-import { obtenerJsonEstricto } from "@/lib/api-cliente";
+import { obtenerJsonEstricto, patchJson } from "@/lib/api-cliente";
 import {
   agregarEstudiantesAlActa,
   construirCuerpoActa,
@@ -87,19 +87,7 @@ export default function EditarActa() {
         : null,
     };
 
-    const respuesta = await fetch(`/api/actas/${actaId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(cuerpo),
-    });
-
-    if (!respuesta.ok) {
-      const detalleError = await respuesta
-        .json()
-        .catch(() => ({ error: "Error al actualizar acta" }));
-      throw new Error(detalleError.error ?? "Error al actualizar acta");
-    }
-
+    await patchJson(`/api/actas/${actaId}`, cuerpo, "Error al actualizar acta");
     await agregarEstudiantesAlActa(actaId, datos.estudiantes);
 
     toast.success("Acta actualizada");

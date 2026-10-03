@@ -3,6 +3,7 @@ import {
   ErrorNoEncontrado,
   ErrorProhibido,
   ErrorConflicto,
+  ErrorValidacion,
 } from "@/server/errores";
 import { respuestaNoAutorizada, responderErrorDeRecurso } from "../respuestas";
 
@@ -56,6 +57,18 @@ describe("responderErrorDeRecurso", () => {
     expect(respuesta.status).toBe(409);
     expect(await respuesta.json()).toEqual({
       error: "El código MEP ya existe",
+    });
+  });
+
+  it("mapea ErrorValidacion a 400 con el mensaje del error", async () => {
+    const respuesta = responderErrorDeRecurso(
+      new ErrorValidacion("El nombre no puede estar vacío"),
+      "No encontrado"
+    );
+
+    expect(respuesta.status).toBe(400);
+    expect(await respuesta.json()).toEqual({
+      error: "El nombre no puede estar vacío",
     });
   });
 
