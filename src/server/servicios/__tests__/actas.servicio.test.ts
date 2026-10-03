@@ -46,7 +46,7 @@ function crearDobles() {
       .mockResolvedValue({ id: 8, actaId: 1, funcionarioId: 2, rolFirma: "Director" }),
   };
   const auditor = vi.fn().mockResolvedValue(undefined);
-  const servicio = crearServicioActas(repositorio, detalle, auditor);
+  const servicio = crearServicioActas(repositorio, detalle, auditor, vi.fn());
   return { repositorio, detalle, auditor, servicio };
 }
 

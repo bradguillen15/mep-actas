@@ -3,7 +3,10 @@ import { crearServicioActasDesdeDb } from "@/server/servicios/actas.fabrica";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
-import { respuestaNoAutorizada } from "@/server/http/respuestas";
+import {
+  responderErrorDeRecurso,
+  respuestaNoAutorizada,
+} from "@/server/http/respuestas";
 import { ambitoDeEscuelaObjetivo, derivarAmbitoConsulta } from "@/server/auth/ambito";
 import { resolverAmbitoDeEscuela } from "@/server/repositorios/escuelas.repositorio";
 
@@ -57,6 +60,21 @@ export async function POST(request: NextRequest) {
   }
 
   const servicio = crearServicioActasDesdeDb(db);
-  const acta = await servicio.crearActa(json, sesion);
+  const { estudiantes, ...datosActa } = json;
+
+  if (Array.isArray(estudiantes) && estudiantes.length > 0) {
+    try {
+      const acta = await servicio.crearActaConEstudiantes(
+        datosActa,
+        estudiantes,
+        sesion
+      );
+      return NextResponse.json(acta, { status: 201 });
+    } catch (error) {
+      return responderErrorDeRecurso(error, "Acta no encontrada");
+    }
+  }
+
+  const acta = await servicio.crearActa(datosActa, sesion);
   return NextResponse.json(acta, { status: 201 });
 }

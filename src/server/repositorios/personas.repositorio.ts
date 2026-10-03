@@ -1,4 +1,5 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { ConexionDb } from "@/db/tipos";
 import { and, eq, or, like } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { AmbitoConsulta } from "@/server/auth/ambito";
@@ -52,7 +53,7 @@ export async function obtenerPersonaPorId(
 }
 
 export async function obtenerPersonaPorIdentificacion(
-  db: LibSQLDatabase<typeof esquema>,
+  db: ConexionDb,
   identificacion: string
 ): Promise<FilaPersona | undefined> {
   const resultado = await db
@@ -86,7 +87,7 @@ export async function obtenerPersonaMinimaPorIdentificacion(
 }
 
 export async function crearPersona(
-  db: LibSQLDatabase<typeof esquema>,
+  db: ConexionDb,
   datos: DatosNuevaPersona
 ): Promise<FilaPersona> {
   const [persona] = await db

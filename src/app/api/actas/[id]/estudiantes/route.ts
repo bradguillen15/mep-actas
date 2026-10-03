@@ -47,6 +47,15 @@ export async function POST(request: NextRequest, { params }: Parametros) {
   const servicio = crearServicioActasDesdeDb(clienteDb());
 
   try {
+    if (Array.isArray(json.estudiantes)) {
+      const resultados = await servicio.agregarEstudiantes(
+        Number(id),
+        json.estudiantes,
+        sesion
+      );
+      return NextResponse.json(resultados, { status: 201 });
+    }
+
     const resultado = await servicio.agregarEstudiante(
       Number(id),
       json.personaId,

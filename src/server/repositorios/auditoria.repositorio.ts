@@ -1,4 +1,5 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { ConexionDb } from "@/db/tipos";
 import { eq, desc, sql, type SQL, and } from "drizzle-orm";
 import { auditoria } from "@/db/esquema";
 import * as esquema from "@/db/esquema";
@@ -36,7 +37,7 @@ export type FilaAuditoriaLista = {
 };
 
 export async function insertarRegistroAuditoria(
-  db: LibSQLDatabase<typeof esquema>,
+  db: ConexionDb,
   datos: DatosAuditoria
 ): Promise<void> {
   await db.insert(auditoria).values({

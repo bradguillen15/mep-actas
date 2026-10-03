@@ -1,13 +1,43 @@
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import type * as esquema from "@/db/esquema";
+import type { BaseDeDatos, ConexionDb } from "@/db/tipos";
 import { crearAuditor } from "./auditoria.servicio";
-import { crearServicioActas, type ServicioActas } from "./actas.servicio";
+import {
+  crearServicioActas,
+  type EjecutarEnTransaccion,
+  type OperacionesTransaccionales,
+  type ServicioActas,
+} from "./actas.servicio";
 import * as actasRepositorio from "@/server/repositorios/actas.repositorio";
+import * as personasRepositorio from "@/server/repositorios/personas.repositorio";
 import * as detalleRepositorio from "@/server/repositorios/actas.detalle.repositorio";
 
-export function crearServicioActasDesdeDb(
-  db: LibSQLDatabase<typeof esquema>
-): ServicioActas {
+function operacionesSobre(conexion: ConexionDb): OperacionesTransaccionales {
+  return {
+    obtenerActaPorId: (id, ambito) =>
+      actasRepositorio.obtenerActaPorId(conexion, id, ambito),
+    crearActa: (datos) => actasRepositorio.crearActa(conexion, datos),
+    listarEstudiantesDeActa: (actaId) =>
+      detalleRepositorio.listarEstudiantesDeActa(conexion, actaId),
+    agregarEstudianteAActa: (actaId, personaId, numeroCertificado) =>
+      detalleRepositorio.agregarEstudianteAActa(
+        conexion,
+        actaId,
+        personaId,
+        numeroCertificado
+      ),
+    obtenerPersonaPorIdentificacion: (identificacion) =>
+      personasRepositorio.obtenerPersonaPorIdentificacion(
+        conexion,
+        identificacion
+      ),
+    crearPersona: (datos) => personasRepositorio.crearPersona(conexion, datos),
+    auditor: crearAuditor(conexion),
+  };
+}
+
+export function crearServicioActasDesdeDb(db: BaseDeDatos): ServicioActas {
+  const ejecutarEnTransaccion: EjecutarEnTransaccion = (trabajo) =>
+    db.transaction((tx) => trabajo(operacionesSobre(tx)));
+
   return crearServicioActas(
     {
       listarActas: (filtros, ambito) =>
@@ -33,6 +63,7 @@ export function crearServicioActasDesdeDb(
       agregarFirmante: (actaId, funcionarioId, rolFirma) =>
         detalleRepositorio.agregarFirmante(db, actaId, funcionarioId, rolFirma),
     },
-    crearAuditor(db)
+    crearAuditor(db),
+    ejecutarEnTransaccion
   );
 }

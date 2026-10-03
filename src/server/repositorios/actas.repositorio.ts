@@ -1,4 +1,5 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { ConexionDb } from "@/db/tipos";
 import { eq, and, type SQL } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { AmbitoConsulta } from "@/server/auth/ambito";
@@ -39,7 +40,7 @@ export async function listarActas(
 }
 
 export async function obtenerActaPorId(
-  db: LibSQLDatabase<typeof esquema>,
+  db: ConexionDb,
   id: number,
   ambito: AmbitoConsulta
 ): Promise<FilaActa | undefined> {
@@ -56,7 +57,7 @@ export async function obtenerActaPorId(
 }
 
 export async function crearActa(
-  db: LibSQLDatabase<typeof esquema>,
+  db: ConexionDb,
   datos: DatosNuevaActa
 ): Promise<FilaActa> {
   const [acta] = await db

@@ -1,4 +1,5 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { ConexionDb } from "@/db/tipos";
 import { eq } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 
@@ -7,7 +8,7 @@ export type FilaActaEstudiante = typeof esquema.actaEstudiantes.$inferSelect;
 export type FilaActaFirmante = typeof esquema.actaFirmantes.$inferSelect;
 
 export async function listarEstudiantesDeActa(
-  db: LibSQLDatabase<typeof esquema>,
+  db: ConexionDb,
   actaId: number
 ): Promise<(FilaActaEstudiante & { identificacion: string; nombres: string; apellidos: string })[]> {
   return db
@@ -33,7 +34,7 @@ export async function listarEstudiantesDeActa(
 }
 
 export async function agregarEstudianteAActa(
-  db: LibSQLDatabase<typeof esquema>,
+  db: ConexionDb,
   actaId: number,
   personaId: number,
   numeroCertificado: number

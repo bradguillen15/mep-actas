@@ -1,4 +1,5 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { ConexionDb } from "@/db/tipos";
 import { eq, and, count } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import { escuelas, actas } from "@/db/esquema";
@@ -29,7 +30,7 @@ export async function listarEscuelas(
 }
 
 export async function obtenerEscuelaPorId(
-  db: LibSQLDatabase<typeof esquema>,
+  db: ConexionDb,
   id: number
 ): Promise<FilaEscuela | undefined> {
   const resultado = await db
@@ -44,7 +45,7 @@ export async function obtenerEscuelaPorId(
 export type AmbitoDeEscuela = { escuelaId: number; regionId: number };
 
 export async function resolverAmbitoDeEscuela(
-  db: LibSQLDatabase<typeof esquema>,
+  db: ConexionDb,
   escuelaId: number
 ): Promise<AmbitoDeEscuela | undefined> {
   const escuela = await obtenerEscuelaPorId(db, escuelaId);

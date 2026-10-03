@@ -31,7 +31,8 @@ describe("cada servicio informa el ámbito del registro auditado", () => {
         listarFirmantesDeActa: vi.fn(),
         agregarFirmante: vi.fn().mockResolvedValue({ id: 8 }),
       },
-      auditor
+      auditor,
+      vi.fn()
     );
   }
 

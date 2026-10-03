@@ -440,6 +440,16 @@ paths:
         Requiere nivel <= 4. La `escuelaId` del cuerpo debe estar dentro del
         ámbito del usuario; el Admin Regional se valida contra la región de la
         escuela objetivo. Una escuela fuera del ámbito o inexistente responde 403.
+
+        El cuerpo puede incluir `estudiantes`: el acta, las personas que aún no
+        existan (buscadas por identificación exacta), los vínculos con el acta y
+        sus registros de auditoría se escriben en una única transacción. Si falla
+        cualquier estudiante no queda nada guardado y el mensaje de `error`
+        identifica al estudiante (por ejemplo, "Estudiante 3 (cédula 1-2345-6789):
+        ..."). Se rechazan con 400, antes de escribir, las identificaciones o
+        los números de certificado repetidos dentro del mismo cuerpo. Con
+        `estudiantes` la respuesta incluye además la lista `estudiantes` con los
+        vínculos creados.
       tags: [Actas]
       security:
         - cookieAuth: []
@@ -448,18 +458,41 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NuevaActa"
+              allOf:
+                - $ref: "#/components/schemas/NuevaActa"
+                - type: object
+                  properties:
+                    estudiantes:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/EstudianteNuevo"
       responses:
         "201":
-          description: Acta creada
+          description: Acta creada (con sus estudiantes, si se enviaron)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Acta"
+        "400":
+          description: >
+            Estudiantes inválidos o repetidos en el cuerpo; no se guardó ningún
+            cambio.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "401":
           $ref: "#/components/responses/NoAutorizado"
         "403":
           $ref: "#/components/responses/SinPermisos"
+        "500":
+          description: >
+            Falló la escritura de un estudiante; la transacción se revirtió y el
+            mensaje identifica al estudiante.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /api/actas/{id}:
     get:
       summary: Obtener un acta por id
@@ -534,10 +567,18 @@ paths:
         "404":
           $ref: "#/components/responses/NoEncontrado"
     post:
-      summary: Agregar un estudiante a un acta
+      summary: Agregar uno o varios estudiantes a un acta
       description: >
         Requiere nivel <= 4 (Staff incluido). Orden: sesión (401), nivel (403),
         ámbito del acta (404, "Acta no encontrada").
+
+        Admite dos cuerpos: uno individual (`personaId` y `numeroCertificado`) o
+        un lote `{ estudiantes: [...] }`. El lote se procesa en una única
+        transacción: se resuelve o crea cada persona por identificación, se
+        vincula al acta y se audita; si falla cualquiera no se guarda nada y el
+        mensaje identifica al estudiante. Responde 400, antes de escribir, ante
+        identificaciones o certificados repetidos en el lote, un certificado ya
+        registrado en el acta o una persona que ya figura en ella.
       tags: [Actas]
       security:
         - cookieAuth: []
@@ -548,26 +589,54 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [personaId, numeroCertificado]
-              properties:
-                personaId:
-                  type: integer
-                numeroCertificado:
-                  type: integer
+              oneOf:
+                - type: object
+                  required: [personaId, numeroCertificado]
+                  properties:
+                    personaId:
+                      type: integer
+                    numeroCertificado:
+                      type: integer
+                - type: object
+                  required: [estudiantes]
+                  properties:
+                    estudiantes:
+                      type: array
+                      minItems: 1
+                      items:
+                        $ref: "#/components/schemas/EstudianteNuevo"
       responses:
         "201":
-          description: Estudiante agregado al acta
+          description: >
+            Estudiante agregado (objeto) o lista de vínculos creados (cuando se
+            envió un lote).
           content:
             application/json:
               schema:
-                type: object
+                oneOf:
+                  - type: object
+                  - type: array
+                    items:
+                      type: object
+        "400":
+          description: Lote inválido; no se guardó ningún cambio.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "401":
           $ref: "#/components/responses/NoAutorizado"
         "403":
           $ref: "#/components/responses/SinPermisos"
         "404":
           $ref: "#/components/responses/NoEncontrado"
+        "500":
+          description: >
+            Falló la escritura de un estudiante; la transacción se revirtió.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /api/actas/{id}/firmantes:
     get:
       summary: Listar los firmantes de un acta
@@ -1214,6 +1283,21 @@ components:
           type: integer
         fecha:
           type: string
+    EstudianteNuevo:
+      type: object
+      required: [identificacion, numeroCertificado]
+      properties:
+        identificacion:
+          type: string
+        nombres:
+          type: string
+          description: Obligatorio si la persona aún no existe.
+        apellidos:
+          type: string
+          description: Obligatorio si la persona aún no existe.
+        numeroCertificado:
+          type: integer
+          minimum: 1
     Acta:
       allOf:
         - $ref: "#/components/schemas/NuevaActa"

@@ -1,5 +1,4 @@
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import * as esquema from "@/db/esquema";
+import type { ConexionDb } from "@/db/tipos";
 import {
   insertarRegistroAuditoria,
   type DatosAuditoria,
@@ -17,7 +16,7 @@ export type ParametrosAuditoria = Omit<
 export type Auditor = (params: ParametrosAuditoria) => Promise<void>;
 
 export function crearAuditor(
-  db: LibSQLDatabase<typeof esquema>
+  db: ConexionDb
 ): Auditor {
   return async ({ escuelaId = null, regionId = null, ...params }) => {
     const regionResuelta =

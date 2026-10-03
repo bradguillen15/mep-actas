@@ -6,3 +6,11 @@ export class ErrorNoEncontrado extends Error {
 export class ErrorProhibido extends Error {
   override name = "ForbiddenError";
 }
+
+export class ErrorValidacion extends Error {
+  override name = "ValidationError";
+}
+
+export class ErrorPersistencia extends Error {
+  override name = "PersistenceError";
+}
