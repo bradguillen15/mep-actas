@@ -1,17 +1,17 @@
 "use client";
 
-import { useReducer, useState } from "react";
+import { useState } from "react";
 import useSWR from "swr";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Plus, KeyRound } from "lucide-react";
 import { Tabla } from "@/components/ui/Tabla";
 import { Campo } from "@/components/ui/Campo";
-import { Selector } from "@/components/ui/Selector";
 import { Modal } from "@/components/ui/Modal";
 import { Boton } from "@/components/ui/Boton";
 import { Cargando } from "@/components/ui/Cargando";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import { Badge } from "@/components/ui/Badge";
+import { ModalNuevoUsuario } from "@/components/usuarios/ModalNuevoUsuario";
 import { useSesion } from "@/hooks/useSesion";
 
 interface Usuario {
@@ -40,33 +40,6 @@ interface Funcionario {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-interface FormularioCrear {
-  funcionarioId: string;
-  rolId: string;
-  email: string;
-  password: string;
-}
-
-type AccionForm =
-  | { tipo: "campo"; campo: keyof FormularioCrear; valor: string }
-  | { tipo: "reiniciar" };
-
-const formInicial: FormularioCrear = {
-  funcionarioId: "",
-  rolId: "",
-  email: "",
-  password: "",
-};
-
-function reducerForm(estado: FormularioCrear, accion: AccionForm): FormularioCrear {
-  switch (accion.tipo) {
-    case "campo":
-      return { ...estado, [accion.campo]: accion.valor };
-    case "reiniciar":
-      return formInicial;
-  }
-}
-
 export default function Usuarios() {
   const { usuario: sesion } = useSesion();
   const { data: usuarios, isLoading, mutate } = useSWR<Usuario[]>(
@@ -80,9 +53,6 @@ export default function Usuarios() {
   );
 
   const [modalCrear, setModalCrear] = useState(false);
-  const [form, dispatch] = useReducer(reducerForm, formInicial);
-  const [guardando, setGuardando] = useState(false);
-  const [errorForm, setErrorForm] = useState("");
 
   const [usuarioReset, setUsuarioReset] = useState<Usuario | null>(null);
   const [nuevaPassword, setNuevaPassword] = useState("");
@@ -96,42 +66,6 @@ export default function Usuarios() {
 
   const nombreRol = (nivel: number) =>
     (roles ?? []).find((r) => r.nivel === nivel)?.nombre ?? `Nivel ${nivel}`;
-
-  const manejarCrear = async () => {
-    setErrorForm("");
-    setGuardando(true);
-    try {
-      const res = await fetch("/api/usuarios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          funcionarioId: Number(form.funcionarioId),
-          rolId: Number(form.rolId),
-          email: form.email,
-          password: form.password,
-        }),
-      });
-      if (res.status === 403) {
-        setErrorForm("No tiene permisos para crear un usuario con ese rol o ámbito.");
-        return;
-      }
-      if (res.status === 409) {
-        setErrorForm("El correo ya está registrado.");
-        return;
-      }
-      if (!res.ok) {
-        setErrorForm("No se pudo crear el usuario.");
-        return;
-      }
-      dispatch({ tipo: "reiniciar" });
-      setModalCrear(false);
-      mutate();
-    } catch {
-      setErrorForm("Error de conexión.");
-    } finally {
-      setGuardando(false);
-    }
-  };
 
   const manejarCambioEstado = async (u: Usuario) => {
     setErrorEstado("");
@@ -238,9 +172,6 @@ export default function Usuarios() {
     },
   ];
 
-  const formValido =
-    form.funcionarioId && form.rolId && form.email && form.password;
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -321,73 +252,13 @@ export default function Usuarios() {
         </>
       )}
 
-      <Modal
+      <ModalNuevoUsuario
         abierto={modalCrear}
         onCerrar={() => setModalCrear(false)}
-        titulo="Invitar usuario"
-        tamano="md"
-      >
-        <div className="flex flex-col gap-4">
-          <Selector
-            label="Funcionario"
-            placeholder="Seleccione un funcionario"
-            opciones={(funcionarios ?? []).map((f) => ({
-              valor: f.id,
-              etiqueta: `${f.nombres} ${f.apellidos}`,
-            }))}
-            value={form.funcionarioId}
-            onChange={(e) =>
-              dispatch({ tipo: "campo", campo: "funcionarioId", valor: e.target.value })
-            }
-          />
-          <Selector
-            label="Rol"
-            placeholder="Seleccione un rol"
-            opciones={rolesPermitidos.map((r) => ({
-              valor: r.id,
-              etiqueta: r.nombre,
-            }))}
-            value={form.rolId}
-            onChange={(e) =>
-              dispatch({ tipo: "campo", campo: "rolId", valor: e.target.value })
-            }
-          />
-          <Campo
-            label="Correo electrónico"
-            type="email"
-            placeholder="correo@mep.go.cr"
-            value={form.email}
-            onChange={(e) =>
-              dispatch({ tipo: "campo", campo: "email", valor: e.target.value })
-            }
-          />
-          <Campo
-            label="Contraseña temporal"
-            type="password"
-            value={form.password}
-            onChange={(e) =>
-              dispatch({ tipo: "campo", campo: "password", valor: e.target.value })
-            }
-          />
-          {errorForm && (
-            <div className="rounded-lg bg-error/10 px-3 py-2 text-sm text-error">
-              {errorForm}
-            </div>
-          )}
-          <div className="flex justify-end gap-2">
-            <Boton variante="secundario" onClick={() => setModalCrear(false)}>
-              Cancelar
-            </Boton>
-            <Boton
-              onClick={manejarCrear}
-              cargando={guardando}
-              disabled={!formValido}
-            >
-              Crear
-            </Boton>
-          </div>
-        </div>
-      </Modal>
+        onCreado={() => mutate()}
+        roles={rolesPermitidos}
+        funcionarios={funcionarios ?? []}
+      />
 
       <Modal
         abierto={usuarioReset !== null}

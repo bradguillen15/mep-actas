@@ -35,7 +35,7 @@ Admin País puede crear regiones y escuelas desde la UI, y Admin Regional escuel
 - [x] T1 — `ModalFormulario` reutilizable con pruebas (ruta: delegado)
 - [x] T2 — Tabs Regiones y Escuelas con creación por modal y control por nivel; tipos de acta al modal (ruta: delegado, disparador: 2+ archivos no triviales)
 - [x] T3 — Eliminar el tab Usuarios de `/configuracion` y `GestionUsuarios.tsx`: era una copia rota de `/usuarios` (columna `rol` inexistente en la API, sin activar/desactivar, creación sin `funcionarioId`/`rolId`). `/usuarios` queda como única pantalla de usuarios (ruta: delegado)
-- [ ] T4 — Migrar "Nuevo usuario" de `/usuarios` a `ModalFormulario` conservando funcionario, rol, validaciones y pruebas (ruta: delegado, disparador: 2+ archivos no triviales)
+- [x] T4 — Migrar "Nuevo usuario" de `/usuarios` a `ModalFormulario` conservando funcionario, rol, validaciones y pruebas (ruta: delegado, disparador: 2+ archivos no triviales)
 
 ## Verificación
 
@@ -46,3 +46,5 @@ Admin País puede crear regiones y escuelas desde la UI, y Admin Regional escuel
 - Rama: `feat/gestion-usuarios-jerarquia`.
 - T1 (ea3115a): `ModalFormulario` sobre `Modal`, 9 pruebas (RED observado: módulo inexistente; GREEN).
 - T2 (ee01690): pestañas Usuarios/Tipos de acta/Regiones/Escuelas; secciones extraídas a `src/components/configuracion/`; `src/lib/api-cliente.ts`; Nuevo usuario migrado a `ModalFormulario`. Verificación: lint, typecheck, test (347) y test:e2e (82) en verde.
+- T3 (5a44645): eliminado el tab Usuarios y `GestionUsuarios.tsx`; tipo `Usuario` retirado de `tipos.ts`; pestaña por defecto Tipos de acta.
+- T4: `ModalNuevoUsuario` (`src/components/usuarios/`) sobre `ModalFormulario` + React Hook Form; el modal de restablecer contraseña se deja con `Modal` (PATCH, no mecánico). Verificación: lint, typecheck, test (353) y test:e2e (82) en verde.
