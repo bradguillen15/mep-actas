@@ -33,7 +33,7 @@ Admin País puede crear regiones y escuelas desde la UI, y Admin Regional escuel
 ## Tareas
 
 - [x] T1 — `ModalFormulario` reutilizable con pruebas (ruta: delegado)
-- [ ] T2 — Tabs Regiones y Escuelas con creación por modal y control por nivel; tipos de acta al modal (ruta: delegado, disparador: 2+ archivos no triviales)
+- [x] T2 — Tabs Regiones y Escuelas con creación por modal y control por nivel; tipos de acta al modal (ruta: delegado, disparador: 2+ archivos no triviales)
 
 ## Verificación
 

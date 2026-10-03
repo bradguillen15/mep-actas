@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 
 import { Boton } from "./Boton";
 import { Modal } from "./Modal";
@@ -15,21 +15,20 @@ interface ModalFormularioProps {
   deshabilitado?: boolean;
 }
 
-export function ModalFormulario({
-  abierto,
+type PropiedadesFormulario = Pick<
+  ModalFormularioProps,
+  "onCerrar" | "children" | "onEnviar" | "textoEnviar" | "deshabilitado"
+>;
+
+function Formulario({
   onCerrar,
-  titulo,
   children,
   onEnviar,
   textoEnviar = "Guardar",
   deshabilitado = false,
-}: ModalFormularioProps) {
+}: PropiedadesFormulario) {
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (!abierto) setError("");
-  }, [abierto]);
 
   const manejarEnvio = async (evento: FormEvent<HTMLFormElement>) => {
     evento.preventDefault();
@@ -45,26 +44,37 @@ export function ModalFormulario({
   };
 
   return (
-    <Modal abierto={abierto} onCerrar={onCerrar} titulo={titulo}>
-      <form onSubmit={manejarEnvio} className="flex flex-col gap-4" noValidate>
-        {children}
-        {error && (
-          <div
-            role="alert"
-            className="rounded-lg bg-error/10 px-3 py-2 text-sm text-error"
-          >
-            {error}
-          </div>
-        )}
-        <div className="flex justify-end gap-2">
-          <Boton type="button" variante="secundario" onClick={onCerrar}>
-            Cancelar
-          </Boton>
-          <Boton type="submit" cargando={enviando} disabled={deshabilitado}>
-            {textoEnviar}
-          </Boton>
+    <form onSubmit={manejarEnvio} className="flex flex-col gap-4" noValidate>
+      {children}
+      {error && (
+        <div
+          role="alert"
+          className="rounded-lg bg-error/10 px-3 py-2 text-sm text-error"
+        >
+          {error}
         </div>
-      </form>
+      )}
+      <div className="flex justify-end gap-2">
+        <Boton type="button" variante="secundario" onClick={onCerrar}>
+          Cancelar
+        </Boton>
+        <Boton type="submit" cargando={enviando} disabled={deshabilitado}>
+          {textoEnviar}
+        </Boton>
+      </div>
+    </form>
+  );
+}
+
+export function ModalFormulario({
+  abierto,
+  onCerrar,
+  titulo,
+  ...propiedades
+}: ModalFormularioProps) {
+  return (
+    <Modal abierto={abierto} onCerrar={onCerrar} titulo={titulo}>
+      <Formulario onCerrar={onCerrar} {...propiedades} />
     </Modal>
   );
 }
