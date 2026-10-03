@@ -73,7 +73,11 @@ Requiere Gentle AI instalado globalmente (`gentle-ai install`). Ver la sección 
 `pnpm dev:local` es el modo demo: aplica las migraciones y siembra la base local (`file:./mep-actas-local.db`) antes de iniciar Next.js, forzando esa URL aunque `.env.local` apunte a Turso. La semilla es idempotente (se puede ejecutar en cada arranque) y se niega a correr contra una URL que no sea `file:`. Las pruebas E2E reutilizan el mismo conjunto de datos.
 
 - `pnpm db:sembrar`: migra y siembra sin iniciar la aplicación.
-- `pnpm db:reiniciar`: borra el archivo local y lo regenera desde cero.
+- `pnpm db:reiniciar`: borra el archivo local y el almacenamiento local de escaneos, y lo regenera todo desde cero.
+
+### Escaneos en desarrollo (sin R2)
+
+Con `NODE_ENV=development` (`pnpm dev`, `pnpm dev:local`) y sin las variables `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` y `R2_SECRET_ACCESS_KEY`, adjuntar y ver escaneos en Tomos funciona sin cuenta de Cloudflare: los archivos se guardan en `.almacenamiento-local/` (ignorado por git, o en `ALMACENAMIENTO_LOCAL_DIR`) y se sirven por `/api/almacenamiento-local/...`, que exige sesión y solo existe en este modo. La semilla genera una imagen PNG de prueba ("Tomo 12 · Folio 3") por cada folio de cada acta. En producción siempre se usa R2 y la falta de variables sigue siendo un error.
 
 Usuarios locales (contraseña `password`):
 

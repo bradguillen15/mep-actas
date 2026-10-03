@@ -33,7 +33,7 @@ En desarrollo local, sin cuenta de Cloudflare R2, se pueden adjuntar y ver escan
 
 - [x] T1 — Puerto de almacenamiento + adaptador local + rutas de desarrollo; servicio de escaneos usa el puerto; corregir `application/pdf` (ruta: delegado)
 - [x] T2 — Seed con imágenes PNG por folio en almacenamiento local y claves de `construirClave`; ajustar pruebas (ruta: delegado)
-- [ ] T3 — Spec `almacenamiento-r2`, README y docs (ruta: delegado)
+- [x] T3 — Spec `almacenamiento-r2`, README y docs (ruta: delegado)
 
 ## Verificación
 

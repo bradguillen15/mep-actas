@@ -38,7 +38,7 @@ src/server/repositorios/          # acceso a datos con Drizzle (p. ej. actas.rep
 src/db/esquema.ts                 # esquema Drizzle (tablas/columnas en español)
 src/db/cliente.ts                 # cliente libSQL/Drizzle (solo servidor)
 src/server/auth/                  # configuración de NextAuth, verificación de rol
-src/server/almacenamiento/        # firma de URLs de Cloudflare R2
+src/server/almacenamiento/        # puerto de almacenamiento: adaptador R2 (URLs firmadas) y local (solo desarrollo)
 ```
 
 ## 3. Base de datos (Drizzle + Turso)
