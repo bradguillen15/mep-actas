@@ -13,6 +13,8 @@
 
 ## Diagrama de entidades
 
+**[Ver el diagrama interactivo del modelo de datos](https://htmlpreview.github.io/?https://github.com/bradguillen15/mep-actas/blob/main/docs/arquitectura/modelo-datos/modelo-datos.html)** (fuente archify en [`arquitectura/modelo-datos/`](arquitectura/modelo-datos/)).
+
 ```
 regiones
   └── escuelas (region_id)

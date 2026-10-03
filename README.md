@@ -41,6 +41,7 @@ Por capas pragmática: `app/api` (route handlers) → servicios → repositorios
 - **[Arquitectura general](https://htmlpreview.github.io/?https://github.com/bradguillen15/mep-actas/blob/main/docs/arquitectura/arquitectura-general/arquitectura-general.html)**: capas, autenticación, auditoría y almacenamiento de escaneos.
 - **[Alcance por escuela y región](https://htmlpreview.github.io/?https://github.com/bradguillen15/mep-actas/blob/main/docs/arquitectura/alcance-escuela-region/alcance-escuela-region.html)**: cómo se autoriza cada solicitud según el rol y su ámbito.
 - **[Ciclo de vida de un acta](https://htmlpreview.github.io/?https://github.com/bradguillen15/mep-actas/blob/main/docs/arquitectura/ciclo-vida-acta/ciclo-vida-acta.html)**: estados implementados frente a los definidos en el BRD.
+- **[Modelo de datos](https://htmlpreview.github.io/?https://github.com/bradguillen15/mep-actas/blob/main/docs/arquitectura/modelo-datos/modelo-datos.html)**: tablas de Turso y sus llaves foráneas, desde catálogos hasta auditoría.
 
 GitHub muestra los archivos `.html` como código fuente, por eso los enlaces pasan por htmlpreview para verlos renderizados. La fuente de cada diagrama (archify) está junto al HTML en [`docs/arquitectura/`](docs/arquitectura/).
 
