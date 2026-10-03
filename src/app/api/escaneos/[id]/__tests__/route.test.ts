@@ -34,6 +34,7 @@ vi.mock("@/server/almacenamiento/r2.util", () => ({
 
 vi.mock("@/server/repositorios/escaneos.repositorio", () => ({
   listarEscaneos: vi.fn(),
+  listarResumenTomos: vi.fn(),
   obtenerEscaneoPorId: mockObtenerEscaneoPorId,
   obtenerEscaneoPorEscuelaTomoFolio: vi.fn(),
   crearEscaneo: vi.fn(),

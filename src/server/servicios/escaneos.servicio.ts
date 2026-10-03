@@ -1,5 +1,8 @@
 import type { Auditor } from "./auditoria.servicio";
-import type { FilaEscaneo } from "../repositorios/escaneos.repositorio";
+import type {
+  FilaEscaneo,
+  ResumenTomo,
+} from "../repositorios/escaneos.repositorio";
 import { construirClave } from "../almacenamiento/r2.util";
 import type { AlmacenamientoEscaneos } from "../almacenamiento/puerto";
 import { tipoContenidoDeExtension } from "@/lib/escaneos";
@@ -14,6 +17,10 @@ export interface RepositorioEscaneos {
     filtros: FiltrosEscaneos,
     ambito: AmbitoConsulta
   ) => Promise<FilaEscaneo[]>;
+  listarResumenTomos: (
+    escuelaId: number,
+    ambito: AmbitoConsulta
+  ) => Promise<ResumenTomo[]>;
   obtenerEscaneoPorId: (
     id: number,
     ambito: AmbitoConsulta
@@ -39,6 +46,10 @@ export interface ServicioEscaneos {
     filtros: FiltrosEscaneos,
     ambito: AmbitoConsulta
   ) => Promise<FilaEscaneo[]>;
+  listarResumenTomos: (
+    escuelaId: number,
+    ambito: AmbitoConsulta
+  ) => Promise<ResumenTomo[]>;
   listarConUrlLectura: (
     filtros: FiltrosEscaneos,
     ambito: AmbitoConsulta
@@ -76,6 +87,10 @@ export function crearServicioEscaneos(
   return {
     async listarEscaneos(filtros, ambito) {
       return repositorio.listarEscaneos(filtros, ambito);
+    },
+
+    async listarResumenTomos(escuelaId, ambito) {
+      return repositorio.listarResumenTomos(escuelaId, ambito);
     },
 
     async listarConUrlLectura(filtros, ambito) {

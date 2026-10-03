@@ -33,6 +33,11 @@ interface Escaneo {
   createdAt: string;
 }
 
+interface ResumenTomo {
+  numeroTomo: number;
+  cantidadFolios: number;
+}
+
 const TAMANO_MAXIMO_MB = 20;
 
 function ImagenFolio({ escaneo }: { escaneo: Escaneo }) {
@@ -60,7 +65,7 @@ function ImagenFolio({ escaneo }: { escaneo: Escaneo }) {
 export default function Tomos() {
   const { escuelaId, escuelas, puedeElegirEscuela } = useEscuelaActual();
   const [escuelaFiltro, setEscuelaFiltro] = useState("");
-  const [tomoTexto, setTomoTexto] = useState("1");
+  const [tomoTexto, setTomoTexto] = useState("");
   const [folioElegido, setFolioElegido] = useState<number | null>(null);
 
   const [nuevoTomo, setNuevoTomo] = useState("");
@@ -72,13 +77,35 @@ export default function Tomos() {
   const escuelaSeleccionada = escuelaFiltro || (escuelaId ? String(escuelaId) : "");
   const tomoActivo = Number(tomoTexto);
   const tomoValido = Number.isInteger(tomoActivo) && tomoActivo > 0;
+
+  const {
+    data: resumenTomos,
+    isLoading: cargandoTomos,
+    error: errorTomos,
+    mutate: mutarTomos,
+  } = useSWR<ResumenTomo[]>(
+    escuelaSeleccionada
+      ? `/api/escaneos/tomos?escuelaId=${escuelaSeleccionada}`
+      : null,
+    obtenerJsonEstricto
+  );
+
+  const tomoParaConsulta =
+    resumenTomos && resumenTomos.length > 0
+      ? resumenTomos.some((t) => t.numeroTomo === tomoActivo)
+        ? tomoActivo
+        : resumenTomos[0].numeroTomo
+      : null;
+
   const params = new URLSearchParams({
     escuelaId: escuelaSeleccionada,
-    tomo: String(tomoActivo),
+    tomo: String(tomoParaConsulta ?? ""),
   });
 
   const { data: escaneos, isLoading, error, mutate } = useSWR<Escaneo[]>(
-    escuelaSeleccionada && tomoValido ? `/api/escaneos?${params.toString()}` : null,
+    escuelaSeleccionada && tomoParaConsulta
+      ? `/api/escaneos?${params.toString()}`
+      : null,
     obtenerJsonEstricto
   );
 
@@ -91,6 +118,7 @@ export default function Tomos() {
   );
   const folioActual = indiceElegido >= 0 ? indiceElegido : 0;
   const escaneoVisible = escaneosOrdenados.at(folioActual) ?? null;
+  const tomoVisible = tomoParaConsulta ?? (tomoValido ? tomoActivo : null);
 
   const irAFolio = (indice: number) => {
     const destino = indice >= 0 ? escaneosOrdenados.at(indice) : undefined;
@@ -151,7 +179,7 @@ export default function Tomos() {
       setArchivo(null);
       setNuevoTomo("");
       setNuevoFolio("");
-      await mutate();
+      await Promise.all([mutate(), mutarTomos()]);
       toast.success(`Folio ${folioSubido} subido`);
     } catch (e) {
       setErrorUpload(e instanceof Error ? e.message : "Error al subir archivo");
@@ -165,14 +193,21 @@ export default function Tomos() {
     etiqueta: e.nombre,
   }));
 
+  const sinTomos =
+    escuelaSeleccionada &&
+    !cargandoTomos &&
+    !errorTomos &&
+    Array.isArray(resumenTomos) &&
+    resumenTomos.length === 0;
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
       <EncabezadoPagina
         titulo="Tomos digitalizados"
         descripcion="Explore los folios digitalizados por tomo y suba nuevas imágenes."
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-3">
         {puedeElegirEscuela && (
           <Selector
             label="Escuela"
@@ -183,26 +218,51 @@ export default function Tomos() {
             value={escuelaFiltro}
             onChange={(e) => {
               setEscuelaFiltro(e.target.value);
+              setTomoTexto("");
               setFolioElegido(null);
             }}
             className="w-full sm:w-56"
           />
         )}
-        <Campo
-          label="N° de tomo"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          value={tomoTexto}
-          onChange={(e) => {
-            setTomoTexto(e.target.value);
-            setFolioElegido(null);
-          }}
-          className="w-full sm:w-32"
-        />
-      </div>
 
-      {isLoading && <Esqueleto className="aspect-[4/3] w-full max-w-3xl self-center" />}
+        {escuelaSeleccionada && cargandoTomos && (
+          <Esqueleto className="h-10 w-full max-w-xl" />
+        )}
+
+        {escuelaSeleccionada && resumenTomos && resumenTomos.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-texto">Tomos con folios</p>
+            <div
+              role="group"
+              aria-label="Tomos disponibles"
+              className="flex flex-wrap gap-2"
+            >
+              {resumenTomos.map((tomo) => {
+                const seleccionado = tomo.numeroTomo === tomoVisible;
+                return (
+                  <Boton
+                    key={tomo.numeroTomo}
+                    type="button"
+                    tamano="sm"
+                    variante={seleccionado ? "primario" : "secundario"}
+                    aria-pressed={seleccionado}
+                    onClick={() => {
+                      setTomoTexto(String(tomo.numeroTomo));
+                      setFolioElegido(null);
+                    }}
+                  >
+                    Tomo {tomo.numeroTomo}
+                    <span className="ml-1.5 tabular-nums opacity-80">
+                      · {tomo.cantidadFolios} folio
+                      {tomo.cantidadFolios !== 1 ? "s" : ""}
+                    </span>
+                  </Boton>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
 
       {!escuelaSeleccionada && (
         <EstadoVacio
@@ -212,7 +272,30 @@ export default function Tomos() {
         />
       )}
 
-      {escuelaSeleccionada && error && (
+      {escuelaSeleccionada && errorTomos && (
+        <EstadoVacio
+          variante="error"
+          mensaje="No se pudieron cargar los tomos"
+          descripcion="Revise su conexión e intente de nuevo."
+          accion={
+            <Boton variante="secundario" onClick={() => mutarTomos()}>
+              Reintentar
+            </Boton>
+          }
+        />
+      )}
+
+      {sinTomos && (
+        <EstadoVacio
+          mensaje="Sin tomos digitalizados"
+          descripcion="Esta escuela aún no tiene folios. Use la sección de subida para agregar el primero."
+          icono={<ImageIcon className="size-6" />}
+        />
+      )}
+
+      {isLoading && <Esqueleto className="aspect-[4/3] w-full max-w-3xl self-center" />}
+
+      {escuelaSeleccionada && tomoParaConsulta && error && (
         <EstadoVacio
           variante="error"
           mensaje="No se pudieron cargar los folios"
@@ -225,15 +308,7 @@ export default function Tomos() {
         />
       )}
 
-      {escuelaSeleccionada && !isLoading && !error && escaneosOrdenados.length === 0 && (
-        <EstadoVacio
-          mensaje="Sin folios digitalizados"
-          descripcion={`El tomo ${tomoTexto} aún no tiene folios. Use la sección de subida para agregar el primero.`}
-          icono={<ImageIcon className="size-6" />}
-        />
-      )}
-
-      {escaneoVisible && (
+      {escaneoVisible && tomoVisible && (
         <div
           role="group"
           aria-label="Visor de folios"
@@ -243,7 +318,8 @@ export default function Tomos() {
         >
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm text-texto">
-              {escaneosOrdenados.length} folio{escaneosOrdenados.length !== 1 ? "s" : ""} en tomo {tomoActivo}
+              {escaneosOrdenados.length} folio
+              {escaneosOrdenados.length !== 1 ? "s" : ""} en tomo {tomoVisible}
             </p>
             <div className="flex items-center gap-2">
               <BotonIcono

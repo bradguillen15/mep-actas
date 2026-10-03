@@ -30,6 +30,7 @@ describe("listarConUrlLectura", () => {
           createdAt: "2026-01-01",
         },
       ]),
+      listarResumenTomos: vi.fn(),
       obtenerEscaneoPorId: vi.fn(),
       obtenerEscaneoPorEscuelaTomoFolio: vi.fn(),
       crearEscaneo: vi.fn(),
@@ -50,6 +51,7 @@ describe("escaneos con ámbito", () => {
   function crearDobles() {
     const repositorio = {
       listarEscaneos: vi.fn().mockResolvedValue([]),
+      listarResumenTomos: vi.fn().mockResolvedValue([]),
       obtenerEscaneoPorId: vi.fn().mockResolvedValue(undefined),
       obtenerEscaneoPorEscuelaTomoFolio: vi.fn(),
       crearEscaneo: vi.fn(),
@@ -102,6 +104,7 @@ describe("prepararSubida", () => {
   function crearServicio() {
     const repositorio = {
       listarEscaneos: vi.fn(),
+      listarResumenTomos: vi.fn(),
       obtenerEscaneoPorId: vi.fn(),
       obtenerEscaneoPorEscuelaTomoFolio: vi.fn().mockResolvedValue(undefined),
       crearEscaneo: vi.fn().mockResolvedValue({ id: 9, escuelaId: 5 }),

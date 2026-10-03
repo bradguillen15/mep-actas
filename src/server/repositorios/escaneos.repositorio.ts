@@ -1,11 +1,16 @@
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { eq, and, type SQL, sql } from "drizzle-orm";
+import { eq, and, asc, type SQL, sql } from "drizzle-orm";
 import * as esquema from "@/db/esquema";
 import type { AmbitoConsulta } from "@/server/auth/ambito";
 import { condicionEscuelaEnAmbito } from "./ambito.condiciones";
 import { ErrorConflicto } from "@/server/errores";
 
 export type FilaEscaneo = typeof esquema.escaneos.$inferSelect;
+
+export type ResumenTomo = {
+  numeroTomo: number;
+  cantidadFolios: number;
+};
 
 export async function listarEscaneos(
   db: LibSQLDatabase<typeof esquema>,
@@ -26,6 +31,32 @@ export async function listarEscaneos(
     .select()
     .from(esquema.escaneos)
     .where(and(...condiciones));
+}
+
+export async function listarResumenTomos(
+  db: LibSQLDatabase<typeof esquema>,
+  escuelaId: number,
+  ambito: AmbitoConsulta
+): Promise<ResumenTomo[]> {
+  const filas = await db
+    .select({
+      numeroTomo: esquema.escaneos.numeroTomo,
+      cantidadFolios: sql<number>`count(*)`,
+    })
+    .from(esquema.escaneos)
+    .where(
+      and(
+        eq(esquema.escaneos.escuelaId, escuelaId),
+        condicionEscuelaEnAmbito(ambito, esquema.escaneos.escuelaId)
+      )
+    )
+    .groupBy(esquema.escaneos.numeroTomo)
+    .orderBy(asc(esquema.escaneos.numeroTomo));
+
+  return filas.map((fila) => ({
+    numeroTomo: fila.numeroTomo,
+    cantidadFolios: Number(fila.cantidadFolios),
+  }));
 }
 
 export async function obtenerEscaneoPorId(

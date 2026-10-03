@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Tomos from "../page";
 
 const { estado, claveSolicitada } = vi.hoisted(() => ({
@@ -8,6 +8,7 @@ const { estado, claveSolicitada } = vi.hoisted(() => ({
     escuelaId: undefined as number | undefined,
     puedeElegirEscuela: false,
     escaneos: [] as unknown[],
+    resumenTomos: [] as { numeroTomo: number; cantidadFolios: number }[] | undefined,
   },
   claveSolicitada: { valor: undefined as string | null | undefined },
 }));
@@ -22,8 +23,21 @@ vi.mock("@/hooks/useEscuelaActual", () => ({
 
 vi.mock("swr", () => ({
   default: (clave: string | null) => {
+    if (clave?.startsWith("/api/escaneos/tomos")) {
+      return {
+        data: estado.resumenTomos,
+        isLoading: estado.resumenTomos === undefined,
+        error: undefined,
+        mutate: vi.fn(),
+      };
+    }
     claveSolicitada.valor = clave;
-    return { data: clave ? estado.escaneos : undefined, isLoading: false, mutate: vi.fn() };
+    return {
+      data: clave ? estado.escaneos : undefined,
+      isLoading: false,
+      error: undefined,
+      mutate: vi.fn(),
+    };
   },
 }));
 
@@ -31,13 +45,14 @@ beforeEach(() => {
   estado.escuelaId = undefined;
   estado.puedeElegirEscuela = false;
   estado.escaneos = [];
+  estado.resumenTomos = [];
   claveSolicitada.valor = undefined;
 });
 
-const escaneo = (numeroFolio: number) => ({
+const escaneo = (numeroFolio: number, numeroTomo = 12) => ({
   id: numeroFolio,
   escuelaId: 5,
-  numeroTomo: 1,
+  numeroTomo,
   numeroFolio,
   url: `k${numeroFolio}`,
   urlLectura: `/img/${numeroFolio}.png`,
@@ -48,6 +63,7 @@ const escaneo = (numeroFolio: number) => ({
 describe("Tomos — selección de escuela", () => {
   it("pide seleccionar una escuela y no consulta folios cuando Admin País no ha elegido ninguna", () => {
     estado.puedeElegirEscuela = true;
+    estado.resumenTomos = undefined;
 
     render(<Tomos />);
 
@@ -55,20 +71,67 @@ describe("Tomos — selección de escuela", () => {
     expect(claveSolicitada.valor).toBeNull();
   });
 
-  it("consulta los folios de la escuela del usuario y muestra el estado vacío del tomo", () => {
+  it("muestra los tomos disponibles y abre el primero automáticamente", async () => {
     estado.escuelaId = 5;
+    estado.resumenTomos = [
+      { numeroTomo: 12, cantidadFolios: 18 },
+      { numeroTomo: 14, cantidadFolios: 15 },
+    ];
+    estado.escaneos = [escaneo(1), escaneo(2)];
 
     render(<Tomos />);
 
-    expect(screen.queryByText("Seleccione una escuela")).not.toBeInTheDocument();
-    expect(claveSolicitada.valor).toBe("/api/escaneos?escuelaId=5&tomo=1");
-    expect(screen.getByText("Sin folios digitalizados")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Tomos disponibles" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Tomo 12/ })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    expect(screen.getByRole("button", { name: /Tomo 14/ })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
+
+    await waitFor(() => {
+      expect(claveSolicitada.valor).toBe("/api/escaneos?escuelaId=5&tomo=12");
+    });
+  });
+
+  it("al cambiar de tomo consulta los folios de ese tomo", async () => {
+    estado.escuelaId = 5;
+    estado.resumenTomos = [
+      { numeroTomo: 12, cantidadFolios: 18 },
+      { numeroTomo: 14, cantidadFolios: 15 },
+    ];
+    estado.escaneos = [escaneo(1)];
+
+    render(<Tomos />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Tomo 14/ }));
+
+    await waitFor(() => {
+      expect(claveSolicitada.valor).toBe("/api/escaneos?escuelaId=5&tomo=14");
+    });
+    expect(screen.getByRole("button", { name: /Tomo 14/ })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+  });
+
+  it("si la escuela no tiene tomos, muestra vacío sin consultar un tomo inventado", () => {
+    estado.escuelaId = 5;
+    estado.resumenTomos = [];
+
+    render(<Tomos />);
+
+    expect(screen.getByText("Sin tomos digitalizados")).toBeInTheDocument();
+    expect(claveSolicitada.valor).toBeNull();
   });
 });
 
 describe("Tomos — visor de folios", () => {
   it("no muta el arreglo de datos de SWR al ordenar", () => {
     estado.escuelaId = 5;
+    estado.resumenTomos = [{ numeroTomo: 12, cantidadFolios: 3 }];
     const datos = [escaneo(3), escaneo(1), escaneo(2)];
     estado.escaneos = datos;
 
@@ -80,6 +143,7 @@ describe("Tomos — visor de folios", () => {
 
   it("navega entre folios con los botones y con las flechas del teclado", () => {
     estado.escuelaId = 5;
+    estado.resumenTomos = [{ numeroTomo: 12, cantidadFolios: 3 }];
     estado.escaneos = [escaneo(1), escaneo(2), escaneo(3)];
 
     render(<Tomos />);
@@ -96,6 +160,7 @@ describe("Tomos — visor de folios", () => {
 
   it("muestra la escuela como contexto y no duplica el selector en el formulario de subida", () => {
     estado.puedeElegirEscuela = true;
+    estado.resumenTomos = undefined;
 
     render(<Tomos />);
 

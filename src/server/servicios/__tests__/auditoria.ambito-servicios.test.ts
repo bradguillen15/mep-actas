@@ -58,6 +58,7 @@ describe("cada servicio informa el ámbito del registro auditado", () => {
     const servicio = crearServicioEscaneos(
       {
         listarEscaneos: vi.fn(),
+        listarResumenTomos: vi.fn(),
         obtenerEscaneoPorId: vi.fn().mockResolvedValue(escaneo),
         obtenerEscaneoPorEscuelaTomoFolio: vi.fn().mockResolvedValue(undefined),
         crearEscaneo: vi.fn().mockResolvedValue(escaneo),

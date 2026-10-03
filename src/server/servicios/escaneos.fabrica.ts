@@ -12,6 +12,8 @@ export function crearServicioEscaneosDesdeDb(
     {
       listarEscaneos: (filtros, ambito) =>
         repositorio.listarEscaneos(db, filtros, ambito),
+      listarResumenTomos: (escuelaId, ambito) =>
+        repositorio.listarResumenTomos(db, escuelaId, ambito),
       obtenerEscaneoPorId: (id, ambito) =>
         repositorio.obtenerEscaneoPorId(db, id, ambito),
       obtenerEscaneoPorEscuelaTomoFolio: (escuelaId, numeroTomo, numeroFolio) =>
