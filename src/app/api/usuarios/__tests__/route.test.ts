@@ -124,6 +124,7 @@ describe("POST /api/usuarios", () => {
     );
 
     expect(respuesta.status).toBe(403);
+    expect(await respuesta.json()).toEqual({ error: "No tiene permisos para realizar esta acción" });
     expect(mockCrearUsuario).not.toHaveBeenCalled();
   });
 

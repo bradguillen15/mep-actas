@@ -16,11 +16,15 @@ export interface AmbitoVerificacion {
   regionId?: number;
 }
 
-export interface ResultadoVerificacion {
-  autorizado: boolean;
-  error?: 401 | 403;
-  usuario?: SesionUsuario;
+export interface VerificacionRechazada {
+  autorizado: false;
+  estado: 401 | 403;
+  mensaje: string;
 }
+
+export type ResultadoVerificacion =
+  | { autorizado: true; usuario: SesionUsuario }
+  | VerificacionRechazada;
 
 export const NIVELES: Record<string, NivelRol> = {
   ADMIN_PAIS: 1,

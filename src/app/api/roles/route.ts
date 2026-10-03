@@ -3,6 +3,7 @@ import { listarRoles } from "@/server/repositorios/roles.repositorio";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
+import { respuestaNoAutorizada } from "@/server/http/respuestas";
 
 const db = clienteDb();
 
@@ -14,7 +15,7 @@ export async function GET() {
 
   const verificacion = verificarRol(sesion, 3);
   if (!verificacion.autorizado) {
-    return NextResponse.json({ error: verificacion.error }, { status: 403 });
+    return respuestaNoAutorizada(verificacion);
   }
 
   const roles = await listarRoles(db);

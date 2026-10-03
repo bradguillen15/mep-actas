@@ -120,6 +120,7 @@ describe("POST /api/actas", () => {
     const respuesta = await POST(req as never);
 
     expect(respuesta.status).toBe(403);
+    expect(await respuesta.json()).toEqual({ error: "No tiene permisos sobre esta escuela o región" });
     expect(mockCrearActa).not.toHaveBeenCalled();
   });
 

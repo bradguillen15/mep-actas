@@ -1,4 +1,14 @@
 import { NextResponse } from "next/server";
+import type { VerificacionRechazada } from "@/server/auth/tipos";
+
+export function respuestaNoAutorizada(
+  verificacion: VerificacionRechazada
+): NextResponse {
+  return NextResponse.json(
+    { error: verificacion.mensaje },
+    { status: verificacion.estado }
+  );
+}
 
 export function responderErrorDeRecurso(
   error: unknown,

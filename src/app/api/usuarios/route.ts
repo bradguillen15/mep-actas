@@ -5,6 +5,7 @@ import { derivarAmbitoConsulta } from "@/server/auth/ambito";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
+import { respuestaNoAutorizada } from "@/server/http/respuestas";
 import { validarPassword } from "@/server/auth/politica-password";
 
 const db = clienteDb();
@@ -17,7 +18,7 @@ export async function GET() {
 
   const verificacion = verificarRol(sesion, 3);
   if (!verificacion.autorizado) {
-    return NextResponse.json({ error: verificacion.error }, { status: 403 });
+    return respuestaNoAutorizada(verificacion);
   }
 
   const servicio = crearServicioUsuariosDesdeDb(db);
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   const verificacion = verificarRol(sesion, 3);
   if (!verificacion.autorizado) {
-    return NextResponse.json({ error: verificacion.error }, { status: 403 });
+    return respuestaNoAutorizada(verificacion);
   }
 
   const json = await request.json();

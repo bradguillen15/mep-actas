@@ -4,7 +4,10 @@ import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
 import { derivarAmbitoConsulta } from "@/server/auth/ambito";
 import { crearServicioActasDesdeDb } from "@/server/servicios/actas.fabrica";
-import { responderErrorDeRecurso } from "@/server/http/respuestas";
+import {
+  responderErrorDeRecurso,
+  respuestaNoAutorizada,
+} from "@/server/http/respuestas";
 
 type Parametros = { params: Promise<{ id: string }> };
 
@@ -36,7 +39,7 @@ export async function PATCH(request: NextRequest, { params }: Parametros) {
 
   const verificacion = verificarRol(sesion, 3);
   if (!verificacion.autorizado) {
-    return NextResponse.json({ error: verificacion.error }, { status: 403 });
+    return respuestaNoAutorizada(verificacion);
   }
 
   const { id } = await params;

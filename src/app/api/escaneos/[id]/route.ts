@@ -4,7 +4,10 @@ import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
 import { derivarAmbitoConsulta } from "@/server/auth/ambito";
 import { crearServicioEscaneosDesdeDb } from "@/server/servicios/escaneos.fabrica";
-import { responderErrorDeRecurso } from "@/server/http/respuestas";
+import {
+  responderErrorDeRecurso,
+  respuestaNoAutorizada,
+} from "@/server/http/respuestas";
 
 type Parametros = { params: Promise<{ id: string }> };
 
@@ -37,10 +40,7 @@ export async function DELETE(_request: NextRequest, { params }: Parametros) {
 
   const verificacionNivel = verificarRol(sesion, 3);
   if (!verificacionNivel.autorizado) {
-    return NextResponse.json(
-      { error: "No tiene permisos para eliminar escaneos" },
-      { status: verificacionNivel.error }
-    );
+    return respuestaNoAutorizada(verificacionNivel);
   }
 
   const { id } = await params;

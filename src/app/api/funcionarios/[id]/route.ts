@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { crearServicioFuncionariosDesdeDb } from "@/server/servicios/funcionarios.fabrica";
 import { derivarAmbitoConsulta } from "@/server/auth/ambito";
-import { responderErrorDeRecurso } from "@/server/http/respuestas";
+import {
+  responderErrorDeRecurso,
+  respuestaNoAutorizada,
+} from "@/server/http/respuestas";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
@@ -43,7 +46,7 @@ export async function PATCH(
 
   const verificacion = verificarRol(sesion, 2);
   if (!verificacion.autorizado) {
-    return NextResponse.json({ error: verificacion.error }, { status: 403 });
+    return respuestaNoAutorizada(verificacion);
   }
 
   const { id } = await params;

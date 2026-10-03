@@ -53,7 +53,34 @@ describe("verificarRol", () => {
     const { verificarRol } = await import("../autorizacion.servicio");
     const resultado = verificarRol(sesionStaff, 3);
     expect(resultado.autorizado).toBe(false);
-    expect(resultado.error).toBe(403);
+    expect(resultado).toMatchObject({ estado: 403 });
+  });
+
+  it("responde 401 con mensaje legible cuando no hay sesión", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    expect(verificarRol(null, 4)).toEqual({
+      autorizado: false,
+      estado: 401,
+      mensaje: "No autorizado",
+    });
+  });
+
+  it("responde 403 con mensaje de permisos cuando el nivel es insuficiente", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    expect(verificarRol(sesionStaff, 3)).toEqual({
+      autorizado: false,
+      estado: 403,
+      mensaje: "No tiene permisos para realizar esta acción",
+    });
+  });
+
+  it("responde 403 con mensaje de alcance cuando la escuela es ajena", async () => {
+    const { verificarRol } = await import("../autorizacion.servicio");
+    expect(verificarRol(sesionStaff, 4, { escuelaId: 99 })).toEqual({
+      autorizado: false,
+      estado: 403,
+      mensaje: "No tiene permisos sobre esta escuela o región",
+    });
   });
 
   it("autoriza a Admin Regional para nivel 3", async () => {
@@ -72,7 +99,7 @@ describe("verificarRol", () => {
     const { verificarRol } = await import("../autorizacion.servicio");
     const resultado = verificarRol(sesionAdminEscuela, 1);
     expect(resultado.autorizado).toBe(false);
-    expect(resultado.error).toBe(403);
+    expect(resultado).toMatchObject({ estado: 403 });
   });
 
   it("verifica ambito por escuela correctamente", async () => {
@@ -85,7 +112,7 @@ describe("verificarRol", () => {
     const { verificarRol } = await import("../autorizacion.servicio");
     const resultado = verificarRol(sesionAdminEscuela, 3, { escuelaId: 99 });
     expect(resultado.autorizado).toBe(false);
-    expect(resultado.error).toBe(403);
+    expect(resultado).toMatchObject({ estado: 403 });
   });
 
   it("Admin Pais pasa cualquier ambito de escuela", async () => {
@@ -104,7 +131,7 @@ describe("verificarRol", () => {
     const { verificarRol } = await import("../autorizacion.servicio");
     const resultado = verificarRol(sesionAdminRegional, 2, { regionId: 99 });
     expect(resultado.autorizado).toBe(false);
-    expect(resultado.error).toBe(403);
+    expect(resultado).toMatchObject({ estado: 403 });
   });
 
   describe("Admin Regional con escuela objetivo", () => {
@@ -115,7 +142,7 @@ describe("verificarRol", () => {
         regionId: 6,
       });
       expect(resultado.autorizado).toBe(false);
-      expect(resultado.error).toBe(403);
+      expect(resultado).toMatchObject({ estado: 403 });
     });
 
     it("autoriza una escuela de su región", async () => {
@@ -131,7 +158,7 @@ describe("verificarRol", () => {
       const { verificarRol } = await import("../autorizacion.servicio");
       const resultado = verificarRol(sesionAdminRegional, 4, { escuelaId: 20 });
       expect(resultado.autorizado).toBe(false);
-      expect(resultado.error).toBe(403);
+      expect(resultado).toMatchObject({ estado: 403 });
     });
   });
 
@@ -142,7 +169,7 @@ describe("verificarRol", () => {
       regionId: 5,
     });
     expect(resultado.autorizado).toBe(false);
-    expect(resultado.error).toBe(403);
+    expect(resultado).toMatchObject({ estado: 403 });
   });
 
   it("autoriza a Staff en su escuela aunque se informe la región", async () => {

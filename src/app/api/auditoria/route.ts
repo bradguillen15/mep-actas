@@ -4,6 +4,7 @@ import * as repositorio from "@/server/repositorios/auditoria.repositorio";
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
+import { respuestaNoAutorizada } from "@/server/http/respuestas";
 import { derivarAmbitoConsulta } from "@/server/auth/ambito";
 
 const db = clienteDb();
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   const verificacion = verificarRol(sesion, 4);
   if (!verificacion.autorizado) {
-    return NextResponse.json({ error: verificacion.error }, { status: 403 });
+    return respuestaNoAutorizada(verificacion);
   }
 
   const { searchParams } = new URL(request.url);

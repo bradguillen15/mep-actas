@@ -137,6 +137,7 @@ describe("POST /api/escaneos", () => {
     const respuesta = await POST(req as never);
 
     expect(respuesta.status).toBe(403);
+    expect(await respuesta.json()).toEqual({ error: "No tiene permisos sobre esta escuela o región" });
     expect(mockCrearEscaneo).not.toHaveBeenCalled();
   });
 
@@ -199,6 +200,7 @@ describe("POST /api/escaneos", () => {
     const respuesta = await POST(req as never);
 
     expect(respuesta.status).toBe(403);
+    expect(await respuesta.json()).toEqual({ error: "No tiene permisos sobre esta escuela o región" });
     expect(mockResolverAmbitoDeEscuela).toHaveBeenCalledWith(expect.anything(), 8);
     expect(mockCrearEscaneo).not.toHaveBeenCalled();
   });
@@ -221,6 +223,7 @@ describe("POST /api/escaneos", () => {
     const respuesta = await POST(req as never);
 
     expect(respuesta.status).toBe(403);
+    expect(await respuesta.json()).toEqual({ error: "No tiene permisos sobre esta escuela o región" });
     expect(mockResolverAmbitoDeEscuela).toHaveBeenCalledWith(expect.anything(), 999);
     expect(mockCrearEscaneo).not.toHaveBeenCalled();
   });

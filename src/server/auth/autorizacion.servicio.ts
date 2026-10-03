@@ -5,21 +5,31 @@ import type {
   ResultadoVerificacion,
 } from "./tipos";
 
+export const MENSAJE_NO_AUTENTICADO = "No autorizado";
+export const MENSAJE_SIN_PERMISOS =
+  "No tiene permisos para realizar esta acción";
+export const MENSAJE_FUERA_DE_AMBITO =
+  "No tiene permisos sobre esta escuela o región";
+
 export function verificarRol(
   sesion: SesionUsuario | null,
   nivelMinimo: NivelRol,
   ambito?: AmbitoVerificacion
 ): ResultadoVerificacion {
   if (!sesion) {
-    return { autorizado: false, error: 401 };
+    return { autorizado: false, estado: 401, mensaje: MENSAJE_NO_AUTENTICADO };
   }
 
   if (sesion.nivel > nivelMinimo) {
-    return { autorizado: false, error: 403 };
+    return { autorizado: false, estado: 403, mensaje: MENSAJE_SIN_PERMISOS };
   }
 
   if (ambito && !ambitoPermitido(sesion, ambito)) {
-    return { autorizado: false, error: 403 };
+    return {
+      autorizado: false,
+      estado: 403,
+      mensaje: MENSAJE_FUERA_DE_AMBITO,
+    };
   }
 
   return { autorizado: true, usuario: sesion };

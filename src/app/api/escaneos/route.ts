@@ -3,6 +3,7 @@ import { crearServicioEscaneosDesdeDb } from "@/server/servicios/escaneos.fabric
 import { clienteDb } from "@/db/cliente";
 import { obtenerSesion } from "@/server/auth/sesion.servicio";
 import { verificarRol } from "@/server/auth/autorizacion.servicio";
+import { respuestaNoAutorizada } from "@/server/http/respuestas";
 import { ambitoDeEscuelaObjetivo, derivarAmbitoConsulta } from "@/server/auth/ambito";
 import { resolverAmbitoDeEscuela } from "@/server/repositorios/escuelas.repositorio";
 
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   const verificacion = verificarRol(sesion, 4);
   if (!verificacion.autorizado) {
-    return NextResponse.json({ error: verificacion.error }, { status: 403 });
+    return respuestaNoAutorizada(verificacion);
   }
 
   const cuerpo = await request.json();
@@ -57,10 +58,7 @@ export async function POST(request: NextRequest) {
   );
   const verificacionAmbito = verificarRol(sesion, 4, ambitoObjetivo);
   if (!verificacionAmbito.autorizado) {
-    return NextResponse.json(
-      { error: verificacionAmbito.error },
-      { status: 403 }
-    );
+    return respuestaNoAutorizada(verificacionAmbito);
   }
 
   const servicio = crearServicioEscaneosDesdeDb(db);
