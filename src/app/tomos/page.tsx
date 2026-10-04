@@ -2,24 +2,23 @@
 
 import { useState, type KeyboardEvent } from "react";
 import useSWR from "swr";
-import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageIcon, Maximize2, Plus } from "lucide-react";
 import Image from "next/image";
-import { EXTENSIONES_PERMITIDAS, extensionDeArchivo, tipoContenidoDeArchivo } from "@/lib/escaneos";
 import { obtenerJsonEstricto } from "@/lib/api-cliente";
 import { cn } from "@/lib/utils";
 import {
-  Alerta,
   Boton,
   BotonIcono,
-  Campo,
   EncabezadoPagina,
   EstadoVacio,
   Esqueleto,
   Selector,
   Tarjeta,
-  ZonaCarga,
   toast,
 } from "@/components/ui";
+import { FilaTomos } from "@/components/tomos/FilaTomos";
+import { ModalNuevoFolio } from "@/components/tomos/ModalNuevoFolio";
+import { VisorPantallaCompleta } from "@/components/tomos/VisorPantallaCompleta";
 import { useEscuelaActual } from "@/hooks/useEscuelaActual";
 
 interface Escaneo {
@@ -38,20 +37,18 @@ interface ResumenTomo {
   cantidadFolios: number;
 }
 
-const TAMANO_MAXIMO_MB = 20;
-
 function ImagenFolio({ escaneo }: { escaneo: Escaneo }) {
   const [cargada, setCargada] = useState(false);
 
   return (
-    <div className="relative mx-auto aspect-[4/3] w-full max-w-3xl overflow-hidden rounded-lg bg-superficie">
+    <div className="relative min-h-64 w-full flex-1 overflow-hidden rounded-lg bg-superficie">
       {!cargada && <Esqueleto className="absolute inset-0 rounded-none" />}
       <Image
         src={escaneo.urlLectura}
         unoptimized={escaneo.urlLectura.startsWith("/")}
         alt={`Folio ${escaneo.numeroFolio}`}
         fill
-        sizes="(min-width: 768px) 768px, 100vw"
+        sizes="(min-width: 1024px) 1024px, 100vw"
         onLoad={() => setCargada(true)}
         className={cn(
           "object-contain transition-opacity duration-200",
@@ -68,11 +65,8 @@ export default function Tomos() {
   const [tomoTexto, setTomoTexto] = useState("");
   const [folioElegido, setFolioElegido] = useState<number | null>(null);
 
-  const [nuevoTomo, setNuevoTomo] = useState("");
-  const [nuevoFolio, setNuevoFolio] = useState("");
-  const [archivo, setArchivo] = useState<File | null>(null);
-  const [subiendo, setSubiendo] = useState(false);
-  const [errorUpload, setErrorUpload] = useState("");
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [pantallaCompleta, setPantallaCompleta] = useState(false);
 
   const escuelaSeleccionada = escuelaFiltro || (escuelaId ? String(escuelaId) : "");
   const tomoActivo = Number(tomoTexto);
@@ -138,54 +132,11 @@ export default function Tomos() {
 
   const nombreEscuela = escuelas.find((e) => String(e.id) === escuelaSeleccionada)?.nombre;
 
-  const manejarSubida = async () => {
-    if (!archivo || !nuevoTomo || !nuevoFolio || !escuelaSeleccionada) return;
-    setErrorUpload("");
-    setSubiendo(true);
-
-    try {
-      const ext = extensionDeArchivo(archivo.name);
-      const tipoContenido = tipoContenidoDeArchivo(archivo.name);
-      if (!tipoContenido) throw new Error("Tipo de archivo no permitido");
-      const resPrep = await fetch("/api/escaneos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          escuelaId: Number(escuelaSeleccionada),
-          numeroTomo: Number(nuevoTomo),
-          numeroFolio: Number(nuevoFolio),
-          formato: ext,
-        }),
-      });
-
-      if (!resPrep.ok) {
-        const err = await resPrep.json().catch(() => ({ error: "Error al preparar subida" }));
-        throw new Error(err.error ?? "Error al preparar subida");
-      }
-
-      const { urlSubida } = await resPrep.json();
-
-      const resUpload = await fetch(urlSubida, {
-        method: "PUT",
-        body: archivo,
-        headers: { "Content-Type": tipoContenido },
-      });
-
-      if (!resUpload.ok) throw new Error("Error al subir el archivo");
-
-      const folioSubido = Number(nuevoFolio);
-      setTomoTexto(nuevoTomo);
-      setFolioElegido(folioSubido);
-      setArchivo(null);
-      setNuevoTomo("");
-      setNuevoFolio("");
-      await Promise.all([mutate(), mutarTomos()]);
-      toast.success(`Folio ${folioSubido} subido`);
-    } catch (e) {
-      setErrorUpload(e instanceof Error ? e.message : "Error al subir archivo");
-    } finally {
-      setSubiendo(false);
-    }
+  const alSubirFolio = async (tomo: number, folio: number) => {
+    setTomoTexto(String(tomo));
+    setFolioElegido(folio);
+    await Promise.all([mutate(), mutarTomos()]);
+    toast.success(`Folio ${folio} subido`);
   };
 
   const escuelaOpciones = escuelas.map((e) => ({
@@ -208,22 +159,34 @@ export default function Tomos() {
       />
 
       <div className="flex flex-col gap-3">
-        {puedeElegirEscuela && (
-          <Selector
-            label="Escuela"
-            opciones={[
-              { valor: "", etiqueta: "Seleccione escuela" },
-              ...escuelaOpciones,
-            ]}
-            value={escuelaFiltro}
-            onChange={(e) => {
-              setEscuelaFiltro(e.target.value);
-              setTomoTexto("");
-              setFolioElegido(null);
-            }}
-            className="w-full sm:w-56"
-          />
-        )}
+        <div className="flex flex-wrap items-end gap-3">
+          {puedeElegirEscuela && (
+            <Selector
+              label="Escuela"
+              opciones={[
+                { valor: "", etiqueta: "Seleccione escuela" },
+                ...escuelaOpciones,
+              ]}
+              value={escuelaFiltro}
+              onChange={(e) => {
+                setEscuelaFiltro(e.target.value);
+                setTomoTexto("");
+                setFolioElegido(null);
+              }}
+              className="w-full sm:w-56"
+            />
+          )}
+          <Boton
+            type="button"
+            variante="acento"
+            onClick={() => setModalAbierto(true)}
+            disabled={!escuelaSeleccionada}
+            className="ml-auto"
+          >
+            <Plus aria-hidden className="size-4" />
+            Nuevo folio
+          </Boton>
+        </div>
 
         {escuelaSeleccionada && cargandoTomos && (
           <Esqueleto className="h-10 w-full max-w-xl" />
@@ -232,34 +195,14 @@ export default function Tomos() {
         {escuelaSeleccionada && resumenTomos && resumenTomos.length > 0 && (
           <div className="flex flex-col gap-2">
             <p className="text-sm font-medium text-texto">Tomos con folios</p>
-            <div
-              role="group"
-              aria-label="Tomos disponibles"
-              className="flex flex-wrap gap-2"
-            >
-              {resumenTomos.map((tomo) => {
-                const seleccionado = tomo.numeroTomo === tomoVisible;
-                return (
-                  <Boton
-                    key={tomo.numeroTomo}
-                    type="button"
-                    tamano="sm"
-                    variante={seleccionado ? "primario" : "secundario"}
-                    aria-pressed={seleccionado}
-                    onClick={() => {
-                      setTomoTexto(String(tomo.numeroTomo));
-                      setFolioElegido(null);
-                    }}
-                  >
-                    Tomo {tomo.numeroTomo}
-                    <span className="ml-1.5 tabular-nums opacity-80">
-                      · {tomo.cantidadFolios} folio
-                      {tomo.cantidadFolios !== 1 ? "s" : ""}
-                    </span>
-                  </Boton>
-                );
-              })}
-            </div>
+            <FilaTomos
+              tomos={resumenTomos}
+              tomoSeleccionado={tomoVisible}
+              onElegir={(numeroTomo) => {
+                setTomoTexto(String(numeroTomo));
+                setFolioElegido(null);
+              }}
+            />
           </div>
         )}
       </div>
@@ -288,12 +231,12 @@ export default function Tomos() {
       {sinTomos && (
         <EstadoVacio
           mensaje="Sin tomos digitalizados"
-          descripcion="Esta escuela aún no tiene folios. Use la sección de subida para agregar el primero."
+          descripcion="Esta escuela aún no tiene folios. Use el botón Nuevo folio para agregar el primero."
           icono={<ImageIcon className="size-6" />}
         />
       )}
 
-      {isLoading && <Esqueleto className="aspect-[4/3] w-full max-w-3xl self-center" />}
+      {isLoading && <Esqueleto className="min-h-64 w-full flex-1" />}
 
       {escuelaSeleccionada && tomoParaConsulta && error && (
         <EstadoVacio
@@ -314,7 +257,7 @@ export default function Tomos() {
           aria-label="Visor de folios"
           tabIndex={0}
           onKeyDown={alPresionarTecla}
-          className="flex flex-col gap-4 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primario focus-visible:ring-offset-2"
+          className="flex min-h-0 flex-1 flex-col gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primario focus-visible:ring-offset-2"
         >
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm text-texto">
@@ -340,70 +283,38 @@ export default function Tomos() {
                 disabled={folioActual >= escaneosOrdenados.length - 1}
                 onClick={() => irAFolio(folioActual + 1)}
               />
+              <BotonIcono
+                etiqueta="Ver en pantalla completa"
+                icono={<Maximize2 />}
+                onClick={() => setPantallaCompleta(true)}
+              />
             </div>
           </div>
 
-          <Tarjeta className="p-4">
+          <Tarjeta className="flex min-h-0 flex-1 flex-col p-3">
             <ImagenFolio key={escaneoVisible.urlLectura} escaneo={escaneoVisible} />
           </Tarjeta>
+
+          <VisorPantallaCompleta
+            abierto={pantallaCompleta}
+            onCerrar={() => setPantallaCompleta(false)}
+            urlImagen={escaneoVisible.urlLectura}
+            titulo={`Tomo ${tomoVisible} · Folio ${escaneoVisible.numeroFolio}`}
+            hayAnterior={folioActual > 0}
+            haySiguiente={folioActual < escaneosOrdenados.length - 1}
+            onAnterior={() => irAFolio(folioActual - 1)}
+            onSiguiente={() => irAFolio(folioActual + 1)}
+          />
         </div>
       )}
 
-      <Tarjeta>
-        <h2 className="mb-1 text-base font-semibold text-texto">Subir nuevo folio</h2>
-        <p className="mb-4 text-sm text-texto-suave">
-          {nombreEscuela
-            ? `Escuela: ${nombreEscuela}`
-            : escuelaSeleccionada
-              ? "Se subirá a su escuela."
-              : "Seleccione una escuela arriba para subir folios."}
-        </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Campo
-            label="N° de tomo"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            placeholder="Ej: 4"
-            value={nuevoTomo}
-            onChange={(e) => setNuevoTomo(e.target.value)}
-          />
-          <Campo
-            label="N° de folio"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            placeholder="Ej: 1"
-            value={nuevoFolio}
-            onChange={(e) => setNuevoFolio(e.target.value)}
-          />
-        </div>
-
-        <ZonaCarga
-          className="mt-4"
-          archivo={archivo}
-          onArchivo={setArchivo}
-          extensionesPermitidas={EXTENSIONES_PERMITIDAS}
-          tamanoMaximoMb={TAMANO_MAXIMO_MB}
-          deshabilitada={subiendo}
-        />
-
-        {errorUpload && (
-          <Alerta variante="error" className="mt-3">
-            {errorUpload}
-          </Alerta>
-        )}
-
-        <div className="mt-4">
-          <Boton
-            onClick={manejarSubida}
-            disabled={!archivo || !nuevoTomo || !nuevoFolio || !escuelaSeleccionada || subiendo}
-            cargando={subiendo}
-          >
-            {subiendo ? "Subiendo…" : "Subir folio"}
-          </Boton>
-        </div>
-      </Tarjeta>
+      <ModalNuevoFolio
+        abierto={modalAbierto}
+        onCerrar={() => setModalAbierto(false)}
+        escuelaId={escuelaSeleccionada}
+        nombreEscuela={nombreEscuela}
+        onSubido={alSubirFolio}
+      />
     </div>
   );
 }
