@@ -8,14 +8,6 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    env:
-      NEXTAUTH_SECRET: placeholder
-      TURSO_DATABASE_URL: file:./temp-ci.db
-      TURSO_AUTH_TOKEN: placeholder
-      R2_ACCOUNT_ID: placeholder
-      R2_ACCESS_KEY_ID: placeholder
-      R2_SECRET_ACCESS_KEY: placeholder
-      R2_BUCKET: placeholder
     steps:
       - uses: actions/checkout@v4
 
@@ -28,4 +20,4 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm verify:ci
+      - run: sh scripts/verificar-ci.sh

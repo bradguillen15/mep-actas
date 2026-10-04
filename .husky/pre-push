@@ -1,1 +1,1 @@
-pnpm verify:ci
+sh scripts/verificar-ci.sh
