@@ -48,13 +48,41 @@ El diagrama entidad-relación de la base de datos está en Mermaid dentro de [`d
 
 ---
 
+## Funcionalidades
+
+| Página | Qué permite |
+|---|---|
+| `/consultar` | Buscar graduados por nombre o número de identificación, con filtros por fechas y escuela. |
+| `/actas` | Listar, crear y editar actas de graduación junto con sus estudiantes (un solo flujo de dos columnas). |
+| `/tomos` | Explorar los folios digitalizados por escuela y tomo, verlos a pantalla completa y subir nuevos escaneos. |
+| `/auditoria` | Revisar el historial de cambios con los datos anteriores y nuevos de cada registro. |
+| `/usuarios` | Gestionar las cuentas dentro del ámbito del administrador (solo administradores). |
+| `/configuracion` | Administrar tipos de acta, regiones y escuelas (solo administradores). |
+| `/ayuda` | Manual de usuario integrado. |
+
+### Roles y ámbito
+
+Los roles siguen la jerarquía del MEP; cada persona solo ve y modifica lo que está dentro de su ámbito:
+
+- **Admin País**: todo el país.
+- **Admin Regional**: las escuelas de su región.
+- **Admin Escuela**: su escuela.
+- **Staff**: registra y corrige actas, consulta graduados y digitaliza folios de su escuela.
+
+La regla completa de autorización está en el diagrama [Alcance por escuela y región](https://htmlpreview.github.io/?https://github.com/bradguillen15/mep-actas/blob/main/docs/arquitectura/alcance-escuela-region/alcance-escuela-region.html) y en el [BRD](docs/brd.md).
+
+---
+
 ## Documentación
 
 - **[docs/brd.md](docs/brd.md)** — requerimientos de negocio (fuente de verdad).
 - **[docs/base-standards.md](docs/base-standards.md)** — principios, TDD, idioma.
 - **[docs/backend-standards.md](docs/backend-standards.md)** — API, Drizzle/Turso, seguridad, pruebas.
 - **[docs/frontend-standards.md](docs/frontend-standards.md)** — Next.js/React, estado, identidad MEP.
+- **[docs/data-model.md](docs/data-model.md)** — modelo de datos y diagrama entidad-relación.
+- **[docs/api-spec.yml](docs/api-spec.yml)** — especificación OpenAPI de la API.
 - **[docs/documentation-standards.md](docs/documentation-standards.md)** — estándares de documentación.
+- **[docs/openspec-tasks-mandatory-steps.md](docs/openspec-tasks-mandatory-steps.md)** — pasos obligatorios al crear `tasks.md` de OpenSpec.
 
 ### Desarrollo guiado por specs con IA
 
@@ -69,6 +97,15 @@ Requiere Gentle AI instalado globalmente (`gentle-ai install`). Ver la sección 
 ---
 
 ## Desarrollo local
+
+Requisitos: Node.js 22 y pnpm.
+
+```bash
+pnpm install
+pnpm dev:local
+```
+
+`pnpm dev:local` funciona sin credenciales de Turso ni R2. Para trabajar contra Turso o R2, copie `.env.example` a `.env.local` y complete las credenciales (`TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `NEXTAUTH_SECRET` y las variables `R2_*`); `.env.local` está ignorado por git.
 
 `pnpm dev` inicia Next.js contra la base configurada en `TURSO_DATABASE_URL` (Turso remoto cuando esté configurado); no siembra nada.
 
@@ -94,6 +131,23 @@ La semilla incluye más usuarios por región y escuela; `pnpm db:sembrar` imprim
 
 ---
 
+## Verificación y CI
+
+| Comando | Qué ejecuta |
+|---|---|
+| `pnpm verify:fast` | lint, typecheck y pruebas unitarias |
+| `pnpm verify` | `verify:fast` más las pruebas E2E |
+| `sh scripts/verificar-ci.sh` | la verificación completa de CI (`verify:ci`: lint, typecheck, unitarias, semilla, build y E2E) con el mismo entorno que GitHub Actions |
+
+Los hooks de Husky corren `verify:fast` en cada commit y `scripts/verificar-ci.sh` en cada push, así lo que pasa localmente pasa también en CI.
+
+- **CI** ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)): corre `scripts/verificar-ci.sh` en cada pull request.
+- **CD** ([`.github/workflows/cd.yml`](.github/workflows/cd.yml)): en cada push a `main`, vuelve a correr CI y, si pasa, despliega a producción en Vercel.
+- **Revisión de código**: [CodeRabbit](https://coderabbit.ai) revisa cada pull request en español (configuración en [`.coderabbit.yaml`](.coderabbit.yaml)).
+- **Rama `main` protegida**: solo recibe cambios por pull request; no admite push directo ni force-push.
+
+---
+
 ## Estado
 
-En arranque. La estructura de la aplicación (`app/`, `src/`, esquema Drizzle, etc.) aún no está creada — ver **[docs/initialize-project.md](docs/initialize-project.md)**.
+Piloto funcional: autenticación con roles y ámbito, registro y edición de actas, consulta de graduados, digitalización de folios, auditoría, gestión de usuarios y configuración de catálogos.
