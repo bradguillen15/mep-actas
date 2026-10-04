@@ -102,7 +102,7 @@ describe("Consultar — búsqueda", () => {
     expect(opcionesSwr.valor).toMatchObject({ keepPreviousData: true });
   });
 
-  it("muestra la escuela como primer filtro solo si el admin puede elegirla", () => {
+  it("muestra la escuela después de la búsqueda, junto a las fechas, solo si el admin puede elegirla", () => {
     conResultados([graduacion]);
     const { rerender } = render(<Consultar />);
     expect(screen.queryByLabelText("Escuela")).not.toBeInTheDocument();
@@ -116,8 +116,13 @@ describe("Consultar — búsqueda", () => {
 
     const escuela = screen.getByLabelText("Escuela");
     const busqueda = screen.getByRole("textbox", { name: "Búsqueda avanzada" });
+    const fechaDesde = screen.getByLabelText("Fecha desde");
     expect(
-      escuela.compareDocumentPosition(busqueda) &
+      busqueda.compareDocumentPosition(escuela) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      escuela.compareDocumentPosition(fechaDesde) &
         Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
   });

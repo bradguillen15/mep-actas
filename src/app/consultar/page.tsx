@@ -236,19 +236,6 @@ export default function Consultar() {
       />
 
       <div className="flex shrink-0 flex-col gap-3">
-        {puedeElegirEscuela && (
-          <Selector
-            label="Escuela"
-            opciones={[
-              { valor: "", etiqueta: "Todas las escuelas" },
-              ...escuelaOpciones,
-            ]}
-            value={escuelaFiltro}
-            onChange={(e) => setEscuelaFiltro(e.target.value)}
-            className="w-full max-w-md"
-          />
-        )}
-
         <div>
           <div className="mb-1 flex items-center gap-1">
             <label
@@ -291,6 +278,19 @@ export default function Consultar() {
         </div>
 
         <div className="flex flex-wrap items-end gap-3">
+          {puedeElegirEscuela && (
+            <div className="w-full sm:w-72">
+              <Selector
+                label="Escuela"
+                opciones={[
+                  { valor: "", etiqueta: "Todas las escuelas" },
+                  ...escuelaOpciones,
+                ]}
+                value={escuelaFiltro}
+                onChange={(e) => setEscuelaFiltro(e.target.value)}
+              />
+            </div>
+          )}
           <div className="w-40">
             <Campo
               label="Fecha desde"
@@ -321,14 +321,7 @@ export default function Consultar() {
         </div>
       </div>
 
-      <div className="relative flex min-h-0 flex-1 flex-col gap-3">
-        <div
-          aria-hidden
-          className={cn(
-            "absolute inset-x-0 -top-1 z-10 h-0.5 animate-pulse rounded-full bg-acento transition-opacity duration-150",
-            actualizando ? "opacity-100" : "opacity-0"
-          )}
-        />
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         {error ? (
           <EstadoVacio
             variante="error"
