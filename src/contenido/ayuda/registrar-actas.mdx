@@ -1,0 +1,44 @@
+## Ver las actas
+
+En el menú lateral, abra **Actas**. La tabla muestra **N° de acta**, **Tomo / Folios**, **Fecha**, **Folio inicio** y **Folio fin**. Presione una fila para abrir el acta.
+
+Los roles Admin País y Admin Regional pueden filtrar por escuela con el selector **Escuela**. Los demás roles ven siempre las actas de su escuela.
+
+## Registrar una acta nueva
+
+1. En **Actas**, presione **Nueva acta**. Se abre la misma pantalla de dos columnas que se usa para corregir: **Datos del acta** a la izquierda y **Estudiantes registrados** a la derecha.
+2. En **Datos del acta**, complete:
+   - **Tipo de acta**
+   - **Título / N° de acta** (por ejemplo, Acta 001-2025)
+   - **Escuela** (Admin País y Admin Regional la eligen; para los demás roles ya viene fija)
+   - **N° de tomo**, **Folio inicio** y **Folio fin** (deben ser mayores a 0)
+   - **Fecha** (por defecto es la de hoy)
+3. No hay botón de guardar: en cuanto todos los campos requeridos son válidos y sale del último campo, el sistema crea el acta, muestra **Acta creada** y abre su pantalla. Si deja la pantalla con datos incompletos, no se crea nada.
+4. Ya creada el acta, presione **Agregar estudiante** (antes de eso el botón está deshabilitado), complete **Cédula**, **Nombres**, **Apellidos** y **N° certificado**, y presione **Agregar**. Repita por cada persona.
+
+Si la cédula ya está registrada en el sistema, se usa esa misma persona y no se crea un duplicado.
+
+> **Tenga en cuenta:** para algunos tipos de acta aparece el campo **Acta de referencia (ID)**. Úselo para indicar el número interno (ID) del acta original. Si no aparece para su tipo de acta, no es necesario.
+
+## Corregir una acta existente
+
+1. En **Actas**, presione la fila del acta. Se abre la pantalla **Acta**, con los **Datos del acta** a la izquierda y los **Estudiantes registrados** a la derecha (en pantallas pequeñas se muestran uno debajo del otro).
+2. Modifique cualquier campo de **Datos del acta**. Cada campo se guarda solo al salir de él, siempre que sea válido; junto al título verá **Guardando…**, **Cambios guardados** o el mensaje de error.
+3. Para sumar una persona, presione **Agregar estudiante** junto al título **Estudiantes registrados**, complete **Cédula**, **Nombres**, **Apellidos** y **N° certificado**, y presione **Agregar**. El estudiante aparece de inmediato en la tabla.
+
+Quedan registrados en la auditoría tanto la creación como los cambios de cada acta.
+
+## Quién puede qué
+
+| Acción | Roles |
+|---|---|
+| Registrar actas nuevas y agregar estudiantes | Admin País, Admin Regional, Admin Escuela y Staff |
+| Cambiar los datos de un acta existente | Admin País, Admin Regional, Admin Escuela y Staff, dentro de su alcance |
+
+> **Tenga en cuenta:** desde esta pantalla no se pueden quitar ni modificar los estudiantes ya registrados. Si detecta un error en esos datos, comuníquese con la administración de su escuela.
+
+## Si algo falla al guardar
+
+- Los campos requeridos se marcan en la pantalla. Un campo con error no se guarda: corrija lo indicado y salga del campo de nuevo.
+- Si al crear el acta aparece un mensaje de error junto al título **Datos del acta**, corrija lo indicado y salga del campo de nuevo; el acta no se crea hasta que se guarde correctamente.
+- Si aparece un error al agregar un estudiante, el mensaje se muestra dentro de la ventana; corríjalo y presione **Agregar** otra vez.

@@ -1,0 +1,3 @@
+import { LIMITE_PAGINA_POR_DEFECTO } from "@/lib/paginacion";
+
+export const LIMITE_GRADUACIONES_POR_PAGINA = LIMITE_PAGINA_POR_DEFECTO;

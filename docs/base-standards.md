@@ -36,40 +36,21 @@ Para estándares y lineamientos detallados de cada área del proyecto, consulta:
 - [Pasos Obligatorios de Tareas OpenSpec](./openspec-tasks-mandatory-steps.md) - Checklist y reglas de ejecución obligatorias al crear o actualizar archivos `tasks.md` de OpenSpec
 - [BRD del producto](./brd.md) - Documento de requerimientos de negocio; fuente de verdad del producto
 
-## 4. Skills del proyecto
+## 4. Flujo de trabajo con IA (Gentle AI)
 
-- Las skills viven en `ai-specs/skills`.
-- Cuando una solicitud coincida con una skill, carga y sigue el `SKILL.md` correspondiente automáticamente antes de continuar.
-- Carga también cualquier archivo referenciado dentro de la carpeta de la skill (por ejemplo, `references/*.md`) cuando la skill lo requiera.
+- El proyecto usa **Gentle AI** (desarrollo guiado por specs, SDD) con persistencia `openspec`. Gentle AI se instala a nivel global; el repositorio no contiene skills, agentes ni comandos propios.
+- Los artefactos de cada cambio viven en `openspec/changes/<cambio>/` (propuesta, specs, diseño, tareas) y los specs vigentes en `openspec/specs/`. Los cambios cerrados se mueven a `openspec/changes/archive/`.
+- Flujo: `/gentle-sdd-new <cambio>` → `/gentle-sdd-ff` (o `/gentle-sdd-continue` paso a paso) → `/gentle-sdd-apply` → `/gentle-sdd-verify` → `/gentle-sdd-archive`. Estado: `/gentle-sdd-status`.
+- **Idioma de los artefactos**: Gentle AI genera en inglés por defecto; en este proyecto todos los artefactos SDD se escriben en español (ver sección 2).
+- Antes de crear artefactos o implementar, leer el BRD y los estándares de la sección 3; al crear `tasks.md`, aplicar los [Pasos Obligatorios de Tareas](./openspec-tasks-mandatory-steps.md).
 
-## 5. Requisito de modelo para planificación
+## 5. Cambios posteriores a apply: primero los artefactos
 
-Los flujos de planificación deben ejecutarse con Opus en razonamiento alto.
-
-Aplica a:
-- `enrich-us`
-- `openspec-ff-change`
-- `openspec-continue-change`
-
-Antes de iniciar cualquiera de estos flujos, verifica que la sesión use Opus en razonamiento alto. Si no lo está, **autocorrige** agregando `"model": "claude-opus-4-8"` a `.claude/settings.json` (usa la skill `update-config` o edítalo directamente) y luego continúa — no te detengas a preguntar. Haz lo mismo para volver a Sonnet medio en cualquier otro paso.
-
-## 6. Integridad de symlinks y portabilidad multi-agente
-
-- **Fuente canónica**: Mantén los artefactos reutilizables en `ai-specs` como fuente canónica. Las rutas específicas de cada agente (como `.claude` y `.cursor`) deben referenciarlos mediante symlinks cuando sea posible.
-- **Seguridad al actualizar**: Cada vez que un archivo se renombre, mueva o cambie su sufijo, verifica y actualiza todos los symlinks que lo apuntan antes de dar por completado el cambio.
-- **Enlace de nuevos artefactos**: Cada vez que crees un artefacto nuevo que requiera exposición multi-agente (por ejemplo, nuevos agentes o skills en `ai-specs`), crea los symlinks correspondientes desde las rutas de referencia esperadas de cada agente.
-- **Revisión de personalización externa**: Cada vez que se introduzca una personalización fuera de `ai-specs`, evalúa si debería moverse a `ai-specs` y reemplazarse con symlinks desde las ubicaciones originales.
-- **Compuerta de finalización**: Un cambio está incompleto si deja symlinks rotos, destinos obsoletos o artefactos canónicos duplicados entre carpetas específicas de agentes.
-
-## 7. Actualización obligatoria de artefactos OpenSpec para cambios posteriores a apply
-
-Cuando aparezca una nueva solicitud de arreglo/cambio después de `opsx:apply` (o `/apply`) y antes de `opsx:archive` (o `/archive`), los agentes deben tratarla primero como una actualización de spec, no como un "arréglalo rápido" informal. Es el principio central de OpenSpec: la documentación es la fuente de verdad.
+Cuando aparezca una nueva solicitud de arreglo o cambio después de `apply` y antes de `archive`, se trata primero como una actualización de spec, no como un arreglo rápido: la documentación es la fuente de verdad.
 
 Orden requerido:
 
-1. Actualiza los artefactos del cambio OpenSpec actual que estén afectados (por ejemplo: escenarios, requisitos/specs y `tasks.md`). No agregues las tareas como "bugfixes" sino como parte del diseño inicial, en la sección correspondiente.
-2. Si se requiere regenerar artefactos, ejecuta el paso correspondiente de OpenSpec (`opsx:continue`, `opsx:ff` o equivalente) antes de programar.
+1. Actualiza los artefactos del cambio actual que estén afectados (escenarios, requisitos/specs y `tasks.md`). Las tareas nuevas se agregan como parte del diseño, en la sección correspondiente, no como "bugfixes".
+2. Si hace falta regenerar artefactos, ejecuta la fase correspondiente (`/gentle-sdd-continue` o `/gentle-sdd-ff`) antes de programar.
 3. Implementa el código solo después de que los artefactos reflejen la nueva solicitud.
-4. Vuelve a ejecutar la verificación contra los artefactos actualizados antes de archivar.
-
-No apliques arreglos directos solo de código en esta ventana sin actualizar los artefactos OpenSpec.
+4. Vuelve a ejecutar la verificación (`/gentle-sdd-verify`) antes de archivar.

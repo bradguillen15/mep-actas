@@ -1,49 +1,73 @@
-# Ignore in all directories
-**/.DS_Store
-**/node_modules
-**/prompts_master.md
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Secrets / env — never commit. Keep .env.example as the template.
-**/.env
-**/.env.*
-!**/.env.example
-**/*.pem
-**/*.key
-# Turso / libSQL local credentials & db files
-**/*.sqlite
-**/*.sqlite3
-**/*.db
-**/.turso/
-
-# other dependencies
-**/.pnp
-**.pnp.js
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
 # testing
-**/coverage
+/coverage
+
+# next.js
+/.next/
+/out/
 
 # production
-**/build
-**/dist
+/build
 
-# logs
+# misc
+.DS_Store
+*.pem
+
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# IDE
-.idea
-.vscode
+# env files (can opt-in for committing if needed)
+.env*
 
-# .env
+# vercel
+.vercel
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# database
+*.sqlite
+*.sqlite3
+*.db
+.turso/
+
+# AI config (local overrides, never committed)
+.claude/settings.json
+.claude/settings.local.json
 .mcp.json
 
-# Claude Code per-user settings
-**/.claude/settings.json
-**/.claude/settings.local.json
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 
-# temp files
-**/tmp
+# allow example env file
+!.env.example
 
-# git worktrees
-.worktrees/
+# herramientas de IA (salidas de trabajo locales)
+.archify/
+.atl/
+docs/arquitectura/**/*.finalize.json
+docs/arquitectura/**/*.finalize-summary.json
+docs/arquitectura/**/*.browser-check.json
+docs/arquitectura/**/*.delivery.json
+
+# almacenamiento local de escaneos (desarrollo)
+/.almacenamiento-local/

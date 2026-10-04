@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "es"
+early_access: false
+
+chat:
+  auto_reply: true
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+  finishing_touches:
+    docstrings:
+      enabled: false
+  path_filters:
+    - "!pnpm-lock.yaml"
+    - "!drizzle/meta/**"
+    - "!public/**"
+    - "!.codegraph/**"
+    - "!openspec/changes/archive/**"
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        Producto para el Gobierno de Costa Rica (MEP). Todo artefacto va en español: identificadores,
+        mensajes de error, nombres de pruebas, columnas de base de datos y mensajes de commit.
+        Las palabras reservadas, paquetes y APIs de terceros se mantienen en su forma original.
+        Fuente de verdad del producto: docs/brd.md.
+    - path: "src/**/*.{ts,tsx}"
+      instructions: |
+        - Tipado estricto: sin `any` ni aserciones innecesarias.
+        - Comentarios mínimos: señalar comentarios que repiten lo que hace el código o banners divisores.
+        - Detectar patrones de código repetidos que deberían extraerse.
+    - path: "src/app/api/**/*.ts"
+      instructions: |
+        Seguir docs/backend-standards.md. En cada route handler verificar: sesión válida, nivel mínimo con
+        verificarRol, y ámbito por escuela/región (sin IDOR: un recurso fuera del ámbito responde 404,
+        sin escribir). Toda escritura debe registrar auditoría. Validar la entrada con esquemas.
+    - path: "src/server/**/*.ts"
+      instructions: |
+        Acceso a datos con Drizzle sobre Turso (libSQL/SQLite). Revisar que las consultas apliquen el
+        ámbito del actor, usen transacciones cuando escriben en varias tablas y no expongan datos
+        personales innecesarios.
+    - path: "src/{app,components}/**/*.tsx"
+      instructions: |
+        Seguir docs/frontend-standards.md: patrón contenedor-presentacional, componentes de
+        src/components/ui (base shadcn), accesibilidad (etiquetas, foco visible, aria) y diseño
+        responsive sin scroll horizontal de página.
+    - path: "**/__tests__/**"
+      instructions: |
+        Pruebas con Vitest y Testing Library, nombres en español, enfocadas en comportamiento y no en
+        detalles de implementación. Señalar casos borde de permisos y ámbito sin cubrir.
+    - path: "openspec/**/*.md"
+      instructions: |
+        Specs SDD en español. Verificar que los requisitos usen SHALL y que cada requisito tenga
+        escenarios WHEN/THEN coherentes con el código y con docs/brd.md.

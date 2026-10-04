@@ -1,0 +1,1458 @@
+# Especificación de API — Sistema de Consulta de Títulos del MEP
+# Versión: 0.3.0 (seguridad-alcance-escuela-region)
+# Formato: OpenAPI 3.0
+
+openapi: "3.0.0"
+info:
+  title: API de Consulta de Títulos del MEP
+  description: API del Sistema de Consulta de Títulos del Ministerio de Educación Pública de Costa Rica
+  version: "0.3.0"
+servers:
+  - url: /
+    description: Mismo dominio que la aplicación (Next.js)
+paths:
+  /api/regiones:
+    get:
+      summary: Listar todas las regiones activas
+      tags: [Regiones]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Lista de regiones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Region"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+    post:
+      summary: Crear una nueva región
+      tags: [Regiones]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre:
+                  type: string
+      responses:
+        "201":
+          description: Región creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Region"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+  /api/regiones/{id}:
+    patch:
+      summary: Actualizar una región
+      tags: [Regiones]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre:
+                  type: string
+      responses:
+        "200":
+          description: Región actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Region"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+    delete:
+      summary: Desactivar una región (borrado lógico)
+      tags: [Regiones]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Región desactivada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Region"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+        "409":
+          $ref: "#/components/responses/Conflicto"
+  /api/escuelas:
+    get:
+      summary: Listar escuelas activas
+      tags: [Escuelas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: region_id
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de escuelas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Escuela"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+    post:
+      summary: Crear una nueva escuela
+      tags: [Escuelas]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [regionId, codigoMep, nombre]
+              properties:
+                regionId:
+                  type: integer
+                codigoMep:
+                  type: string
+                nombre:
+                  type: string
+      responses:
+        "201":
+          description: Escuela creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Escuela"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+  /api/escuelas/{id}:
+    patch:
+      summary: Actualizar una escuela
+      tags: [Escuelas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                codigoMep:
+                  type: string
+      responses:
+        "200":
+          description: Escuela actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Escuela"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+    delete:
+      summary: Desactivar una escuela (borrado lógico)
+      tags: [Escuelas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Escuela desactivada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Escuela"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+        "409":
+          $ref: "#/components/responses/Conflicto"
+  /api/roles:
+    get:
+      summary: Listar los roles del sistema (para selectores de administración)
+      tags: [Usuarios]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Lista de roles ordenada por nivel
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Rol"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+  /api/usuarios:
+    get:
+      summary: Listar usuarios
+      description: >
+        Requiere rol administrador (nivel <= 3). La lista se limita a los
+        usuarios cuyo funcionario está en el ámbito del actor. El BRD §6 permite al Admin
+        Escuela crear usuarios staff de su escuela, por lo que también accede
+        a la gestión de usuarios.
+      tags: [Usuarios]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Usuario"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+    post:
+      summary: Crear (invitar) un usuario
+      description: >
+        El rol solicitado debe tener un nivel igual o mayor (mismo nivel o
+        inferior en privilegio) al del usuario en sesión, y el funcionario
+        destino debe pertenecer al ámbito del actor (región para Admin Regional,
+        escuela para Admin Escuela; Admin País sin restricción). Una violación
+        de jerarquía o un funcionario destino fuera del ámbito responde 403.
+      tags: [Usuarios]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [funcionarioId, rolId, email, password]
+              properties:
+                funcionarioId:
+                  type: integer
+                rolId:
+                  type: integer
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "201":
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+        "409":
+          $ref: "#/components/responses/Conflicto"
+  /api/usuarios/{id}:
+    get:
+      summary: Obtener un usuario por id
+      description: >
+        Un usuario fuera del ámbito responde 404 con el mismo cuerpo que uno
+        inexistente ("Usuario no encontrado").
+      tags: [Usuarios]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Usuario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+    patch:
+      summary: Restablecer contraseña o cambiar estado de un usuario
+      description: >
+        Acepta `password` (restablecer contraseña) o `activo` (activar/desactivar).
+        Orden: sesión (401), nivel (403), ámbito del usuario destino (404,
+        "Usuario no encontrado", igual que un inexistente) y jerarquía
+        (403 si el destino, dentro del ámbito, tiene un rol más privilegiado).
+      tags: [Usuarios]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                activo:
+                  type: boolean
+      responses:
+        "200":
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+
+  /api/actas:
+    get:
+      summary: Listar actas dentro del ámbito del usuario
+      description: >
+        Admin País ve todas; Admin Regional, las de las escuelas de su región;
+        Admin Escuela y Staff, las de su escuela. Las actas fuera del ámbito se
+        excluyen sin error. El filtro `escuelaId` solo puede estrechar el
+        resultado, nunca ampliar el ámbito.
+      tags: [Actas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: escuelaId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: tipoActaId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: tomo
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de actas del ámbito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Acta"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+    post:
+      summary: Crear un acta
+      description: >
+        Requiere nivel <= 4. La `escuelaId` del cuerpo debe estar dentro del
+        ámbito del usuario; el Admin Regional se valida contra la región de la
+        escuela objetivo. Una escuela fuera del ámbito o inexistente responde 403.
+
+        El cuerpo puede incluir `estudiantes`: el acta, las personas que aún no
+        existan (buscadas por identificación exacta), los vínculos con el acta y
+        sus registros de auditoría se escriben en una única transacción. Si falla
+        cualquier estudiante no queda nada guardado y el mensaje de `error`
+        identifica al estudiante (por ejemplo, "Estudiante 3 (cédula 1-2345-6789):
+        ..."). Se rechazan con 400, antes de escribir, las identificaciones o
+        los números de certificado repetidos dentro del mismo cuerpo. Con
+        `estudiantes` la respuesta incluye además la lista `estudiantes` con los
+        vínculos creados.
+      tags: [Actas]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/NuevaActa"
+                - type: object
+                  properties:
+                    estudiantes:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/EstudianteNuevo"
+      responses:
+        "201":
+          description: Acta creada (con sus estudiantes, si se enviaron)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Acta"
+        "400":
+          description: >
+            Estudiantes inválidos o repetidos en el cuerpo; no se guardó ningún
+            cambio.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "500":
+          description: >
+            Falló la escritura de un estudiante; la transacción se revirtió y el
+            mensaje identifica al estudiante.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/actas/{id}:
+    get:
+      summary: Obtener un acta por id
+      description: >
+        Un acta fuera del ámbito responde 404 con el mismo cuerpo que un acta
+        inexistente ("Acta no encontrada").
+      tags: [Actas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      responses:
+        "200":
+          description: Acta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Acta"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+    patch:
+      summary: Actualizar un acta
+      description: >
+        Requiere nivel <= 3. Orden de verificación: sesión (401), nivel (403),
+        ámbito del acta (404, "Acta no encontrada").
+      tags: [Actas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NuevaActa"
+      responses:
+        "200":
+          description: Acta actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Acta"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+  /api/actas/{id}/estudiantes:
+    get:
+      summary: Listar los estudiantes de un acta
+      description: Un acta fuera del ámbito responde 404 ("Acta no encontrada").
+      tags: [Actas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      responses:
+        "200":
+          description: Estudiantes del acta
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+    post:
+      summary: Agregar uno o varios estudiantes a un acta
+      description: >
+        Requiere nivel <= 4 (Staff incluido). Orden: sesión (401), nivel (403),
+        ámbito del acta (404, "Acta no encontrada").
+
+        Admite dos cuerpos: uno individual (`personaId` y `numeroCertificado`) o
+        un lote `{ estudiantes: [...] }`. El lote se procesa en una única
+        transacción: se resuelve o crea cada persona por identificación, se
+        vincula al acta y se audita; si falla cualquiera no se guarda nada y el
+        mensaje identifica al estudiante. Responde 400, antes de escribir, ante
+        identificaciones o certificados repetidos en el lote, un certificado ya
+        registrado en el acta o una persona que ya figura en ella.
+      tags: [Actas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [personaId, numeroCertificado]
+                  properties:
+                    personaId:
+                      type: integer
+                    numeroCertificado:
+                      type: integer
+                - type: object
+                  required: [estudiantes]
+                  properties:
+                    estudiantes:
+                      type: array
+                      minItems: 1
+                      items:
+                        $ref: "#/components/schemas/EstudianteNuevo"
+      responses:
+        "201":
+          description: >
+            Estudiante agregado (objeto) o lista de vínculos creados (cuando se
+            envió un lote).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                  - type: array
+                    items:
+                      type: object
+        "400":
+          description: Lote inválido; no se guardó ningún cambio.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+        "500":
+          description: >
+            Falló la escritura de un estudiante; la transacción se revirtió.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/actas/{id}/firmantes:
+    get:
+      summary: Listar los firmantes de un acta
+      description: Un acta fuera del ámbito responde 404 ("Acta no encontrada").
+      tags: [Actas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      responses:
+        "200":
+          description: Firmantes del acta
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+    post:
+      summary: Agregar un firmante a un acta
+      description: >
+        Requiere nivel <= 4 (Staff incluido). Orden: sesión (401), nivel (403),
+        ámbito del acta (404, "Acta no encontrada").
+      tags: [Actas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [funcionarioId, rolFirma]
+              properties:
+                funcionarioId:
+                  type: integer
+                rolFirma:
+                  type: string
+      responses:
+        "201":
+          description: Firmante agregado al acta
+          content:
+            application/json:
+              schema:
+                type: object
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+  /api/escaneos:
+    get:
+      summary: Listar escaneos dentro del ámbito del usuario
+      description: >
+        Los escaneos fuera del ámbito se excluyen sin error. El filtro
+        `escuelaId` solo puede estrechar el resultado.
+      tags: [Escaneos]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: escuelaId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: tomo
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de escaneos con URL de lectura firmada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Escaneo"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+    post:
+      summary: Preparar la subida de un escaneo
+      description: >
+        Requiere nivel <= 4. La `escuelaId` del cuerpo debe estar dentro del
+        ámbito del usuario (Admin Regional validado contra la región de la
+        escuela objetivo); una escuela ajena o inexistente responde 403.
+        Un formato no permitido responde 400.
+      tags: [Escaneos]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [escuelaId, numeroTomo, numeroFolio, formato]
+              properties:
+                escuelaId:
+                  type: integer
+                numeroTomo:
+                  type: integer
+                numeroFolio:
+                  type: integer
+                formato:
+                  type: string
+                  description: jpg, jpeg, png o pdf
+      responses:
+        "201":
+          description: Subida preparada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  urlSubida:
+                    type: string
+                  clave:
+                    type: string
+                  escaneo:
+                    $ref: "#/components/schemas/Escaneo"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+  /api/escaneos/{id}:
+    get:
+      summary: Obtener un escaneo por id
+      description: >
+        Un escaneo fuera del ámbito responde 404 con el mismo cuerpo que uno
+        inexistente ("Escaneo no encontrado"); no se genera URL de lectura.
+      tags: [Escaneos]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      responses:
+        "200":
+          description: Escaneo con URL de lectura firmada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Escaneo"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+    delete:
+      summary: Eliminar un escaneo
+      description: >
+        Requiere nivel <= 3. Orden: sesión (401), nivel (403), ámbito del
+        escaneo (404, "Escaneo no encontrado"); un escaneo ajeno ya no responde 403.
+      tags: [Escaneos]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      responses:
+        "200":
+          description: Escaneo eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Escaneo"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+  /api/graduaciones:
+    get:
+      summary: Buscar graduaciones dentro del ámbito del usuario
+      description: >
+        El `total` y la paginación reflejan solo las graduaciones visibles en
+        el ámbito. El filtro `escuelaId` solo puede estrechar el resultado.
+      tags: [Graduaciones]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: identificacion
+          in: query
+          schema:
+            type: string
+        - name: nombre
+          in: query
+          schema:
+            type: string
+        - name: escuelaId
+          in: query
+          schema:
+            type: integer
+        - name: tipoActaId
+          in: query
+          schema:
+            type: integer
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+        - name: numeroCertificado
+          in: query
+          schema:
+            type: string
+        - name: tituloActa
+          in: query
+          schema:
+            type: string
+        - name: pagina
+          in: query
+          schema:
+            type: integer
+        - name: limite
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Resultados paginados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  datos:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Graduacion"
+                  total:
+                    type: integer
+                  pagina:
+                    type: integer
+                  limite:
+                    type: integer
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+  /api/graduaciones/{id}:
+    get:
+      summary: Obtener una graduación por id
+      description: >
+        Una graduación fuera del ámbito responde 404 con el mismo cuerpo que
+        una inexistente ("Graduación no encontrada").
+      tags: [Graduaciones]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      responses:
+        "200":
+          description: Graduaciones del acta
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  acta:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Graduacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+  /api/personas:
+    get:
+      summary: Buscar personas
+      description: >
+        Dos modos. Con `identificacion` (coincidencia exacta) responde a
+        cualquier usuario autenticado, sin restricción de ámbito, con un
+        arreglo de cero o un elemento `PersonaMinima` (solo id, nombres,
+        apellidos e identificación). Si llegan `identificacion` y `busqueda`,
+        prevalece `identificacion`. Con `busqueda` (parcial) o sin parámetros,
+        la lista se limita al ámbito: una persona está en el ámbito si aparece
+        como estudiante o firmante en un acta de una escuela del ámbito, o es
+        funcionario asignado a una escuela del ámbito; las personas sin
+        vínculo solo las ve el Admin País.
+      tags: [Personas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: identificacion
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: busqueda
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Personas encontradas
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/PersonaMinima"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/Persona"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+    post:
+      summary: Crear una persona
+      description: >
+        Requiere nivel <= 4 (Staff incluido). Una identificación duplicada
+        responde 400. Toda creación se audita.
+      tags: [Personas]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identificacion, nombres, apellidos]
+              properties:
+                identificacion:
+                  type: string
+                nombres:
+                  type: string
+                apellidos:
+                  type: string
+      responses:
+        "201":
+          description: Persona creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+  /api/personas/{id}:
+    get:
+      summary: Obtener una persona por id
+      description: >
+        Una persona fuera del ámbito responde 404 con el mismo cuerpo que una
+        inexistente ("Persona no encontrada").
+      tags: [Personas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      responses:
+        "200":
+          description: Persona
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+    patch:
+      summary: Actualizar una persona
+      description: >
+        Requiere nivel <= 2. Orden: sesión (401), nivel (403), ámbito de la
+        persona (404, "Persona no encontrada").
+      tags: [Personas]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                identificacion:
+                  type: string
+                nombres:
+                  type: string
+                apellidos:
+                  type: string
+      responses:
+        "200":
+          description: Persona actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+  /api/funcionarios:
+    get:
+      summary: Listar funcionarios dentro del ámbito del usuario
+      description: >
+        Un funcionario está en el ámbito según las escuelas que tiene
+        asignadas; sin asignación solo lo ve el Admin País. El filtro
+        `escuelaId` solo puede estrechar el resultado.
+      tags: [Funcionarios]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: escuelaId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de funcionarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Funcionario"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+    post:
+      summary: Crear un funcionario
+      description: Requiere nivel <= 2.
+      tags: [Funcionarios]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [personaId, puesto]
+              properties:
+                personaId:
+                  type: integer
+                puesto:
+                  type: string
+      responses:
+        "201":
+          description: Funcionario creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Funcionario"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+  /api/funcionarios/{id}:
+    get:
+      summary: Obtener un funcionario por id
+      description: >
+        Un funcionario fuera del ámbito responde 404 con el mismo cuerpo que
+        uno inexistente ("Funcionario no encontrado").
+      tags: [Funcionarios]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      responses:
+        "200":
+          description: Funcionario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Funcionario"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+    patch:
+      summary: Actualizar un funcionario
+      description: >
+        Requiere nivel <= 2. Orden: sesión (401), nivel (403), ámbito del
+        funcionario (404, "Funcionario no encontrado").
+      tags: [Funcionarios]
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdRuta"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                puesto:
+                  type: string
+      responses:
+        "200":
+          description: Funcionario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Funcionario"
+        "400":
+          $ref: "#/components/responses/ErrorValidacion"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+        "404":
+          $ref: "#/components/responses/NoEncontrado"
+  /api/auditoria:
+    get:
+      summary: Consultar el registro de auditoría de mi ámbito
+      description: >
+        Requiere nivel <= 4. Admin País ve todo el registro; Admin Regional
+        ve toda su región (incluidas las filas regionales sin escuela); Admin
+        Escuela y Staff ven solo su escuela. Las filas sin escuela ni región
+        (acciones nacionales) solo las ve el Admin País.
+      tags: [Auditoría]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: usuarioId
+          in: query
+          schema:
+            type: integer
+        - name: tabla
+          in: query
+          schema:
+            type: string
+        - name: accion
+          in: query
+          schema:
+            type: string
+        - name: limite
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Registros de auditoría del ámbito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RegistroAuditoria"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/SinPermisos"
+
+components:
+  parameters:
+    IdRuta:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  schemas:
+    Region:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        activo:
+          type: boolean
+    Escuela:
+      type: object
+      properties:
+        id:
+          type: integer
+        regionId:
+          type: integer
+        codigoMep:
+          type: string
+        nombre:
+          type: string
+        activo:
+          type: boolean
+    Rol:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        nivel:
+          type: integer
+          description: 1 = Admin País … 4 = Staff
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        activo:
+          type: boolean
+        funcionarioId:
+          type: integer
+        rolId:
+          type: integer
+        nivel:
+          type: integer
+    NuevaActa:
+      type: object
+      properties:
+        escuelaId:
+          type: integer
+        tipoActaId:
+          type: integer
+        actaReferenciaId:
+          type: integer
+          nullable: true
+        titulo:
+          type: string
+        numeroTomo:
+          type: integer
+        folioInicio:
+          type: integer
+        folioFin:
+          type: integer
+        fecha:
+          type: string
+    EstudianteNuevo:
+      type: object
+      required: [identificacion, numeroCertificado]
+      properties:
+        identificacion:
+          type: string
+        nombres:
+          type: string
+          description: Obligatorio si la persona aún no existe.
+        apellidos:
+          type: string
+          description: Obligatorio si la persona aún no existe.
+        numeroCertificado:
+          type: integer
+          minimum: 1
+    Acta:
+      allOf:
+        - $ref: "#/components/schemas/NuevaActa"
+        - type: object
+          properties:
+            id:
+              type: integer
+            createdAt:
+              type: string
+    Escaneo:
+      type: object
+      properties:
+        id:
+          type: integer
+        escuelaId:
+          type: integer
+        numeroTomo:
+          type: integer
+        numeroFolio:
+          type: integer
+        url:
+          type: string
+        formato:
+          type: string
+        uploadedBy:
+          type: integer
+        createdAt:
+          type: string
+        urlLectura:
+          type: string
+          description: URL firmada de lectura, presente al listar u obtener por id
+    Graduacion:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombreCompleto:
+          type: string
+        identificacion:
+          type: string
+        escuela:
+          type: string
+        tipoActa:
+          type: string
+        fecha:
+          type: string
+        numeroCertificado:
+          type: integer
+        actaId:
+          type: integer
+        tituloActa:
+          type: string
+    Persona:
+      type: object
+      properties:
+        id:
+          type: integer
+        identificacion:
+          type: string
+        nombres:
+          type: string
+        apellidos:
+          type: string
+    PersonaMinima:
+      type: object
+      description: Proyección mínima devuelta por la consulta exacta por identificación
+      properties:
+        id:
+          type: integer
+        nombres:
+          type: string
+        apellidos:
+          type: string
+        identificacion:
+          type: string
+    Funcionario:
+      type: object
+      properties:
+        id:
+          type: integer
+        personaId:
+          type: integer
+        puesto:
+          type: string
+        nombres:
+          type: string
+        apellidos:
+          type: string
+        identificacion:
+          type: string
+    RegistroAuditoria:
+      type: object
+      properties:
+        id:
+          type: integer
+        usuarioId:
+          type: integer
+        tabla:
+          type: string
+        registroId:
+          type: integer
+        accion:
+          type: string
+        datosAnteriores:
+          type: string
+          nullable: true
+        datosNuevos:
+          type: string
+          nullable: true
+        escuelaId:
+          type: integer
+          nullable: true
+        regionId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+  responses:
+    NoAutorizado:
+      description: No autenticado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    SinPermisos:
+      description: No autorizado (rol insuficiente)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrorValidacion:
+      description: Error de validación
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NoEncontrado:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflicto:
+      description: Conflicto (regla de negocio)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: next-auth.session-token

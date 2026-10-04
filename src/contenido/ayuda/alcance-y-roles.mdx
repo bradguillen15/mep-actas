@@ -1,0 +1,33 @@
+## Los cuatro roles
+
+Cada cuenta tiene un rol que define qué puede hacer y qué datos puede ver.
+
+| Rol | Qué datos ve | Qué administra |
+|---|---|---|
+| **Admin País** | Todo el país. | Regiones, escuelas, usuarios de cualquier nivel y la configuración. |
+| **Admin Regional** | Las escuelas de su región. | Escuelas y usuarios de su región. |
+| **Admin Escuela** | Solo su escuela. | Actas y escaneos de su escuela, y usuarios de su escuela. |
+| **Staff** | Solo su escuela. | Consulta, registro y corrección de actas, y escaneos. No gestiona usuarios. |
+
+## Qué puede hacer cada rol
+
+| Acción | País | Regional | Escuela | Staff |
+|---|:---:|:---:|:---:|:---:|
+| Consultar graduados | Sí | Sí | Sí | Sí |
+| Registrar actas nuevas | Sí | Sí | Sí | Sí |
+| Corregir los datos de un acta | Sí | Sí | Sí | Sí |
+| Ver y subir folios escaneados | Sí | Sí | Sí | Sí |
+| Gestionar usuarios | Sí | Sí | Sí | No |
+| Tipos de acta (crear y eliminar) | Sí | Sí | Sí | No |
+| Crear escuelas | Sí | Sí | No | No |
+| Crear regiones | Sí | No | No | No |
+| Ver la auditoría de su ámbito | Sí | Sí | Sí | Sí |
+
+## Por qué algunos datos no aparecen
+
+El sistema solo le muestra información de su alcance. Si busca un acta, un folio o una persona de otra escuela o región, el resultado es el mismo que si no existiera: no aparece en las listas y no se puede abrir.
+
+- **Admin País** y **Admin Regional** pueden elegir la escuela en las pantallas de Consultar, Actas y Tomos. El Admin Regional solo ve las escuelas de su región.
+- **Admin Escuela** y **Staff** trabajan siempre con su propia escuela; no necesitan elegirla.
+
+> **Tenga en cuenta:** el menú lateral muestra **Usuarios** y **Configuración** solo a los roles de administración (País, Regional y Escuela). **Auditoría** está disponible para los cuatro roles, pero cada uno ve solo los registros de su ámbito; los de alcance nacional los ve solo el Admin País. Si una acción no está permitida para su rol, el sistema muestra el mensaje "No tiene permisos para realizar esta acción".

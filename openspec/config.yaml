@@ -11,7 +11,7 @@ context: |
   (acceso a datos con Drizzle). Mantener separación de responsabilidades y dominio tipado, sin la
   ceremonia completa de DDD (sin entity.save(), sin 4 capas formales).
   Estado en el cliente: SWR (datos), React Context (sesión/usuario), useReducer (formularios).
-  Pruebas: Vitest (unitarias/servicios) y Playwright (E2E). Cobertura pragmática del dominio y de
+  Pruebas: Vitest (unitarias/servicios) y Vitest contra SQLite para E2E (`pnpm test:e2e`). Cobertura pragmática del dominio y de
   los servicios; sin umbral fijo del 90%.
   Commits convencionales (prefijo en inglés `feat:`/`fix:`, descripción en español).
   Dominio: Sistema de Consulta de Títulos del MEP (Ministerio de Educación Pública, Costa Rica) —
@@ -30,16 +30,14 @@ context: |
   - docs/api-spec.yml — contratos de API y definición de endpoints (crear por proyecto)
   - docs/data-model.md — modelo de dominio y de datos (crear por proyecto)
   - docs/documentation-standards.md — estructura y mantenimiento de la documentación
-  Para implementar: adoptar el agente correspondiente de ai-specs/agents/
-  (backend-developer.md para backend, frontend-developer.md para frontend).
 
 # Reglas por artefacto (opcional)
 rules:
   # Global: aplicar los estándares al crear cualquier artefacto
   _global:
     - Antes de crear cualquier artefacto, leer y aplicar docs/base-standards.md y docs/brd.md
-    - Para artefactos de backend, leer docs/backend-standards.md y adoptar ai-specs/agents/backend-developer.md
-    - Para artefactos de frontend, leer docs/frontend-standards.md y adoptar ai-specs/agents/frontend-developer.md
+    - Para artefactos de backend, leer y aplicar docs/backend-standards.md
+    - Para artefactos de frontend, leer y aplicar docs/frontend-standards.md
     - Usar docs/api-spec.yml y docs/data-model.md para consistencia de API y de datos en specs y tareas
     - Todo el contenido (código, esquema, documentación, nombres de tablas/columnas) va en español
 
@@ -50,7 +48,7 @@ rules:
       Seguir TDD: escribir la prueba que falla primero, luego implementar hasta ponerla en verde
     - |
       Pasos obligatorios por cambio: crear rama de feature; escribir/actualizar pruebas (Vitest);
-      ejecutar pruebas; verificación E2E con Playwright cuando cambie un flujo de usuario;
+      ejecutar pruebas; verificación E2E (`pnpm test:e2e`) cuando cambie la persistencia o un flujo de usuario;
       actualizar documentación
     - |
       No incluir pasos de "curl manual"; la API se prueba con pruebas de route handlers/servicios
@@ -94,3 +92,45 @@ rules:
       sin colores embebidos. Accesibilidad WCAG AA.
     - |
       Toda la interfaz, mensajes y textos en español (Costa Rica).
+
+# Bootstrap de Gentle AI SDD (agregado por sdd-init, 2026-09-29)
+artifact_language: es-CR  # Español neutro y profesional (Costa Rica); ver CLAUDE.md sección 2
+
+projects:
+  - path: .
+    stack: TypeScript, Next.js 16 (App Router), React 19, Drizzle ORM + Turso (libSQL), NextAuth v5, Cloudflare R2, Tailwind 4
+    package_manager: pnpm@10.33.1
+    test_command: pnpm test
+    e2e_command: pnpm test:e2e
+
+strict_tdd: true  # Fuente: convención del proyecto (CLAUDE.md "Desarrollo guiado por pruebas") + comando de pruebas a nivel de espacio de trabajo (pnpm test)
+
+testing:
+  strict_tdd: true
+  runner:
+    name: vitest
+    command: pnpm test
+    watch: pnpm test:watch
+  layers:
+    unit:
+      available: true
+      tool: vitest (config vitest.config.mts, entorno node, incluye **/*.{test,spec}.{ts,tsx})
+    integration:
+      available: true
+      tool: "@testing-library/react + jsdom (servicios/repositorios con datos de prueba)"
+    e2e:
+      available: true
+      tool: vitest e2e (config vitest.e2e.config.mts, test/e2e/**/*.test.ts)
+      command: pnpm test:e2e
+  coverage:
+    available: false
+    command: null
+    note: "@vitest/coverage-* no está instalado"
+  quality:
+    linter: pnpm lint          # eslint 9 + eslint-config-next + eslint-plugin-security
+    type_checker: pnpm typecheck  # tsc --noEmit
+    formatter: null
+  verify:
+    fast: pnpm verify:fast     # lint + typecheck + test
+    full: pnpm verify          # verify:fast + test:e2e
+    ci: pnpm verify:ci
