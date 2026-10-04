@@ -23,5 +23,5 @@ export { EncabezadoPagina } from "./EncabezadoPagina";
 export { ListaDefiniciones } from "./ListaDefiniciones";
 export { Esqueleto, FilasEsqueleto } from "./Esqueleto";
 export { Notificador, toast } from "./Notificaciones";
-export { Pestanas } from "./Pestanas";
+export { AccionesPestana, Pestanas } from "./Pestanas";
 export { ZonaCarga } from "./ZonaCarga";
