@@ -37,7 +37,7 @@ export async function PATCH(request: NextRequest, { params }: Parametros) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const verificacion = verificarRol(sesion, 3);
+  const verificacion = verificarRol(sesion, 4);
   if (!verificacion.autorizado) {
     return respuestaNoAutorizada(verificacion);
   }

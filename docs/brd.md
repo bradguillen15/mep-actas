@@ -111,7 +111,7 @@ Los roles son **jerárquicos por nivel**. Cada nivel puede crear usuarios de su 
 | Admin País | 1 | Acceso total nacional. Gestiona regiones, escuelas, usuarios de cualquier nivel, configuración global. Ve toda la auditoría. |
 | Admin Regional | 2 | Gestiona escuelas y usuarios dentro de su región. Configura valores por defecto regionales. Ve la auditoría de su región. |
 | Admin Escuela | 3 | Gestiona actas, estudiantes y escaneos de su escuela. Crea usuarios staff de su escuela. Ve la auditoría de su escuela. |
-| Staff | 4 | Consulta y registro de actas, estudiantes, firmantes y personas dentro de su escuela. Ve la auditoría de su escuela. No puede gestionar usuarios ni eliminar registros. |
+| Staff | 4 | Consulta, registro y corrección de actas, estudiantes, firmantes y personas dentro de su escuela. Ve la auditoría de su escuela. No puede gestionar usuarios ni eliminar registros. |
 
 - Primer arranque → asistente de configuración crea la primera cuenta Admin País (sin credenciales por defecto).
 - No hay auto-registro: las cuentas se crean por invitación desde un nivel superior.

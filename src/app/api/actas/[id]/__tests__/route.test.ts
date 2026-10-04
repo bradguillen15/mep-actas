@@ -98,12 +98,28 @@ describe("PATCH /api/actas/[id]", () => {
     expect(mockAuditor).not.toHaveBeenCalled();
   });
 
-  it("un nivel insuficiente sigue en 403 antes del ámbito", async () => {
+  it("Staff corrige un acta de su escuela", async () => {
     mockObtenerSesion.mockResolvedValue(sesiones.staff);
     const { PATCH } = await import("../route");
     const respuesta = await PATCH(peticion("PATCH", { titulo: "X" }), params);
-    expect(respuesta.status).toBe(403);
-    expect(mockObtenerActaPorId).not.toHaveBeenCalled();
+    expect(respuesta.status).toBe(200);
+    expect(mockActualizarActa).toHaveBeenCalled();
+  });
+
+  it("Staff recibe 404 sin escribir si el acta es de otra escuela", async () => {
+    mockObtenerSesion.mockResolvedValue(sesiones.staff);
+    mockObtenerActaPorId.mockResolvedValue(undefined);
+    const { PATCH } = await import("../route");
+    const respuesta = await PATCH(peticion("PATCH", { titulo: "X" }), params);
+    expect(respuesta.status).toBe(404);
+    expect(mockActualizarActa).not.toHaveBeenCalled();
+  });
+
+  it("sin sesión responde 401", async () => {
+    mockObtenerSesion.mockResolvedValue(null);
+    const { PATCH } = await import("../route");
+    const respuesta = await PATCH(peticion("PATCH", { titulo: "X" }), params);
+    expect(respuesta.status).toBe(401);
   });
 });
 

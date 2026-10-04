@@ -26,7 +26,7 @@ Los roles SHALL ser jerárquicos por nivel numérico: Admin País (1), Admin Reg
 - **THEN** la verificación de rol retorna no autorizado
 
 ### Requirement: Autorización con verificación de nivel y ámbito
-Cada endpoint protegido SHALL verificar sesión válida, nivel mínimo requerido y ámbito de acceso (escuela/región según el rol). La verificación SHALL ejecutarse en el servidor en cada petición. El registro de actas y de escaneos (`POST /api/actas`, `POST /api/escaneos`) SHALL permitir nivel mínimo 4 (Staff), validando que el `escuelaId` de la petición coincida con el `escuelaId` de la sesión del actor cuando su nivel sea mayor a 2.
+Cada endpoint protegido SHALL verificar sesión válida, nivel mínimo requerido y ámbito de acceso (escuela/región según el rol). La verificación SHALL ejecutarse en el servidor en cada petición. El registro y la corrección de actas (`POST /api/actas`, `PATCH /api/actas/[id]`) y el registro de escaneos (`POST /api/escaneos`) SHALL permitir nivel mínimo 4 (Staff), validando que el `escuelaId` de la petición coincida con el `escuelaId` de la sesión del actor cuando su nivel sea mayor a 2.
 
 #### Scenario: Verificación de ámbito por escuela
 - **WHEN** un Admin Escuela de escuela_id=5 intenta acceder a datos de escuela_id=10
