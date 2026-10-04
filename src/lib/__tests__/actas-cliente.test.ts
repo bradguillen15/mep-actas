@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   agregarEstudiantesAlActa,
-  crearActaConEstudiantes,
+  crearActa,
 } from "../actas-cliente";
 
 const estudiantesFormulario = [
@@ -37,39 +37,30 @@ describe("actas-cliente", () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  describe("crearActaConEstudiantes", () => {
-    it("crea el acta con todos los estudiantes en una única solicitud", async () => {
+  describe("crearActa", () => {
+    it("crea el acta sin estudiantes en una única solicitud", async () => {
       fetchMock.mockResolvedValue(respuesta(201, { id: 42 }));
 
-      const acta = await crearActaConEstudiantes(cuerpoActa, estudiantesFormulario);
+      const acta = await crearActa(cuerpoActa);
 
       expect(acta.id).toBe(42);
       expect(fetchMock).toHaveBeenCalledTimes(1);
       const [url, opciones] = fetchMock.mock.calls[0];
       expect(url).toBe("/api/actas");
       expect(opciones.method).toBe("POST");
-      expect(JSON.parse(opciones.body)).toEqual({
-        ...cuerpoActa,
-        estudiantes: estudiantesEnviados,
-      });
+      expect(JSON.parse(opciones.body)).toEqual(cuerpoActa);
     });
 
     it("propaga el mensaje de error de la API", async () => {
-      fetchMock.mockResolvedValue(
-        respuesta(400, { error: "Estudiante 2 (cédula 2-2222-2222): certificado repetido" })
-      );
+      fetchMock.mockResolvedValue(respuesta(400, { error: "Tomo inválido" }));
 
-      await expect(
-        crearActaConEstudiantes(cuerpoActa, estudiantesFormulario)
-      ).rejects.toThrow("Estudiante 2 (cédula 2-2222-2222): certificado repetido");
+      await expect(crearActa(cuerpoActa)).rejects.toThrow("Tomo inválido");
     });
 
     it("usa un mensaje genérico si la respuesta no trae JSON", async () => {
       fetchMock.mockResolvedValue(new Response("falló", { status: 500 }));
 
-      await expect(
-        crearActaConEstudiantes(cuerpoActa, estudiantesFormulario)
-      ).rejects.toThrow("Error al crear acta");
+      await expect(crearActa(cuerpoActa)).rejects.toThrow("Error al crear acta");
     });
   });
 

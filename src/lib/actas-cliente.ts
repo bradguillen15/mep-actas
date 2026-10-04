@@ -1,7 +1,7 @@
 import type {
   EstudianteFormulario,
   ValoresFormularioActa,
-} from "@/components/actas/FormularioActa";
+} from "@/components/actas/tipos";
 
 function prepararEstudiantes(estudiantes: EstudianteFormulario[]) {
   return estudiantes.map((estudiante) => ({
@@ -30,17 +30,12 @@ async function enviarSolicitud<T>(
   return respuesta.json();
 }
 
-export async function crearActaConEstudiantes(
+export async function crearActa(
   cuerpoActa: ReturnType<typeof construirCuerpoActa> & {
     actaReferenciaId?: number;
-  },
-  estudiantes: EstudianteFormulario[]
+  }
 ): Promise<{ id: number }> {
-  return enviarSolicitud(
-    "/api/actas",
-    { ...cuerpoActa, estudiantes: prepararEstudiantes(estudiantes) },
-    "Error al crear acta"
-  );
+  return enviarSolicitud("/api/actas", cuerpoActa, "Error al crear acta");
 }
 
 export async function agregarEstudiantesAlActa(

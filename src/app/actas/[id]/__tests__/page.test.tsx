@@ -55,7 +55,7 @@ describe("EditarActa", () => {
     expect(screen.getByRole("status", { name: "Cargando acta" })).toBeInTheDocument();
   });
 
-  it("muestra el formulario con los datos del acta", () => {
+  it("muestra los campos editables y Agregar estudiante al cargar, sin modo vista", () => {
     estado.detalle = {
       data: {
         acta: {
@@ -78,5 +78,8 @@ describe("EditarActa", () => {
 
     expect(screen.getByLabelText(/Título/)).toHaveValue("Acta 7");
     expect(screen.getByLabelText(/Folio fin/)).toHaveValue(8);
+    expect(screen.getByRole("button", { name: /Agregar estudiante/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Editar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Listo" })).not.toBeInTheDocument();
   });
 });
