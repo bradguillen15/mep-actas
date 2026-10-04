@@ -84,17 +84,17 @@ El sistema SHALL ofrecer una pantalla de gestión de usuarios accesible solo par
 - **THEN** el selector de rol solo ofrece roles de `nivel >= 2` (su mismo nivel o inferiores)
 
 ### Requirement: La pantalla de gestión de usuarios es responsiva
-La pantalla de gestión de usuarios SHALL adaptarse al tamaño del viewport sin desplazamiento horizontal de la página: en pantallas pequeñas (menores a `768px`) SHALL presentar los usuarios como tarjetas apiladas con las mismas acciones (restablecer contraseña, activar/desactivar) y el encabezado apilado en columna; en pantallas medianas o mayores SHALL presentar la tabla completa. La navegación lateral SHALL plegarse a un menú desplegable accesible en pantallas pequeñas.
+La pantalla de gestión de usuarios SHALL adaptarse al tamaño del viewport sin desplazamiento horizontal de la página: en todos los viewports SHALL presentar los usuarios en la misma tabla (con scroll interno si hace falta) y las mismas acciones (restablecer contraseña, activar/desactivar); en pantallas pequeñas el encabezado SHALL apilarse en columna. La navegación lateral SHALL plegarse a un menú desplegable accesible en pantallas pequeñas.
 
-#### Scenario: Vista móvil presenta tarjetas con las mismas acciones
+#### Scenario: Vista móvil presenta la tabla con las mismas acciones
 - **WHEN** un administrador abre la gestión de usuarios en un viewport menor a `768px`
-- **THEN** los usuarios se presentan como tarjetas apiladas con correo, funcionario, rol y estado
-- **AND** cada tarjeta ofrece las acciones de restablecer contraseña y activar/desactivar
-- **AND** la tabla no es visible
+- **THEN** los usuarios se presentan en la tabla con correo, funcionario, rol y estado
+- **AND** cada fila ofrece las acciones de restablecer contraseña y activar/desactivar
+- **AND** el desplazamiento horizontal, si ocurre, queda contenido en la tabla y no en la página
 
 #### Scenario: Vista de escritorio presenta la tabla completa
 - **WHEN** un administrador abre la gestión de usuarios en un viewport de `768px` o mayor
-- **THEN** los usuarios se presentan en la tabla con paginación y las tarjetas móviles no son visibles
+- **THEN** los usuarios se presentan en la tabla con paginación
 
 #### Scenario: La navegación se pliega en pantallas pequeñas
 - **WHEN** un administrador usa la aplicación en un viewport menor a `768px`

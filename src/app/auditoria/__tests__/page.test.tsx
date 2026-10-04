@@ -4,6 +4,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Header } from "@/components/layout/Header";
 import { EncabezadoShellProvider } from "@/contextos/EncabezadoShellContext";
+import { elegirOpcion } from "../../../../test/elegir-opcion";
 import Auditoria from "../page";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/auditoria" }));
@@ -121,7 +122,7 @@ describe("Auditoría", () => {
     ];
 
     render(<Auditoria />);
-    await userEvent.selectOptions(screen.getByLabelText("Acción"), "desactivar");
+    await elegirOpcion("Acción", "Desactivó");
 
     expect(screen.queryByText("a@mep.go.cr")).not.toBeInTheDocument();
     expect(screen.getByText("b@mep.go.cr")).toBeInTheDocument();

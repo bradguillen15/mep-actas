@@ -11,7 +11,7 @@ Dejar explícita y enforceable la capa dual shadcn + wrappers en español: los p
 - [x] **S2 — `Selector` sobre Radix (TDD).** Pruebas + wrapper sobre `select.tsx`; tokens MEP en el menú.
 - [x] **S3 — Consumidores nativos.** `Paginacion` con `Selector`; callers RHF con `Controller`; pruebas adaptadas.
 - [x] **S4 — ESLint.** `no-restricted-syntax` prohíbe `<select>` fuera de `src/components/ui/**`.
-- [ ] **S6 — Verificación.** lint, typecheck, test.
+- [x] **S6 — Verificación.** lint, typecheck, test (733). E2E no toca selects de UI.
 
 ## Fase 2 (backlog)
 

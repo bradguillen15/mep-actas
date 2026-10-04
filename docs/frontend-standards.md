@@ -90,7 +90,7 @@ Reglas:
 - Tipografía sans-serif legible (p. ej. Inter). Tono sobrio e institucional; espaciado generoso; sin sombras fuertes ni degradados.
 - **Accesibilidad WCAG AA**: contraste suficiente, foco visible, etiquetas en formularios, navegación por teclado.
 - Los botones solo-ícono usan `BotonIcono`: la prop `etiqueta` alimenta el `aria-label` y el tooltip (Radix). No uses `title` nativo ni botones ícono ad hoc.
-- La `etiqueta` describe solo la acción (`Eliminar`, `Desactivar`, `Restablecer contraseña`). No incluya el nombre, correo u otro identificador del registro afectado: ese contexto ya está en la fila, tarjeta o diálogo de confirmación.
+- La `etiqueta` describe solo la acción (`Eliminar`, `Desactivar`, `Restablecer contraseña`). No incluya el nombre, correo u otro identificador del registro afectado: ese contexto ya está en la fila o diálogo de confirmación.
 - Logo oficial del MEP (SVG) en la barra superior.
 
 ### Movimiento

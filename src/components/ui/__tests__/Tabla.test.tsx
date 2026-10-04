@@ -138,7 +138,7 @@ describe("Tabla", () => {
     expect(screen.getByText("Persona 21")).toBeInTheDocument();
   });
 
-  it("en vista compacta muestra tarjetas en lugar de la tabla", () => {
+  it("en viewport estrecho sigue mostrando la tabla con scroll", () => {
     window.matchMedia = vi.fn().mockImplementation((consulta: string) => ({
       matches: !consulta.includes("min-width: 768px"),
       media: consulta,
@@ -152,8 +152,13 @@ describe("Tabla", () => {
 
     render(<Tabla columnas={columnas} datos={datos} />);
 
-    expect(screen.getByRole("list", { name: "Lista de registros" })).toBeInTheDocument();
-    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.getByRole("table")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("list", { name: "Lista de registros" })
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Ana")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("tabla-contenedor").querySelector(".overflow-auto")
+    ).not.toBeNull();
   });
 });

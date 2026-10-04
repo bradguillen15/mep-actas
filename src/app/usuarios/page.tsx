@@ -53,7 +53,6 @@ interface AccionesUsuarioProps {
   usuario: Usuario;
   esPropio: boolean;
   procesando: boolean;
-  conEtiquetas: boolean;
   onRestablecer: (usuario: Usuario) => void;
   onDesactivar: (usuario: Usuario) => void;
   onActivar: (usuario: Usuario) => void;
@@ -63,67 +62,21 @@ function AccionesUsuario({
   usuario,
   esPropio,
   procesando,
-  conEtiquetas,
   onRestablecer,
   onDesactivar,
   onActivar,
 }: AccionesUsuarioProps) {
-  const etiquetaReset = "Restablecer contraseña";
-  const etiquetaDesactivar = "Desactivar";
-  const etiquetaActivar = "Activar";
-
-  if (conEtiquetas) {
-    return (
-      <div className="flex flex-wrap gap-2">
-        <Boton
-          variante="secundario"
-          tamano="sm"
-          aria-label={etiquetaReset}
-          onClick={() => onRestablecer(usuario)}
-        >
-          <KeyRound aria-hidden className="size-4" />
-          Contraseña
-        </Boton>
-        {usuario.activo && !esPropio && (
-          <Boton
-            variante="secundario"
-            tamano="sm"
-            aria-label={etiquetaDesactivar}
-            cargando={procesando}
-            onClick={() => onDesactivar(usuario)}
-            className="text-error hover-fino:bg-error/10"
-          >
-            <UserX aria-hidden className="size-4" />
-            Desactivar
-          </Boton>
-        )}
-        {!usuario.activo && (
-          <Boton
-            variante="secundario"
-            tamano="sm"
-            aria-label={etiquetaActivar}
-            cargando={procesando}
-            onClick={() => onActivar(usuario)}
-          >
-            <UserCheck aria-hidden className="size-4" />
-            Activar
-          </Boton>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="flex items-center gap-1">
       <BotonIcono
-        etiqueta={etiquetaReset}
+        etiqueta="Restablecer contraseña"
         icono={<KeyRound aria-hidden />}
         onClick={() => onRestablecer(usuario)}
       />
       {usuario.activo && !esPropio && (
         <BotonIcono
           variante="peligro"
-          etiqueta={etiquetaDesactivar}
+          etiqueta="Desactivar"
           icono={<UserX aria-hidden />}
           disabled={procesando}
           onClick={() => onDesactivar(usuario)}
@@ -131,7 +84,7 @@ function AccionesUsuario({
       )}
       {!usuario.activo && (
         <BotonIcono
-          etiqueta={etiquetaActivar}
+          etiqueta="Activar"
           icono={<UserCheck aria-hidden />}
           disabled={procesando}
           onClick={() => onActivar(usuario)}
@@ -215,12 +168,11 @@ export default function Usuarios() {
     toast.success("Contraseña restablecida");
   };
 
-  const accionesDe = (u: Usuario, conEtiquetas: boolean) => (
+  const accionesDe = (u: Usuario) => (
     <AccionesUsuario
       usuario={u}
       esPropio={esPropio(u)}
       procesando={procesandoId === u.id}
-      conEtiquetas={conEtiquetas}
       onRestablecer={setUsuarioReset}
       onDesactivar={setUsuarioADesactivar}
       onActivar={(objetivo) => cambiarEstado(objetivo, true)}
@@ -260,7 +212,7 @@ export default function Usuarios() {
       header: "Acciones",
       enableSorting: false,
       meta: { className: "w-32" },
-      cell: ({ row }) => accionesDe(row.original, false),
+      cell: ({ row }) => accionesDe(row.original),
     },
   ];
 
@@ -301,29 +253,7 @@ export default function Usuarios() {
       {isLoading && <Tabla columnas={columnas} datos={[]} cargando />}
 
       {usuarios && usuarios.length > 0 && (
-        <>
-          <ul
-            aria-label="Lista de usuarios"
-            className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto md:hidden"
-          >
-            {usuarios.map((u) => (
-              <li key={u.id} className="shrink-0 rounded-xl border border-borde bg-white p-4">
-                <p className="truncate text-sm font-medium text-texto">{u.email}</p>
-                <p className="truncate text-sm text-texto-suave">
-                  {u.funcionarioNombres} {u.funcionarioApellidos}
-                </p>
-                <div className="mt-2 flex flex-nowrap items-center gap-2">
-                  <Badge variante="info">{nombreRol(u.nivel)}</Badge>
-                  {badgeEstado(u.activo)}
-                </div>
-                <div className="mt-3">{accionesDe(u, true)}</div>
-              </li>
-            ))}
-          </ul>
-          <div className="hidden min-h-0 flex-1 flex-col md:flex">
-            <Tabla columnas={columnas} datos={usuarios} />
-          </div>
-        </>
+        <Tabla columnas={columnas} datos={usuarios} />
       )}
 
       <ModalNuevoUsuario

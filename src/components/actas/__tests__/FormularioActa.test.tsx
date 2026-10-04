@@ -2,6 +2,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { elegirOpcion } from "../../../../test/elegir-opcion";
 import { FormularioActa } from "../FormularioActa";
 
 const tiposActa = [
@@ -28,7 +29,7 @@ function renderizar(
 }
 
 async function llenarDatosBasicos(folioFin = "8") {
-  await userEvent.selectOptions(screen.getByLabelText(/Tipo de acta/), "1");
+  await elegirOpcion(/Tipo de acta/, "Certificado de Graduación");
   await userEvent.type(screen.getByLabelText(/Título/), "Acta 001-2025");
   await userEvent.type(screen.getByLabelText(/N° de tomo/), "3");
   await userEvent.type(screen.getByLabelText(/Folio inicio/), "1");
@@ -116,7 +117,7 @@ describe("FormularioActa", () => {
     expect(await screen.findByText("La escuela es requerida")).toBeInTheDocument();
     expect(onGuardar).not.toHaveBeenCalled();
 
-    await userEvent.selectOptions(screen.getByLabelText(/Escuela/), "7");
+    await elegirOpcion(/Escuela/, "Escuela Central");
     await userEvent.click(screen.getByRole("button", { name: "Guardar acta" }));
     await vi.waitFor(() => expect(onGuardar).toHaveBeenCalledTimes(1));
     expect(onGuardar.mock.calls[0][1]).toBe(7);

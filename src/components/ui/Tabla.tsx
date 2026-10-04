@@ -15,7 +15,6 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
-import { useMediaMin } from "@/hooks/useMediaMin";
 import { LIMITE_PAGINA_POR_DEFECTO } from "@/lib/paginacion";
 import { cn } from "@/lib/utils";
 import {
@@ -25,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "./table";
-import { Esqueleto, FilasEsqueleto } from "./Esqueleto";
+import { FilasEsqueleto } from "./Esqueleto";
 import { Paginacion } from "./Paginacion";
 
 declare module "@tanstack/react-table" {
@@ -70,7 +69,6 @@ export function Tabla<T>({
     pageSize: LIMITE_PAGINA_POR_DEFECTO,
   });
   const scrollRef = useRef<HTMLDivElement>(null);
-  const esEscritorio = useMediaMin(768);
 
   const columnasConNumero = useMemo(() => {
     if (!numeracion) return columnas;
@@ -282,115 +280,6 @@ export function Tabla<T>({
       />
     </div>
   ) : null;
-
-  if (!esEscritorio) {
-    return (
-      <div
-        data-testid="tabla-contenedor"
-        className={cn(
-          "flex h-0 min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-borde bg-white",
-          className
-        )}
-      >
-        <div className="min-h-0 flex-1 overflow-y-auto p-3">
-          {cargando ? (
-            <ul className="flex flex-col gap-3" aria-hidden>
-              {Array.from({ length: 4 }, (_, i) => (
-                <li key={i} className="rounded-xl border border-borde p-4">
-                  <Esqueleto className="mb-2 h-4 w-2/3" />
-                  <Esqueleto className="mb-1 h-3 w-full" />
-                  <Esqueleto className="h-3 w-1/2" />
-                </li>
-              ))}
-            </ul>
-          ) : filas.length === 0 && vacio ? (
-            vacio
-          ) : (
-            <ul aria-label="Lista de registros" className="flex flex-col gap-3">
-              {filas.map((fila) => {
-                const celdasVisibles = fila
-                  .getVisibleCells()
-                  .filter((celda) => celda.column.id !== "__numero");
-                const [principal, ...resto] = celdasVisibles;
-                const numero = numeracion
-                  ? fila.getVisibleCells().find((c) => c.column.id === "__numero")
-                  : undefined;
-
-                return (
-                  <li key={fila.id}>
-                    <div
-                      className={cn(
-                        "rounded-xl border border-borde bg-white p-4",
-                        onFilaClick &&
-                          "cursor-pointer outline-none transition-colors duration-150 hover-fino:bg-primario-suave focus-visible:ring-2 focus-visible:ring-primario/40"
-                      )}
-                      {...(onFilaClick
-                        ? {
-                            role: "button",
-                            tabIndex: 0,
-                            onClick: () => onFilaClick(fila.original),
-                            onKeyDown: (evento: KeyboardEvent<HTMLDivElement>) => {
-                              if (evento.key === "Enter" || evento.key === " ") {
-                                evento.preventDefault();
-                                onFilaClick(fila.original);
-                              }
-                            },
-                          }
-                        : {})}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1 text-sm font-medium text-texto">
-                          {principal &&
-                            flexRender(
-                              principal.column.columnDef.cell,
-                              principal.getContext()
-                            )}
-                        </div>
-                        {numero && (
-                          <span className="shrink-0 text-xs tabular-nums text-texto-suave">
-                            #
-                            {flexRender(
-                              numero.column.columnDef.cell,
-                              numero.getContext()
-                            )}
-                          </span>
-                        )}
-                      </div>
-                      {resto.length > 0 && (
-                        <dl className="mt-3 space-y-2 border-t border-borde pt-3">
-                          {resto.map((celda) => {
-                            const etiqueta =
-                              typeof celda.column.columnDef.header === "string"
-                                ? celda.column.columnDef.header
-                                : celda.column.id;
-                            return (
-                              <div
-                                key={celda.id}
-                                className="flex items-start justify-between gap-3 text-sm"
-                              >
-                                <dt className="shrink-0 text-texto-suave">{etiqueta}</dt>
-                                <dd className="min-w-0 text-right text-texto">
-                                  {flexRender(
-                                    celda.column.columnDef.cell,
-                                    celda.getContext()
-                                  )}
-                                </dd>
-                              </div>
-                            );
-                          })}
-                        </dl>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-        {pie}
-      </div>
-    );
-  }
 
   return (
     <div

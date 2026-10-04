@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { elegirOpcion, etiquetasOpciones } from "../../../../test/elegir-opcion";
 import Usuarios from "../page";
 
 const { sesion, mutarMock } = vi.hoisted(() => ({
@@ -81,34 +82,22 @@ vi.mock("swr", () => {
   };
 });
 
-describe("Pantalla de usuarios — responsividad", () => {
-  it("presenta las tarjetas móviles con las mismas acciones y ocultas en escritorio", () => {
-    render(<Usuarios />);
-
-    const lista = screen.getByRole("list", { name: "Lista de usuarios" });
-    expect(lista).toHaveClass("md:hidden");
-
-    const tarjetas = within(lista).getAllByRole("listitem");
-    expect(tarjetas).toHaveLength(2);
-
-    expect(
-      within(lista).getAllByRole("button", { name: /contraseña/i })
-    ).toHaveLength(2);
-    expect(
-      within(lista).getByRole("button", { name: /^Desactivar/ })
-    ).toBeInTheDocument();
-    expect(
-      within(lista).getByRole("button", { name: /^Activar/ })
-    ).toBeInTheDocument();
-  });
-
-  it("muestra la tabla solo en pantallas medianas o mayores", () => {
+describe("Pantalla de usuarios — listado", () => {
+  it("muestra la tabla con las acciones de cada usuario", () => {
     render(<Usuarios />);
 
     const tabla = screen.getByRole("table");
-    const contenedorEscritorio = tabla.closest(".hidden");
-    expect(contenedorEscritorio).not.toBeNull();
-    expect(contenedorEscritorio!.className).toContain("md:flex");
+    expect(within(tabla).getByText("activa@mep.go.cr")).toBeInTheDocument();
+    expect(within(tabla).getByText("inactiva@mep.go.cr")).toBeInTheDocument();
+    expect(
+      within(tabla).getAllByRole("button", { name: "Restablecer contraseña" })
+    ).toHaveLength(2);
+    expect(
+      within(tabla).getByRole("button", { name: "Desactivar" })
+    ).toBeInTheDocument();
+    expect(
+      within(tabla).getByRole("button", { name: "Activar" })
+    ).toBeInTheDocument();
   });
 
   it("adapta la barra de acciones del encabezado en pantallas pequeñas", () => {
@@ -125,8 +114,8 @@ describe("Pantalla de usuarios — cambio de estado", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   const botonDesactivar = () =>
-    within(screen.getByRole("list", { name: "Lista de usuarios" })).getByRole("button", {
-      name: /^Desactivar/,
+    within(screen.getByRole("table")).getByRole("button", {
+      name: "Desactivar",
     });
 
   it("pide confirmación al desactivar y no llama a la API hasta confirmar", async () => {
@@ -172,8 +161,8 @@ describe("Pantalla de usuarios — cambio de estado", () => {
     render(<Usuarios />);
 
     await usuaria.click(
-      within(screen.getByRole("list", { name: "Lista de usuarios" })).getByRole("button", {
-        name: /^Activar/,
+      within(screen.getByRole("table")).getByRole("button", {
+        name: "Activar",
       })
     );
 
@@ -208,9 +197,9 @@ describe("Pantalla de usuarios — cambio de estado", () => {
     sesion.usuarioId = 1;
     render(<Usuarios />);
 
-    const lista = screen.getByRole("list", { name: "Lista de usuarios" });
-    expect(within(lista).queryByRole("button", { name: /^Desactivar/ })).not.toBeInTheDocument();
-    expect(within(lista).getByRole("button", { name: /^Activar/ })).toBeInTheDocument();
+    const tabla = screen.getByRole("table");
+    expect(within(tabla).queryByRole("button", { name: "Desactivar" })).not.toBeInTheDocument();
+    expect(within(tabla).getByRole("button", { name: "Activar" })).toBeInTheDocument();
   });
 });
 
@@ -223,9 +212,9 @@ describe("Pantalla de usuarios — restablecer contraseña", () => {
     const usuaria = userEvent.setup();
     render(<Usuarios />);
 
-    const lista = screen.getByRole("list", { name: "Lista de usuarios" });
+    const tabla = screen.getByRole("table");
     await usuaria.click(
-      within(lista).getAllByRole("button", { name: "Restablecer contraseña" })[0]
+      within(tabla).getAllByRole("button", { name: "Restablecer contraseña" })[0]
     );
     const dialogo = await screen.findByRole("dialog", { name: "Restablecer contraseña" });
     expect(within(dialogo).getByText(/Mínimo 12 caracteres/)).toBeInTheDocument();
@@ -250,9 +239,9 @@ describe("Pantalla de usuarios — restablecer contraseña", () => {
     const usuaria = userEvent.setup();
     render(<Usuarios />);
 
-    const lista = screen.getByRole("list", { name: "Lista de usuarios" });
+    const tabla = screen.getByRole("table");
     await usuaria.click(
-      within(lista).getAllByRole("button", { name: "Restablecer contraseña" })[0]
+      within(tabla).getAllByRole("button", { name: "Restablecer contraseña" })[0]
     );
     const dialogo = await screen.findByRole("dialog");
     await usuaria.type(within(dialogo).getByLabelText(/^Nueva contraseña/), "corta{Enter}");
@@ -278,8 +267,8 @@ describe("Pantalla de usuarios — Nuevo usuario", () => {
     render(<Usuarios />);
 
     const dialogo = await abrirModal(usuaria);
-    await usuaria.selectOptions(within(dialogo).getByLabelText(/Funcionario/), "7");
-    await usuaria.selectOptions(within(dialogo).getByLabelText(/Rol/), "4");
+    await elegirOpcion(/Funcionario/, "Carla Vargas", dialogo);
+    await elegirOpcion(/Rol/, "Staff", dialogo);
     await usuaria.type(within(dialogo).getByLabelText(/Correo electrónico/), "nuevo@mep.go.cr");
     await usuaria.type(within(dialogo).getByLabelText(/Contraseña temporal/), "Clave-Segura-1");
     await usuaria.click(within(dialogo).getByRole("button", { name: "Crear usuario" }));
@@ -312,8 +301,8 @@ describe("Pantalla de usuarios — Nuevo usuario", () => {
     render(<Usuarios />);
 
     const dialogo = await abrirModal(usuaria);
-    await usuaria.selectOptions(within(dialogo).getByLabelText(/Funcionario/), "7");
-    await usuaria.selectOptions(within(dialogo).getByLabelText(/Rol/), "4");
+    await elegirOpcion(/Funcionario/, "Carla Vargas", dialogo);
+    await elegirOpcion(/Rol/, "Staff", dialogo);
     await usuaria.type(within(dialogo).getByLabelText(/Correo electrónico/), "nuevo@mep.go.cr");
     await usuaria.type(within(dialogo).getByLabelText(/Contraseña temporal/), "corta");
     await usuaria.click(within(dialogo).getByRole("button", { name: "Crear usuario" }));
@@ -347,8 +336,8 @@ describe("Pantalla de usuarios — Nuevo usuario", () => {
     render(<Usuarios />);
 
     const dialogo = await abrirModal(usuaria);
-    await usuaria.selectOptions(within(dialogo).getByLabelText(/Funcionario/), "7");
-    await usuaria.selectOptions(within(dialogo).getByLabelText(/Rol/), "4");
+    await elegirOpcion(/Funcionario/, "Carla Vargas", dialogo);
+    await elegirOpcion(/Rol/, "Staff", dialogo);
     await usuaria.type(within(dialogo).getByLabelText(/Correo electrónico/), "no-es-correo");
     await usuaria.type(within(dialogo).getByLabelText(/Contraseña temporal/), "Clave-Segura-1");
     await usuaria.click(within(dialogo).getByRole("button", { name: "Crear usuario" }));
@@ -363,10 +352,8 @@ describe("Pantalla de usuarios — Nuevo usuario", () => {
     render(<Usuarios />);
 
     const dialogo = await abrirModal(usuaria);
-    const etiquetas = within(within(dialogo).getByLabelText(/Rol/))
-      .getAllByRole("option")
-      .map((o) => o.textContent);
-    expect(etiquetas).toEqual(["Seleccione un rol", "Admin País", "Admin Regional", "Staff"]);
+    const etiquetas = await etiquetasOpciones(/Rol/, dialogo);
+    expect(etiquetas).toEqual(["Admin País", "Admin Regional", "Staff"]);
   });
 
   it("limita los roles al nivel de la sesión o inferior", async () => {
@@ -375,9 +362,7 @@ describe("Pantalla de usuarios — Nuevo usuario", () => {
     render(<Usuarios />);
 
     const dialogo = await abrirModal(usuaria);
-    const etiquetas = within(within(dialogo).getByLabelText(/Rol/))
-      .getAllByRole("option")
-      .map((o) => o.textContent);
-    expect(etiquetas).toEqual(["Seleccione un rol", "Admin Regional", "Staff"]);
+    const etiquetas = await etiquetasOpciones(/Rol/, dialogo);
+    expect(etiquetas).toEqual(["Admin Regional", "Staff"]);
   });
 });

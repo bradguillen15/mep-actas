@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { elegirOpcion } from "../../../../test/elegir-opcion";
 import { GestionEscuelas } from "../GestionEscuelas";
 
 let usuario: { nivel: number; regionId?: number } = { nivel: 1 };
@@ -94,11 +95,11 @@ describe("GestionEscuelas", () => {
     render(<GestionEscuelas />);
 
     await userEvent.click(screen.getByRole("button", { name: /nueva escuela/i }));
-    const selector = screen.getByLabelText(/^Región/);
+    const selector = screen.getByRole("combobox", { name: /^Región/ });
     expect(selector).toBeEnabled();
+    await userEvent.click(selector);
     expect(screen.queryByRole("option", { name: "Antigua" })).not.toBeInTheDocument();
-
-    await userEvent.selectOptions(selector, "Chorotega");
+    await userEvent.click(await screen.findByRole("option", { name: "Chorotega" }));
     await userEvent.type(screen.getByLabelText(/^Código MEP/), "E-002");
     await userEvent.type(screen.getByLabelText(/^Nombre/), "Escuela Dos");
     await userEvent.click(screen.getByRole("button", { name: "Crear escuela" }));
@@ -154,7 +155,7 @@ describe("GestionEscuelas", () => {
     render(<GestionEscuelas />);
 
     await userEvent.click(screen.getByRole("button", { name: /nueva escuela/i }));
-    await userEvent.selectOptions(screen.getByLabelText(/^Región/), "Central");
+    await elegirOpcion(/^Región/, "Central");
     await userEvent.type(screen.getByLabelText(/^Código MEP/), "E-001");
     await userEvent.type(screen.getByLabelText(/^Nombre/), "Duplicada");
     await userEvent.click(screen.getByRole("button", { name: "Crear escuela" }));
