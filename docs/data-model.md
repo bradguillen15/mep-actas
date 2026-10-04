@@ -22,16 +22,17 @@ erDiagram
     escuelas ||--o{ escaneos : "escuela_id"
     escuelas ||--o{ funcionario_escuela : "escuela_id"
     tipos_acta ||--o{ actas : "tipo_acta_id"
+    actas |o--o{ actas : "acta_referencia_id"
     actas ||--o{ acta_estudiantes : "acta_id"
     actas ||--o{ acta_escaneos : "acta_id"
     actas ||--o{ acta_firmantes : "acta_id"
     estudiantes ||--o{ acta_estudiantes : "estudiante_id"
     escaneos ||--o{ acta_escaneos : "escaneo_id"
-    personas ||--o{ estudiantes : "persona_id"
-    personas ||--o{ funcionarios : "persona_id"
+    personas ||--o| estudiantes : "persona_id"
+    personas ||--o| funcionarios : "persona_id"
     funcionarios ||--o{ funcionario_escuela : "funcionario_id"
     funcionarios ||--o{ acta_firmantes : "funcionario_id"
-    funcionarios ||--o{ usuarios : "funcionario_id"
+    funcionarios ||--o| usuarios : "funcionario_id"
     roles ||--o{ usuarios : "rol_id"
     usuarios ||--o{ escaneos : "uploaded_by"
     usuarios ||--o{ auditoria : "usuario_id"
@@ -75,7 +76,7 @@ erDiagram
     }
     estudiantes {
         int id PK
-        int persona_id FK_UK
+        int persona_id FK, UK
     }
     acta_estudiantes {
         int id PK
@@ -100,7 +101,7 @@ erDiagram
     }
     funcionarios {
         int id PK
-        int persona_id FK_UK
+        int persona_id FK, UK
         text puesto
     }
     funcionario_escuela {
@@ -121,7 +122,7 @@ erDiagram
     }
     usuarios {
         int id PK
-        int funcionario_id FK_UK
+        int funcionario_id FK, UK
         int rol_id FK
         text email UK
         text password_hash
