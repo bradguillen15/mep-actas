@@ -1,0 +1,2 @@
+export const clasesCampoBase =
+  "h-10 w-full min-w-0 rounded-lg border border-borde bg-white px-3 text-sm text-texto outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-texto-suave focus-visible:border-primario focus-visible:ring-2 focus-visible:ring-primario/20 aria-invalid:border-error aria-invalid:ring-2 aria-invalid:ring-error/20 disabled:cursor-not-allowed disabled:bg-superficie disabled:opacity-60";

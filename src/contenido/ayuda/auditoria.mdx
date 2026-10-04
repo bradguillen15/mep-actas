@@ -1,0 +1,35 @@
+## Para qué sirve
+
+**Auditoría** (menú **Principal**) es el historial de cambios del sistema. Permite saber quién hizo un cambio, sobre qué registro y cuándo. Es de solo lectura: nadie puede modificar ni borrar estos registros.
+
+Todos los roles pueden abrir esta pantalla, pero cada uno ve solo los registros de su ámbito:
+
+| Rol | Qué registros ve |
+|---|---|
+| **Admin País** | Todos, incluidos los de alcance nacional (sin escuela ni región). |
+| **Admin Regional** | Los de su región. |
+| **Admin Escuela** | Los de su escuela. |
+| **Staff** | Los de su escuela. |
+
+Los registros de alcance nacional, por ejemplo los de regiones o tipos de acta, solo los ve el **Admin País**.
+
+## Revisar el historial
+
+1. Abra **Auditoría**.
+2. Revise la tabla, que muestra **Usuario**, **Acción**, **Tabla**, **ID registro** y **Fecha**. Puede ordenar por cualquier columna presionando su encabezado.
+3. Presione una fila para abrir el **Detalle de auditoría**.
+
+Si todavía no hay cambios registrados, el sistema muestra **Sin registros de auditoría**.
+
+## Detalle de un registro
+
+El detalle muestra los datos del registro y, cuando aplica, dos bloques:
+
+- **Datos anteriores:** cómo estaba la información antes del cambio.
+- **Datos nuevos:** cómo quedó después.
+
+## Qué se registra
+
+Entre otros, se registran la creación y los cambios de actas, la incorporación de estudiantes, la subida de escaneos, y la creación, activación o desactivación de usuarios.
+
+> **Tenga en cuenta:** use la auditoría para aclarar dudas sobre cambios, no para corregirlos. Para corregir un dato, siga el procedimiento del tema correspondiente.

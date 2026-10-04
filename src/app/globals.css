@@ -1,0 +1,135 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  --primario: #172B54;
+  --primario-hover: #0F1F3D;
+  --primario-suave: #EEF1F6;
+  --acento: #CFAC65;
+  --acento-suave: #E5D2A6;
+  --acento-hover: #B8954E;
+  --acento-texto: #7A5F22;
+  --fondo: #FFFFFF;
+  --superficie: #F4F6F9;
+  --borde: #E2E8F0;
+  --texto: #1F2937;
+  --texto-suave: #6B7280;
+  --exito: #1E7E45;
+  --error: #C0392B;
+  --error-hover: #A93226;
+
+  --background: var(--fondo);
+  --foreground: var(--texto);
+  --card: var(--fondo);
+  --card-foreground: var(--texto);
+  --popover: var(--fondo);
+  --popover-foreground: var(--texto);
+  --primary: var(--primario);
+  --primary-foreground: var(--fondo);
+  --secondary: var(--superficie);
+  --secondary-foreground: var(--primario);
+  --muted: var(--superficie);
+  --muted-foreground: var(--texto-suave);
+  --accent: var(--acento);
+  --accent-foreground: var(--primario);
+  --destructive: var(--error);
+  --destructive-foreground: var(--fondo);
+  --border: var(--borde);
+  --input: var(--borde);
+  --ring: var(--primario);
+  --radius: 0.625rem;
+}
+
+@theme {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@theme inline {
+  --color-primario: var(--primario);
+  --color-primario-hover: var(--primario-hover);
+  --color-primario-suave: var(--primario-suave);
+  --color-acento: var(--acento);
+  --color-acento-suave: var(--acento-suave);
+  --color-acento-hover: var(--acento-hover);
+  --color-acento-texto: var(--acento-texto);
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-borde: var(--borde);
+  --color-texto: var(--texto);
+  --color-texto-suave: var(--texto-suave);
+  --color-exito: var(--exito);
+  --color-error: var(--error);
+  --color-error-hover: var(--error-hover);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@custom-variant hover-fino {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+@utility presionable {
+  transition: transform 150ms var(--ease-out);
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+@layer base {
+  body {
+    background: var(--color-fondo);
+    color: var(--color-texto);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
