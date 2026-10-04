@@ -52,7 +52,7 @@ function ContenidoLayout({ children }: { children: ReactNode }) {
         <div inert={menuAbierto} className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <Header menuAbierto={menuAbierto} onAbrirMenu={() => setAbiertoEn(pathname)} />
           <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-superficie">
-            <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+            <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col px-3 py-2 sm:px-6 sm:py-3 lg:px-8 lg:py-4">
               {children}
             </div>
           </main>

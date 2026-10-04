@@ -12,7 +12,7 @@ const buttonVariants = cva(
         default:
           "bg-primario text-white hover-fino:bg-primario-hover focus-visible:ring-acento",
         acento:
-          "bg-acento text-primario hover-fino:bg-acento-suave focus-visible:ring-primario",
+          "bg-acento text-primario hover-fino:bg-acento-hover focus-visible:ring-primario",
         destructive:
           "bg-error text-white hover-fino:bg-error-hover focus-visible:ring-error",
         outline:

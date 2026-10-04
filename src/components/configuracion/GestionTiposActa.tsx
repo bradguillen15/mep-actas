@@ -80,11 +80,6 @@ export function GestionTiposActa() {
   };
 
   const columnas: ColumnDef<TipoActa>[] = [
-    {
-      header: "ID",
-      accessorKey: "id",
-      meta: { className: "w-16 text-texto-suave tabular-nums" },
-    },
     { header: "Nombre", accessorKey: "nombre", enableSorting: true },
     {
       header: "",
@@ -108,7 +103,7 @@ export function GestionTiposActa() {
         <BarraSeccion
           texto={tipos && textoConteo(tipos.length, "tipo de acta", "tipos de acta")}
           accion={
-            <Boton tamano="sm" onClick={() => setModalAbierto(true)}>
+            <Boton variante="acento" tamano="sm" onClick={() => setModalAbierto(true)}>
               <Plus className="h-4 w-4" />
               Nuevo tipo de acta
             </Boton>

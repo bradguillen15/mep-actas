@@ -12,7 +12,7 @@ interface DialogoConfirmacionProps {
   titulo: string;
   descripcion: string;
   etiquetaConfirmar?: string;
-  variante?: "peligro" | "primario";
+  variante?: "peligro" | "acento";
 }
 
 export function DialogoConfirmacion({
@@ -22,7 +22,7 @@ export function DialogoConfirmacion({
   titulo,
   descripcion,
   etiquetaConfirmar = "Confirmar",
-  variante = "primario",
+  variante = "acento",
 }: DialogoConfirmacionProps) {
   const [confirmando, setConfirmando] = useState(false);
 

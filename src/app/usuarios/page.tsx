@@ -224,7 +224,7 @@ export default function Usuarios() {
         titulo="Usuarios"
         descripcion="Gestione las cuentas de acceso. Solo puede crear o modificar cuentas de su mismo nivel o inferior, dentro de su ámbito."
         acciones={
-          <Boton onClick={() => setModalCrear(true)}>
+          <Boton variante="acento" onClick={() => setModalCrear(true)}>
             <Plus className="h-4 w-4" />
             Nuevo usuario
           </Boton>

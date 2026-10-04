@@ -34,7 +34,7 @@ interface TipoActa {
 
 function BotonNuevaActa() {
   return (
-    <Boton asChild>
+    <Boton asChild variante="acento">
       <Link href="/actas/nueva">
         <Plus aria-hidden className="size-4" />
         Nueva acta
@@ -142,11 +142,10 @@ export default function Actas() {
       <EncabezadoPagina
         titulo="Actas"
         descripcion="Consulte y administre las actas de graduación."
-        acciones={<BotonNuevaActa />}
       />
 
-      {puedeElegirEscuela && (
-        <div className="flex shrink-0 flex-wrap items-end gap-3">
+      <div className="flex shrink-0 flex-wrap items-end gap-3">
+        {puedeElegirEscuela && (
           <Selector
             label="Escuela"
             opciones={[
@@ -157,8 +156,11 @@ export default function Actas() {
             onChange={(e) => setEscuelaFiltro(e.target.value)}
             className="w-56"
           />
+        )}
+        <div className="ml-auto">
+          <BotonNuevaActa />
         </div>
-      )}
+      </div>
 
       {error ? (
         <EstadoVacio

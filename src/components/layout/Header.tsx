@@ -18,7 +18,7 @@ export function Header({ menuAbierto, onAbrirMenu }: HeaderProps) {
   const descripcion = encabezado.descripcion;
 
   return (
-    <header className="sticky top-0 z-30 flex min-h-14 shrink-0 items-center gap-3 border-b border-primario-hover bg-primario px-4 py-3 text-white sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex min-h-14 shrink-0 items-center gap-3 border-b-2 border-acento bg-primario px-4 py-3 text-white sm:px-6 lg:px-8">
       <div className="flex min-w-0 items-center gap-2">
         <BotonIcono
           etiqueta="Abrir menú"

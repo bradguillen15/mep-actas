@@ -47,7 +47,7 @@ function Marca({ onNavegar, accionCabecera }: SidebarProps) {
           alt="Ministerio de Educación Pública — Gobierno de Costa Rica"
           className="h-auto w-full max-w-52"
         />
-        <span className="text-xs font-medium tracking-wide text-white/70">
+        <span className="text-xs font-medium tracking-wide text-acento">
           Sistema de Consulta de Títulos
         </span>
       </Link>
@@ -136,7 +136,7 @@ export function Sidebar({ onNavegar, accionCabecera }: SidebarProps) {
                 {obtenerIniciales(usuario.nombre)}
               </span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium" title={usuario.nombre}>
+                <p className="truncate text-sm font-medium text-acento" title={usuario.nombre}>
                   {usuario.nombre}
                 </p>
                 <p className="truncate text-xs text-white/60">

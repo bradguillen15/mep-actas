@@ -175,11 +175,6 @@ export function GestionEscuelas() {
     valor.trim() !== "" || mensaje;
 
   const columnas: ColumnDef<EscuelaConRegion>[] = [
-    {
-      header: "ID",
-      accessorKey: "id",
-      meta: { className: "w-16 text-texto-suave tabular-nums" },
-    },
     { header: "Nombre", accessorKey: "nombre", enableSorting: true },
     { header: "Código MEP", accessorKey: "codigoMep" },
     {
@@ -226,7 +221,7 @@ export function GestionEscuelas() {
           texto={escuelas && textoConteo(escuelas.length, "escuela", "escuelas")}
           accion={
             puedeGestionar && (
-              <Boton tamano="sm" onClick={abrirCrear}>
+              <Boton variante="acento" tamano="sm" onClick={abrirCrear}>
                 <Plus className="h-4 w-4" />
                 Nueva escuela
               </Boton>

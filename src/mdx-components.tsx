@@ -11,7 +11,9 @@ const componentes: MDXComponents = {
     <h1 className="mb-4 text-3xl font-bold text-primario">{children}</h1>
   ),
   h2: ({ children }) => (
-    <h2 className="mb-3 mt-8 text-2xl font-semibold text-primario">{children}</h2>
+    <h2 className="mb-3 mt-8 border-l-4 border-acento pl-3 text-2xl font-semibold text-primario">
+      {children}
+    </h2>
   ),
   h3: ({ children }) => (
     <h3 className="mb-2 mt-6 text-lg font-semibold text-texto">{children}</h3>

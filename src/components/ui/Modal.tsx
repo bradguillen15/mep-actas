@@ -45,10 +45,10 @@ export function Modal({
       <DialogContent
         showCloseButton={false}
         {...(!descripcion && { "aria-describedby": undefined })}
-        className={cn("gap-0 p-0", tamanos[tamano as keyof typeof tamanos])}
+        className={cn("gap-0 overflow-hidden border-0 p-0", tamanos[tamano as keyof typeof tamanos])}
       >
-        <div className="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
-          <DialogTitle className="text-lg font-semibold text-texto">
+        <div className="flex items-center justify-between gap-4 border-b-2 border-acento bg-primario px-6 py-4">
+          <DialogTitle className="text-lg font-semibold text-white">
             {titulo}
           </DialogTitle>
           <BotonIcono
@@ -56,6 +56,7 @@ export function Modal({
             icono={<X />}
             disabled={bloquearCierre}
             onClick={onCerrar}
+            className="text-white/75 hover-fino:bg-white/10 hover-fino:text-white focus-visible:ring-acento/60 focus-visible:ring-offset-0"
           />
         </div>
         {descripcion && (

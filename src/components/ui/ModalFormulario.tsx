@@ -65,6 +65,7 @@ export function ModalFormulario({
           </Boton>
           <Boton
             type="submit"
+            variante="acento"
             form={idFormulario}
             cargando={enviando}
             disabled={deshabilitado}

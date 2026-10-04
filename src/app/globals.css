@@ -7,6 +7,7 @@
   --primario-suave: #EEF1F6;
   --acento: #CFAC65;
   --acento-suave: #E5D2A6;
+  --acento-hover: #B8954E;
   --acento-texto: #7A5F22;
   --fondo: #FFFFFF;
   --superficie: #F4F6F9;
@@ -51,6 +52,7 @@
   --color-primario-suave: var(--primario-suave);
   --color-acento: var(--acento);
   --color-acento-suave: var(--acento-suave);
+  --color-acento-hover: var(--acento-hover);
   --color-acento-texto: var(--acento-texto);
   --color-fondo: var(--fondo);
   --color-superficie: var(--superficie);

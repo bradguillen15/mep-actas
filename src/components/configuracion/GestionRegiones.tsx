@@ -116,11 +116,6 @@ export function GestionRegiones() {
   };
 
   const columnas: ColumnDef<Region>[] = [
-    {
-      header: "ID",
-      accessorKey: "id",
-      meta: { className: "w-16 text-texto-suave tabular-nums" },
-    },
     { header: "Nombre", accessorKey: "nombre", enableSorting: true },
     {
       header: "Estado",
@@ -162,7 +157,7 @@ export function GestionRegiones() {
           texto={regiones && textoConteo(regiones.length, "región", "regiones")}
           accion={
             puedeGestionar && (
-              <Boton tamano="sm" onClick={abrirCrear}>
+              <Boton variante="acento" tamano="sm" onClick={abrirCrear}>
                 <Plus className="h-4 w-4" />
                 Nueva región
               </Boton>
