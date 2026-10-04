@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { clienteDb } from "@/db/cliente";
 import * as repositorio from "@/server/repositorios/escaneos.repositorio";
 import { crearAuditor } from "@/server/servicios/auditoria.servicio";
@@ -112,34 +112,34 @@ describe("Escaneos e2e", () => {
     expect(escaneo!.url).toContain("test-key.pdf");
   });
 
-  it("servicio prepararSubida falla si faltan env vars de R2", async () => {
+  it("servicio prepararSubida falla sin insertar el escaneo si faltan env vars de R2", async () => {
+    vi.stubEnv("R2_ACCOUNT_ID", "");
+    vi.stubEnv("R2_ACCESS_KEY_ID", "");
+    vi.stubEnv("R2_SECRET_ACCESS_KEY", "");
     const db = clienteDb();
     const servicio = crearServicioEscaneosDesdeDb(db);
 
-    const promesa = servicio.prepararSubida(
-      {
-        escuelaId,
-        numeroTomo: 2,
-        numeroFolio: 5,
-        formato: "pdf",
-      },
-      sesion
-    );
-
     try {
-      await promesa;
-    } catch {
-      const escaneos = await db
-        .select()
-        .from(esquema.escaneos)
-        .where(
-          and(
-            eq(esquema.escaneos.escuelaId, escuelaId),
-            eq(esquema.escaneos.numeroTomo, 2),
-            eq(esquema.escaneos.numeroFolio, 5)
-          )
-        );
-      for (const e of escaneos) idsEscaneo.push(e.id);
+      await expect(
+        servicio.prepararSubida(
+          { escuelaId, numeroTomo: 2, numeroFolio: 5, formato: "pdf" },
+          sesion
+        )
+      ).rejects.toThrow(/R2/);
+    } finally {
+      vi.unstubAllEnvs();
     }
+
+    const escaneos = await db
+      .select()
+      .from(esquema.escaneos)
+      .where(
+        and(
+          eq(esquema.escaneos.escuelaId, escuelaId),
+          eq(esquema.escaneos.numeroTomo, 2),
+          eq(esquema.escaneos.numeroFolio, 5)
+        )
+      );
+    expect(escaneos).toHaveLength(0);
   });
 });

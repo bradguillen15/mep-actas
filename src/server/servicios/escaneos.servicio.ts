@@ -128,6 +128,11 @@ export function crearServicioEscaneos(
         datos.numeroFolio
       );
 
+      const urlSubida = await almacenamiento.generarUrlSubida(
+        clave,
+        tipoContenidoDeExtension(ext)
+      );
+
       const escaneo =
         existente ??
         (await repositorio.crearEscaneo({
@@ -138,11 +143,6 @@ export function crearServicioEscaneos(
           formato: datos.formato,
           uploadedBy: sesion.usuarioId,
         }));
-
-      const urlSubida = await almacenamiento.generarUrlSubida(
-        clave,
-        tipoContenidoDeExtension(ext)
-      );
 
       if (!existente) {
         await auditor({

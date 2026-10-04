@@ -161,4 +161,14 @@ describe("prepararSubida", () => {
     expect(resultado.escaneo).toEqual(existente);
     expect(repositorio.crearEscaneo).not.toHaveBeenCalled();
   });
+
+  it("no inserta la fila del escaneo si el almacenamiento no puede generar la URL", async () => {
+    const { servicio, repositorio } = crearServicio();
+    mockGenerarUrlSubida.mockRejectedValue(new Error("Faltan variables de entorno para Cloudflare R2"));
+
+    await expect(
+      servicio.prepararSubida({ escuelaId: 5, numeroTomo: 2, numeroFolio: 3, formato: "pdf" }, sesion)
+    ).rejects.toThrow(/R2/);
+    expect(repositorio.crearEscaneo).not.toHaveBeenCalled();
+  });
 });
